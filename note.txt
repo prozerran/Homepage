@@ -1,0 +1,116 @@
+- code to html
+https://tohtml.com/
+
+- html colors
+https://www.w3schools.com/colors/colors_picker.asp
+
+
+https://docs.microsoft.com/en-us/aspnet/web-api/overview/getting-started-with-aspnet-web-api/tutorial-your-first-web-api
+https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/
+
+action filter
+https://msdn.microsoft.com/en-us/library/dd410056(v=vs.98).aspx
+
+Accenture WIKI:
+https://ts.accenture.com/sites/HKJC/landing/HKJC%20Network/Home.aspx
+
+On-boarding deck:
+https://ts.accenture.com/sites/HKJC/SP3d%20FO1/01.%20Project%20Formation%20(Mobilization)/Team%20Onboarding/HKJC_SP3d_FO%20-%20Onboarding%20Deck%20DRAFT%20v01.pptx?d=wbcedb738170146df9c0635b71bd8df0e
+
+Dev Links:
+•  VDI Access (Onsite Access) - https://itterminal.corp.hkjc.com/
+•  VDI Access (IDC Access)
+•  Jenkins: http://devci01:8080/
+
+
+•  Artifactory: http://devartifact01:8081/
+	artifact/icssvr-proprietary-local
+
+
+•  Bitbucket: http://devgit01:7990/
+•  JIRA: http://devjira01/
+•  Confluence: http://devconf01/
+
+
+async/await
+https://docs.microsoft.com/en-us/dotnet/csharp/async
+https://msdn.microsoft.com/en-us/library/hh191443(v=vs.120).aspx
+
+GIT commands
+========================================================
+http://guides.beanstalkapp.com/version-control/common-git-commands.html
+https://stackoverflow.com/questions/1146973/how-do-i-revert-all-local-changes-in-git-managed-project-to-previous-state
+
+git init								// make git repository
+git clone https://prozerran@bitbucket.org/prozerran/test1.git		// clone repo
+	git pass: code4life
+git status			// status
+git checkout -b name		// create new branch
+git fetch			// fetch latest
+git pull			// update latest
+git fetch && git pull		// get lastest update from remote
+git fetch && git checkout dev1	// checkout branch
+get add .			// add all changed files
+git commit -m "message"		// commit to local
+git push			// commit to remote, -all for everything
+git merge from_branch		// merge to current branch
+git rebase master		// merge to master 
+git branch -a			// get local branches, -a get all
+git branch -D			// delete branch
+git checkout <file>		// revert to recent file
+git checkout .			// revert to lastest remote
+git reset --hard HEAD		// revert to recent commit
+git clean -fd			// remove untracked files/dir
+git log				// logs
+git stash [pop]			// stash and pop it
+
+// checkout branches
+git checkout -b test1 origin/feature/fo1.2b
+
+// no ask password
+git config --global credential.helper "cache --timeout=3600"
+
+
+
+MISC STUFF
+==============================================================
+## find file recursively
+find . -name "MapCore.dll"
+
+##### SEARCH all files
+grep -inr "login" *
+
+grep -inr \
+--exclude="debugger.html" \
+--exclude-dir="requisite" \
+--exclude-dir="StressTest" \
+--exclude-dir="WebClientPackage" \
+--exclude-dir="WebServerPackage" \
+--exclude-dir="SVSWeb/js/vendor" \
+--exclude-dir="SVSWCFService/CCBASVSGateway" \
+--exclude-dir="SVSWCFService/CommonDll" \
+--exclude-dir="SVSWCFService/Development" \
+--exclude-dir="SVSWCFService/Mvc4ApplicationTest" \
+--exclude-dir="SVSWCFService/SVSTMService" \
+--exclude-dir="SVSWCFService/packages" \
+--exclude-dir="SVSWCFService/SVSWCFService/obj" \
+"login" *
+
+##### RENAME ALL files + subdirectories
+find ./ -type f -exec sed -i -e 's/FF/TT/g' {} \;
+find ./ -type f -name '*.config' -exec sed -i -e 's/FF/TT/g' {} \;
+find ./ -name '*.config' -exec grep -i '10.0.0.22' {} \; -print
+
+
+
+
+
+
+???????????????
+=========================================
+only sketchy briefing of system architecture and design
+documents & assignment not fully defined
+no clear instruction what to do
+cannot use own development tools (mobaxterm, beyondcompare, fiddler)
+not really using jira/task
+agile, stand up meeting useless, PM usually not there
