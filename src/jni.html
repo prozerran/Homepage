@@ -1,0 +1,111 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    3/2/2006</span>
+<span style='color:#008000; '>// File:    JNI.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    JNI implementation for a Java created JNI header file.</span>
+<span style='color:#008000; '>//          This is the JNI workaround for a native port done in C++</span>
+<span style='color:#008000; '>//          which provides a working JNI interface for Java developers</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#008000; '>// ObjectJNI.cpp : Defines the entry point for the DLL application.</span>
+<span style='color:#008000; '>//</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Object.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>ObjectExports.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; font-weight:bold; '>namespace</span> OBJECT<span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>/* Global Variables */</span>
+<span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; '>*</span> g_pObject <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+JNIEXPORT jboolean JNICALL Java_Object_Init<span style='color:#0000ff; '>(</span>JNIEnv <span style='color:#0000ff; '>*</span>env<span style='color:#0000ff; '>,</span> jobject obj<span style='color:#0000ff; '>,</span> jstring jstr<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nLicense <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_pObject<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        g_pObject <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> UVObjectCreate<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>g_pObject<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>str <span style='color:#0000ff; '>=</span> env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetStringUTFChars<span style='color:#0000ff; '>(</span>jstr<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        nLicense <span style='color:#0000ff; '>=</span> g_pObject<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Init<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ReleaseStringUTFChars<span style='color:#0000ff; '>(</span>jstr<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span>nLicense <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span> <span style='color:#0000ff; '>?</span> JNI_TRUE <span style='color:#0000ff; '>:</span> JNI_FALSE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+JNIEXPORT jboolean JNICALL Java_Object_ParseXmlFile<span style='color:#0000ff; '>(</span>JNIEnv <span style='color:#0000ff; '>*</span>env<span style='color:#0000ff; '>,</span> jobject obj<span style='color:#0000ff; '>,</span> jstring jstr<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>TODO: Add your implementation code here</span>
+    jboolean ret <span style='color:#0000ff; '>=</span> JNI_FALSE<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>str <span style='color:#0000ff; '>=</span> env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetStringUTFChars<span style='color:#0000ff; '>(</span>jstr<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>g_pObject<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ParseXmlFile<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span> PARSE_ALL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        ret <span style='color:#0000ff; '>=</span> JNI_TRUE<span style='color:#0000ff; '>;</span>
+
+    env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ReleaseStringUTFChars<span style='color:#0000ff; '>(</span>jstr<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> ret<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+JNIEXPORT jstring JNICALL Java_Object_InvokeMethod
+<span style='color:#0000ff; '>(</span>JNIEnv <span style='color:#0000ff; '>*</span>env<span style='color:#0000ff; '>,</span> jobject obj<span style='color:#0000ff; '>,</span> jint nMethodId<span style='color:#0000ff; '>,</span> jint nuId<span style='color:#0000ff; '>,</span> jint nhId<span style='color:#0000ff; '>,</span> jstring jstr<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>TODO: Add your implementation code here</span>
+    jstring jReturnCode <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; '>::</span>ReturnCode rcRes <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; '>::</span>rcInternalError<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>enum</span> <span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; '>::</span>InvokeMethodId eMethId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; '>::</span>InvokeMethodId<span style='color:#0000ff; '>)</span> nMethodId<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>str <span style='color:#0000ff; '>=</span> env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetStringUTFChars<span style='color:#0000ff; '>(</span>jstr<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>eMethId<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>_Meth1</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>_Meth2</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            rcRes <span style='color:#0000ff; '>=</span> g_pObject<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>InvokeMethod<span style='color:#0000ff; '>(</span>eMethId<span style='color:#0000ff; '>,</span> nhId<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// determine return code value and return via jstring</span>
+            <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>rcRes<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>rcOk</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                    jReturnCode <span style='color:#0000ff; '>=</span> env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>NewStringUTF<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>rcOk</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+                    jReturnCode <span style='color:#0000ff; '>=</span> env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>NewStringUTF<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>rcError</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#0000ff; font-weight:bold; '>CObject</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>_Meth3</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            jReturnCode <span style='color:#0000ff; '>=</span> env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>NewStringUTF<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>rcNotImplemented</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+            jReturnCode <span style='color:#0000ff; '>=</span> env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>NewStringUTF<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>rcError</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    env<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ReleaseStringUTFChars<span style='color:#0000ff; '>(</span>jstr<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>//env->ReleaseStringUTFChars(jReturnCode, NULL);    // may have memory leak</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> jReturnCode<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+JNIEXPORT jboolean JNICALL Java_Object_Term<span style='color:#0000ff; '>(</span>JNIEnv <span style='color:#0000ff; '>*</span>env<span style='color:#0000ff; '>,</span> jobject obj<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>TODO: Add your implementation code here</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>g_pObject<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        UVObjectFree<span style='color:#0000ff; '>(</span>g_pObject<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    g_pObject <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> JNI_TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

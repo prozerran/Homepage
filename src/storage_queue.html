@@ -1,0 +1,38 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>Azure<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>WindowsAzure<span style='color:#0000ff; '>.</span>Storage<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>WindowsAzure<span style='color:#0000ff; '>.</span>Storage<span style='color:#0000ff; '>.</span>Queue<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Storage
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Queue
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> storage <span style='color:#0000ff; '>=</span> CloudStorageAccount<span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>
+                CloudConfigurationManager<span style='color:#0000ff; '>.</span>GetSetting<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>StorageConnection</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> queueClient <span style='color:#0000ff; '>=</span> storage<span style='color:#0000ff; '>.</span>CreateCloudQueueClient<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> queue <span style='color:#0000ff; '>=</span> queueClient<span style='color:#0000ff; '>.</span>GetQueueReference<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>tasks</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            queue<span style='color:#0000ff; '>.</span>CreateIfNotExists<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> mesg <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> CloudQueueMessage<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Hello World</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            queue<span style='color:#0000ff; '>.</span>AddMessage<span style='color:#0000ff; '>(</span>mesg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            mesg <span style='color:#0000ff; '>=</span> queue<span style='color:#0000ff; '>.</span>PeekMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>mesg<span style='color:#0000ff; '>.</span>AsString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            mesg <span style='color:#0000ff; '>=</span> queue<span style='color:#0000ff; '>.</span>GetMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            queue<span style='color:#0000ff; '>.</span>DeleteMessage<span style='color:#0000ff; '>(</span>mesg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            Console<span style='color:#0000ff; '>.</span>ReadKey<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

@@ -1,0 +1,467 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#3f7f59; '>// ==========================================================================</span>
+<span style='color:#3f7f59; '>// Author:  Yee Hsu</span>
+<span style='color:#3f7f59; '>// Date:    3/10/2007</span>
+<span style='color:#3f7f59; '>// File:    parser.java</span>
+<span style='color:#3f7f59; '>//</span>
+<span style='color:#3f7f59; '>// Desc:    Java compiler/debugger parser</span>
+<span style='color:#3f7f59; '>// ==========================================================================</span>
+
+<span style='color:#7f0055; font-weight:bold; '>package</span><span style='color:#7f0055; '> parser</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> lexer</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> ast</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>util</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#3f5fbf; '>/** </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  The Parser class performs recursive</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>descent parsing</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> as a</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  by</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>product it will build the </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;b></span><span style='color:#3f5fbf; '>Abstract Syntax Tree</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/b></span><span style='color:#3f5fbf; '> representation</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  for the source program</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Following is the Grammar we are using</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  PROGRAM </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> program BLOCK ==> program</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  BLOCK </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> { D</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '> S</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '> }  ==> block</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  D </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> TYPE NAME                    ==> decl</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> TYPE NAME FUNHEAD BLOCK      ==> functionDecl</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  TYPE  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  int</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  boolean</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  float</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  FUNHEAD  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> '(' (D list '</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '>')? ')'  ==> formals</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  S </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> if E then BLOCK else BLOCK  ==> if</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> while E BLOCK               ==> while</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> return E                    ==> return</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> BLOCK</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> NAME = E                    ==> assign</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> repeat BLOCK while E        ==> repeat</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  E </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> SE</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> SE == SE   ==> =</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> SE != SE   ==> !=</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> SE &lt;  SE   ==> &lt;</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> SE &lt;= SE   ==> &lt;=</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  SE  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  T</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  SE </span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '> T  ==> </span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  SE </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> T  ==> </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  SE | T  ==> or</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  T  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> F</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>     </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> T </span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '> F  ==> </span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>     </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> T </span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '> F  ==> </span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>     </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> T &amp; F  ==> and</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  F  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> (E)</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>     </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> NAME</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>     </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;int></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>     </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> NAME '(' (E list '</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '>')? ')' ==> call</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>     </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;float></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  NAME  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;id></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+<span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>class</span> Parser {
+    <span style='color:#7f0055; font-weight:bold; '>private</span> Token currentToken;
+    <span style='color:#7f0055; font-weight:bold; '>private</span> Lexer lex;
+    
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Construct a new Parser</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> sourceProgram </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> source file name</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> Exception </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any problems at startup (e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g. I</span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '>O)</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Parser(<span style='color:#7f0055; font-weight:bold; '>String</span> sourceProgram) <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>Exception</span> {
+        <span style='color:#7f0055; font-weight:bold; '>try</span> {
+            lex = <span style='color:#7f0055; font-weight:bold; '>new</span> Lexer(sourceProgram);
+            scan();
+        }
+         <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {
+            <span style='color:#7f0055; font-weight:bold; '>System</span>.out.println(<span style='color:#2a00ff; '>"********exception*******"</span>+e.toString());
+            <span style='color:#7f0055; font-weight:bold; '>throw</span> e;
+         };
+    }
+    
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Lexer getLex() { <span style='color:#7f0055; font-weight:bold; '>return</span> lex; }
+    
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Execute the parse command</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the AST for the source program</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> Exception </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> pass on any type of exception raised</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST execute() <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>Exception</span> {
+        <span style='color:#7f0055; font-weight:bold; '>try</span> {
+            <span style='color:#7f0055; font-weight:bold; '>return</span> rProgram();
+        }<span style='color:#7f0055; font-weight:bold; '>catch</span> (SyntaxError e) {
+            e.print();
+            <span style='color:#7f0055; font-weight:bold; '>throw</span> e;
+            }
+    }
+    
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  program </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> 'program' block ==> program</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the program tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>    
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rProgram() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t = <span style='color:#7f0055; font-weight:bold; '>new</span> ProgramTree();
+        expect(Sym.Program);
+        t.addKid(rBlock());
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  block </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> '{' d</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '> s</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '> '}'  ==> block</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '>  block tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>         e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g. an expected left brace isn't found</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rBlock() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        expect(Sym.LeftBrace);
+        AST t = <span style='color:#7f0055; font-weight:bold; '>new</span> BlockTree();
+        <span style='color:#7f0055; font-weight:bold; '>while</span> (<span style='color:#7f0055; font-weight:bold; '>true</span>) {  <span style='color:#3f7f59; '>// get decls</span>
+           <span style='color:#7f0055; font-weight:bold; '>try</span> {
+            t.addKid(rDecl());
+           } <span style='color:#7f0055; font-weight:bold; '>catch</span> (SyntaxError e) { <span style='color:#7f0055; font-weight:bold; '>break</span>; }
+        }
+        <span style='color:#7f0055; font-weight:bold; '>while</span> (<span style='color:#7f0055; font-weight:bold; '>true</span>) {  <span style='color:#3f7f59; '>// get statements</span>
+           <span style='color:#7f0055; font-weight:bold; '>try</span> {
+            t.addKid(rStatement());
+           } <span style='color:#7f0055; font-weight:bold; '>catch</span> (SyntaxError e) { <span style='color:#7f0055; font-weight:bold; '>break</span>; }
+        }
+        expect(Sym.RightBrace);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  d </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> type name                 ==> decl</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> type name funcHead block  ==> functionDecl</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> either the decl tree or the functionDecl tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rDecl() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t,t1;
+        t = rType();
+        t1 = rName();
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.LeftParen)) { <span style='color:#3f7f59; '>// function</span>
+            t = (<span style='color:#7f0055; font-weight:bold; '>new</span> FunctionDeclTree()).addKid(t).addKid(t1);
+            t.addKid(rFunHead());
+            t.addKid(rBlock());
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        t = (<span style='color:#7f0055; font-weight:bold; '>new</span> DeclTree()).addKid(t).addKid(t1);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  type  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  intType</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  type  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  floatType</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  type  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  boolType</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> either the intType</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> floatType or boolType tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rType() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t;
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.Int)) {
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> IntTypeTree();
+            scan();
+        } <span style='color:#7f0055; font-weight:bold; '>else</span> <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.<span style='color:#7f0055; font-weight:bold; '>Float</span>)) {
+        t = <span style='color:#7f0055; font-weight:bold; '>new</span> FloatTypeTree();
+        scan();
+    } <span style='color:#7f0055; font-weight:bold; '>else</span>
+    {
+            expect(Sym.BOOLean);
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> BoolTypeTree();
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  funHead  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  ( (decl list '</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '>')? )  ==> formals</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  note a funhead is a list of zero or more decl's</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  separated by commas</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> all in parens</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the formals tree describing this list of formals</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rFunHead() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t = <span style='color:#7f0055; font-weight:bold; '>new</span> FormalsTree();
+        expect(Sym.LeftParen);
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (!isNextTok(Sym.RightParen)) {
+            <span style='color:#7f0055; font-weight:bold; '>do</span> {
+                t.addKid(rDecl());
+                <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.Comma)) {
+                    scan();
+                } <span style='color:#7f0055; font-weight:bold; '>else</span> {
+                    <span style='color:#7f0055; font-weight:bold; '>break</span>;
+                }
+            } <span style='color:#7f0055; font-weight:bold; '>while</span> (<span style='color:#7f0055; font-weight:bold; '>true</span>);
+        }
+        expect(Sym.RightParen);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      S </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> if e then block else block  ==> if</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> while e block  ==> while</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> return e  ==> return</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> block</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> name = e  ==> assign</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> repeat BLOCK while E  ==> repeat</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the tree corresponding to the statement found</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rStatement() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t;
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.If)) {
+            scan();
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> IfTree();
+            t.addKid(rExpr());
+            expect(Sym.Then);
+            t.addKid(rBlock());
+            expect(Sym.Else);
+            t.addKid(rBlock());
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.While)) {
+            scan();
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> WhileTree();
+            t.addKid(rExpr());
+            t.addKid(rBlock());
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.Return)) {
+            scan();
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> ReturnTree();
+            t.addKid(rExpr());
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.LeftBrace)) {
+            <span style='color:#7f0055; font-weight:bold; '>return</span> rBlock();
+        }
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.Repeat)) {
+            scan();
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> RepeatTree();
+            t.addKid(rBlock());
+            expect(Sym.While);
+            t.addKid(rExpr());
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        t = rName();
+        t = (<span style='color:#7f0055; font-weight:bold; '>new</span> AssignTree()).addKid(t);
+        expect(Sym.Assign);
+        t.addKid(rExpr());
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      e </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> se</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> se == se  ==> =</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> se != se  ==> !=</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> se &lt;  se  ==> &lt;</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> se &lt;= se  ==> &lt;=</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the tree corresponding to the expression</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rExpr() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t, kid = rSimpleExpr();
+        t = getRelationTree();
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (t == <span style='color:#7f0055; font-weight:bold; '>null</span>) {
+            <span style='color:#7f0055; font-weight:bold; '>return</span> kid;
+        }
+        t.addKid(kid);
+        t.addKid(rSimpleExpr());
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      se  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  t</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>          </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  se </span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '> t  ==> </span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>          </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  se </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> t  ==> </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>          </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>>  se | t  ==> or</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  This rule indicates we should pick up as many </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>t</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '>'s as</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  possible</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> the </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>t</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '>'s will be left associative</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the tree corresponding to the adding expression</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rSimpleExpr() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t, kid = rTerm();
+        <span style='color:#7f0055; font-weight:bold; '>while</span> ( (t = getAddOperTree()) != <span style='color:#7f0055; font-weight:bold; '>null</span>) {
+            t.addKid(kid);
+            t.addKid(rTerm());
+            kid = t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> kid;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      t  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> f</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>         </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> t </span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '> f  ==> </span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>         </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> t </span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '> f  ==> </span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>         </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> t &amp; f  ==> and</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  This rule indicates we should pick up as many </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>f</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '>'s as</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  possible</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> the </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>f</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '>'s will be left associative</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the tree corresponding to the multiplying expression</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rTerm() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t, kid = rFactor();
+        <span style='color:#7f0055; font-weight:bold; '>while</span> ( (t = getMultOperTree()) != <span style='color:#7f0055; font-weight:bold; '>null</span>) {
+            t.addKid(kid);
+            t.addKid(rFactor());
+            kid = t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> kid;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      f  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> (e)</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>         </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> name</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>         </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;int></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>         </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> name '(' (e list '</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '>')? ) ==> call</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>         </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;float></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the tree corresponding to the factor expression</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rFactor() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t;
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.LeftParen)) { <span style='color:#3f7f59; '>// -> (e)</span>
+            scan();
+            t = rExpr();
+            expect(Sym.RightParen);
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.INTeger)) {  <span style='color:#3f7f59; '>//  -> &lt;int></span>
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> IntTree(currentToken);
+            scan();
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.FLoat)) {    <span style='color:#3f7f59; '>//  -> &lt;float></span>
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> FloatTree(currentToken);
+            scan();
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        t = rName();
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (!isNextTok(Sym.LeftParen)) {  <span style='color:#3f7f59; '>//  -> name</span>
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        scan();     <span style='color:#3f7f59; '>// -> name '(' (e list ',')? ) ==> call</span>
+        t = (<span style='color:#7f0055; font-weight:bold; '>new</span> CallTree()).addKid(t);    
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (!isNextTok(Sym.RightParen)) {
+            <span style='color:#7f0055; font-weight:bold; '>do</span> {
+                t.addKid(rExpr());
+                <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.Comma)) {
+                    scan();
+                } <span style='color:#7f0055; font-weight:bold; '>else</span> {
+                    <span style='color:#7f0055; font-weight:bold; '>break</span>;
+                }
+            } <span style='color:#7f0055; font-weight:bold; '>while</span> (<span style='color:#7f0055; font-weight:bold; '>true</span>);
+        }
+        expect(Sym.RightParen);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>      name  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;id></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the id tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@exception</span><span style='color:#3f5fbf; '> SyntaxError </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> thrown for any syntax error</span>
+<span style='color:#3f5fbf; '>*/</span>        
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST rName() <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        AST t;
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(Sym.Identifier)) {
+            t = <span style='color:#7f0055; font-weight:bold; '>new</span> IdTree(currentToken);
+            scan();
+            <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>throw</span> <span style='color:#7f0055; font-weight:bold; '>new</span> SyntaxError(currentToken,Sym.Identifier);
+    }
+    
+    AST getRelationTree() {  <span style='color:#3f7f59; '>// build tree with current token's relation</span>
+        <span style='color:#7f0055; font-weight:bold; '>int</span> kind = currentToken.getKind();
+        <span style='color:#7f0055; font-weight:bold; '>switch</span> (kind) {
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.Equal:
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.NotEqual:
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.Less:
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.LessEqual:AST t = <span style='color:#7f0055; font-weight:bold; '>new</span> RelOpTree(currentToken);
+                         scan(); <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+    
+    <span style='color:#7f0055; font-weight:bold; '>private</span> AST getAddOperTree() {
+        <span style='color:#7f0055; font-weight:bold; '>int</span> kind = currentToken.getKind();
+        <span style='color:#7f0055; font-weight:bold; '>switch</span> (kind) {
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.Plus:
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.Minus:
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.Or: AST t = <span style='color:#7f0055; font-weight:bold; '>new</span> AddOpTree(currentToken);
+                 scan(); <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> AST getMultOperTree() {
+        <span style='color:#7f0055; font-weight:bold; '>int</span> kind = currentToken.getKind();
+        <span style='color:#7f0055; font-weight:bold; '>switch</span> (kind) {
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.Multiply:
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.Divide:
+            <span style='color:#7f0055; font-weight:bold; '>case</span> Sym.And: AST t = <span style='color:#7f0055; font-weight:bold; '>new</span> MultOpTree(currentToken);
+                   scan(); <span style='color:#7f0055; font-weight:bold; '>return</span> t;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>boolean</span> isNextTok(<span style='color:#7f0055; font-weight:bold; '>int</span> kind) {
+        <span style='color:#7f0055; font-weight:bold; '>if</span> ((currentToken == <span style='color:#7f0055; font-weight:bold; '>null</span>) || (currentToken.getKind() != kind)) {
+            <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>false</span>;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>true</span>;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>void</span> expect(<span style='color:#7f0055; font-weight:bold; '>int</span> kind) <span style='color:#7f0055; font-weight:bold; '>throws</span> SyntaxError {
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (isNextTok(kind)) {
+            scan();
+            <span style='color:#7f0055; font-weight:bold; '>return</span>;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>throw</span> <span style='color:#7f0055; font-weight:bold; '>new</span> SyntaxError(currentToken,kind);
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>void</span> scan() {
+        currentToken = lex.nextToken();
+        <span style='color:#3f7f59; '>//if (currentToken != null) {currentToken.print();} //debug</span>
+        <span style='color:#7f0055; font-weight:bold; '>return</span>;
+    }
+}
+
+<span style='color:#7f0055; font-weight:bold; '>class</span> SyntaxError <span style='color:#7f0055; font-weight:bold; '>extends</span> Exception {
+    <span style='color:#7f0055; font-weight:bold; '>private</span> Token tokenFound;
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>int</span> kindExpected;
+    
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  record the syntax error just encountered</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> tokenFound is the token just found by the parser</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> kindExpected is the token we expected to find based on </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  the current context</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> SyntaxError(Token tokenFound, <span style='color:#7f0055; font-weight:bold; '>int</span> kindExpected) {
+        <span style='color:#7f0055; font-weight:bold; '>this</span>.tokenFound = tokenFound;
+        <span style='color:#7f0055; font-weight:bold; '>this</span>.kindExpected = kindExpected;
+    }
+    
+    <span style='color:#7f0055; font-weight:bold; '>void</span> print() {
+        <span style='color:#7f0055; font-weight:bold; '>System</span>.out.println(<span style='color:#2a00ff; '>"Expected: "</span> + 
+           TokenType.tokens[kindExpected].toString());
+        <span style='color:#7f0055; font-weight:bold; '>return</span>;
+    }
+}
+</pre>

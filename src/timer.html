@@ -1,0 +1,294 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ComponentModel<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Diagnostics<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ServiceProcess<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Timers<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Configuration<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> SrvCommon<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MySql<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>.</span>MySqlClient<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> SrvTracDataCopier
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>class</span> ServiceCfg
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> TableName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>trackerlog1</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> LogConnectionString <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> SrvConnectionString <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>int</span> Interval <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>10</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>int</span> MaxBulkRow <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>100</span><span style='color:#0000ff; '>;</span>        
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>long</span> Initial_ID <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>49298987</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> ServiceCfg<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span> <span style='color:#0000ff; '>{</span> TableName <span style='color:#0000ff; '>=</span> ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>table_name</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span> <span style='color:#0000ff; '>{</span> Interval <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>interval</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>1000</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span> <span style='color:#0000ff; '>{</span> Initial_ID <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>long</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>initial_id</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span> <span style='color:#0000ff; '>{</span> LogConnectionString <span style='color:#0000ff; '>=</span> ConfigurationManager<span style='color:#0000ff; '>.</span>ConnectionStrings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>db_tracker</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span> <span style='color:#0000ff; '>{</span> SrvConnectionString <span style='color:#0000ff; '>=</span> ConfigurationManager<span style='color:#0000ff; '>.</span>ConnectionStrings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>db_Srvtrac</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>public</span> partial <span style='color:#0000ff; font-weight:bold; '>class</span> Service1 <span style='color:#0000ff; '>:</span> ServiceBase
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> System<span style='color:#0000ff; '>.</span>Timers<span style='color:#0000ff; '>.</span>Timer timer1 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>string</span> table_name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> MySqlConnection db_trk <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> MySqlConnection db_Srv <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Service1<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            InitializeComponent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>void</span> OnStart<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// on restart, lets copy most recent record from TRACKERLOG so that it doesnt need to copy all old data,</span>
+            <span style='color:#008000; '>// since copying all lost data takes a VERY LONG time. We don't need all old data in staging anyways.</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>Copy_LastRoutine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                timer1 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> System<span style='color:#0000ff; '>.</span>Timers<span style='color:#0000ff; '>.</span>Timer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>timer1<span style='color:#0000ff; '>.</span>Interval <span style='color:#0000ff; '>=</span> ServiceCfg<span style='color:#0000ff; '>.</span>Interval<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>timer1<span style='color:#0000ff; '>.</span>Elapsed <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> System<span style='color:#0000ff; '>.</span>Timers<span style='color:#0000ff; '>.</span>ElapsedEventHandler<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>timer1_Tick<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>timer1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>table_name <span style='color:#0000ff; '>=</span> ServiceCfg<span style='color:#0000ff; '>.</span>TableName<span style='color:#0000ff; '>;</span>
+
+                SrvLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SrvTracDataCopier Started</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>void</span> OnStop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>timer1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            SrvLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SrvTracDataCopier Stopped</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Create and open database connection.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> MySqlConnection CreateConnection<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> conn_key<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                MySqlConnection dbConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySqlConnection<span style='color:#0000ff; '>(</span>conn_key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                dbConn<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> dbConn<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                SrvLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception: CannotOpenDbConn - {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> timer1_Tick<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> ElapsedEventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>timer1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span>
+            <span style='color:#0000ff; '>{</span>
+              <span style='color:#008000; '>// TRY/CATCH to circumvent NUnit</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk <span style='color:#0000ff; '>=</span> CreateConnection<span style='color:#0000ff; '>(</span>ServiceCfg<span style='color:#0000ff; '>.</span>LogConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv <span style='color:#0000ff; '>=</span> CreateConnection<span style='color:#0000ff; '>(</span>ServiceCfg<span style='color:#0000ff; '>.</span>SrvConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>int</span> nRet <span style='color:#0000ff; '>=</span> Copy_MainRoutine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    SrvLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Inserted {0} Rows.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> nRet<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>MySqlException ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                SrvLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>MySqlException: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                SrvLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk<span style='color:#0000ff; '>.</span>State <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ConnectionState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv<span style='color:#0000ff; '>.</span>State <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ConnectionState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>timer1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// TRY/CATCH to circumvent NUnit</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>long</span> GetMaxIdFromDB<span style='color:#0000ff; '>(</span>MySqlConnection dbConn<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlCommand dbCmd <span style='color:#0000ff; '>=</span> dbConn<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                dbCmd<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT MAX(ID) FROM {0};</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ServiceCfg<span style='color:#0000ff; '>.</span>TableName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                dbCmd<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlDataReader dbReader <span style='color:#0000ff; '>=</span> dbCmd<span style='color:#0000ff; '>.</span>ExecuteReader<span style='color:#0000ff; '>(</span>CommandBehavior<span style='color:#0000ff; '>.</span>SingleRow<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>dbReader<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> dbReader<span style='color:#0000ff; '>.</span>GetInt64<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> Copy_LastRoutine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> nRet <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk <span style='color:#0000ff; '>=</span> CreateConnection<span style='color:#0000ff; '>(</span>ServiceCfg<span style='color:#0000ff; '>.</span>LogConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv <span style='color:#0000ff; '>=</span> CreateConnection<span style='color:#0000ff; '>(</span>ServiceCfg<span style='color:#0000ff; '>.</span>SrvConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>long</span> nMaxSource <span style='color:#0000ff; '>=</span> GetMaxIdFromDB<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                DataTable dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DataTable<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>string</span> szQuery <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT * FROM `{0}` WHERE `ID` = '{1}';</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                    ServiceCfg<span style='color:#0000ff; '>.</span>TableName<span style='color:#0000ff; '>,</span> nMaxSource<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlCommand dbCmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    dbCmd<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> szQuery<span style='color:#0000ff; '>;</span>
+                    dbCmd<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlDataAdapter dbAdp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySqlDataAdapter<span style='color:#0000ff; '>(</span>dbCmd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        dbAdp<span style='color:#0000ff; '>.</span>Fill<span style='color:#0000ff; '>(</span>dt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>.</span>Count <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> hex <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>0x</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> SrvUtil<span style='color:#0000ff; '>.</span>ByteArrayToHexString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Datagram</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    DateTime tm <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>)</span>dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>RecvTime</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+                    szQuery <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>INSERT INTO {0} (`ID`,`DevModel`,Datagram,`RecvTime`) VALUES ('{1}', '{2}', {3}, '{4}');</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+                        ServiceCfg<span style='color:#0000ff; '>.</span>TableName<span style='color:#0000ff; '>,</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DevModel</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> hex<span style='color:#0000ff; '>,</span> tm<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>yyyy-MM-dd HH:mm:ss.fff</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlCommand dbCmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        dbCmd<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> szQuery<span style='color:#0000ff; '>;</span>
+                        dbCmd<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+                        nRet <span style='color:#0000ff; '>=</span> dbCmd<span style='color:#0000ff; '>.</span>ExecuteNonQuery<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span>nRet <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span> ? <span style='color:#0000ff; font-weight:bold; '>true</span> <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>int</span> Copy_MainRoutine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> nRet <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>long</span> nMaxSource <span style='color:#0000ff; '>=</span> GetMaxIdFromDB<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>long</span> nMaxTarget <span style='color:#0000ff; '>=</span> GetMaxIdFromDB<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nMaxTarget <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                nMaxTarget <span style='color:#0000ff; '>=</span> ServiceCfg<span style='color:#0000ff; '>.</span>Initial_ID<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>long</span> nIndex <span style='color:#0000ff; '>=</span> nMaxTarget<span style='color:#0000ff; '>;</span> nIndex <span style='color:#0000ff; '>&lt;</span> nMaxSource<span style='color:#0000ff; '>;</span> nIndex <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> ServiceCfg<span style='color:#0000ff; '>.</span>MaxBulkRow<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                DataTable dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DataTable<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>string</span> szQuery <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT `ID`,`DevModel`,`Datagram`,`RecvTime` FROM `{0}` WHERE `ID` > '{1}' AND `ID` &lt;= '{2}';</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                    ServiceCfg<span style='color:#0000ff; '>.</span>TableName<span style='color:#0000ff; '>,</span> nIndex<span style='color:#0000ff; '>,</span> nIndex <span style='color:#0000ff; '>+</span> ServiceCfg<span style='color:#0000ff; '>.</span>MaxBulkRow<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlCommand dbCmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_trk<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    dbCmd<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> szQuery<span style='color:#0000ff; '>;</span>
+                    dbCmd<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlDataAdapter dbAdp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySqlDataAdapter<span style='color:#0000ff; '>(</span>dbCmd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        dbAdp<span style='color:#0000ff; '>.</span>Fill<span style='color:#0000ff; '>(</span>dt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+
+                szQuery <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>INSERT INTO {0} (`ID`,`DevModel`,Datagram,`RecvTime`) VALUES </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ServiceCfg<span style='color:#0000ff; '>.</span>TableName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>int</span> nCnt <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> totalrows <span style='color:#0000ff; '>=</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>.</span>Count<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>DataRow dr <span style='color:#0000ff; font-weight:bold; '>in</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> hex <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>0x</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> SrvUtil<span style='color:#0000ff; '>.</span>ByteArrayToHexString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Datagram</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    DateTime tm <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>)</span>dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>RecvTime</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> model <span style='color:#0000ff; '>=</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DevModel</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// don't copy V07/AT05 stuff, there is just too many</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nCnt <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> totalrows &amp;&amp; <span style='color:#0000ff; '>(</span>model <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>V07</span><span style='color:#0000e6; '>"</span> || model <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>AT05</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        nCnt<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#008000; '>// ...</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> buf <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>('{0}', '{1}', {2}, '{3}')</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> model<span style='color:#0000ff; '>,</span> hex<span style='color:#0000ff; '>,</span> tm<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>yyyy-MM-dd HH:mm:ss.fff</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nCnt <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> totalrows<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        szQuery <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0};</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>else</span>
+                    <span style='color:#0000ff; '>{</span>
+                        szQuery <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0},</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    nCnt<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>totalrows <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>//SrvLogger.ConsoleWriteLine(szQuery);</span>
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlCommand dbCmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>db_Srv<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        dbCmd<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> szQuery<span style='color:#0000ff; '>;</span>
+                        dbCmd<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+                        nRet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> dbCmd<span style='color:#0000ff; '>.</span>ExecuteNonQuery<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+
+                Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> nRet<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

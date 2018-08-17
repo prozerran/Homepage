@@ -1,0 +1,288 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// XmlDocument.cpp: implementation of the CXmlDocument class.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>XmlDocument.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>FileFind.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _DEBUG</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>undef</span><span style='color:#004a43; '> THIS_FILE</span>
+<span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>char</span> THIS_FILE<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>=</span>__FILE__<span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> new DEBUG_NEW</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CXmlDocument Construction/Destruction</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+
+CXmlDocument<span style='color:#0000ff; '>::</span>CXmlDocument<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>HRESULT</span>  hr<span style='color:#0000ff; '>=</span>m_XmlDoc<span style='color:#0000ff; '>.</span>CoCreateInstance<span style='color:#0000ff; '>(</span>CLSID_DOMDocument<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span><span style='color:#008000; '>//CLSID_DOMDocument</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>hr<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>S_OK</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    m_XmlDoc<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>hr<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>REGDB_E_CLASSNOTREG<span style='color:#0000ff; '>)</span>
+      MYTRACE<span style='color:#0000ff; '>(</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>A specified class is not registered in the registration database.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>hr<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>CLASS_E_NOAGGREGATION<span style='color:#0000ff; '>)</span>
+      MYTRACE<span style='color:#0000ff; '>(</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>This class cannot be created as part of an aggregate. </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+CXmlDocument<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CXmlDocument<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_XmlDoc<span style='color:#0000ff; '>.</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlDocument<span style='color:#0000ff; '>::</span>Load<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span> <span style='color:#0000ff; '>&amp;</span> path<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> DEBUG</span>
+  <span style='color:#0000ff; font-weight:bold; '>WIN32_FIND_DATA</span> fd<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>FindFirstFile</span><span style='color:#0000ff; '>(</span>path<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>fd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_WARNING<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Xml File not exist: [</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>]</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+  VARIANT_BOOL bSuccess<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+  CComVariant filePath<span style='color:#0000ff; '>=</span>path<span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FAILED</span><span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>load<span style='color:#0000ff; '>(</span>filePath<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>bSuccess<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> bSuccess<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Load Xml Failed [</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>]</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>filePath<span style='color:#0000ff; '>.</span>bstrVal<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>  
+  m_FilePath<span style='color:#0000ff; '>=</span>path<span style='color:#0000ff; '>;</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Load Xml Okay [</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>]</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>filePath<span style='color:#0000ff; '>.</span>bstrVal<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlDocument<span style='color:#0000ff; '>::</span>Save<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> SaveAs<span style='color:#0000ff; '>(</span>m_FilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlDocument<span style='color:#0000ff; '>::</span>SaveAs<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> <span style='color:#0000ff; '>&amp;</span> path<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  CComVariant filePath<span style='color:#0000ff; '>=</span>path<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>S_OK</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>save<span style='color:#0000ff; '>(</span>filePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    m_FilePath<span style='color:#0000ff; '>=</span>path<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlDocument<span style='color:#0000ff; '>::</span>SelectNode<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> queryString<span style='color:#0000ff; '>,</span>CXmlNode<span style='color:#0000ff; '>*</span> node<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  CComBSTR str<span style='color:#0000ff; '>(</span>queryString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> hr<span style='color:#0000ff; '>=</span>m_XmlDoc<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>selectSingleNode<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>node<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  str<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>S_OK</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> hr<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlDocument<span style='color:#0000ff; '>::</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> queryString<span style='color:#0000ff; '>,</span>CXmlNodeList<span style='color:#0000ff; '>*</span> nodeList<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  CComBSTR str<span style='color:#0000ff; '>(</span>queryString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> hr<span style='color:#0000ff; '>=</span>m_XmlDoc<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>selectNodes<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>nodeList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNodeList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  str<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>S_OK</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> hr<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlDocument<span style='color:#0000ff; '>::</span>CreateAttribute<span style='color:#0000ff; '>(</span>CXmlNode <span style='color:#0000ff; '>*</span>parentNode<span style='color:#0000ff; '>,</span>CXmlNode <span style='color:#0000ff; '>*</span> attrNode<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>CString</span> attrName<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bResult<span style='color:#0000ff; '>;</span>
+  CComPtr<span style='color:#0000ff; '>&lt;</span>IXMLDOMNamedNodeMap<span style='color:#0000ff; '>></span>  xmlNamedNodeMap<span style='color:#0000ff; '>;</span>
+  CComPtr<span style='color:#0000ff; '>&lt;</span>IXMLDOMAttribute<span style='color:#0000ff; '>></span> xmlAttr<span style='color:#0000ff; '>;</span>
+  CComBSTR name<span style='color:#0000ff; '>=</span>attrName<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>S_OK</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>createAttribute<span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>xmlAttr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FAILED</span><span style='color:#0000ff; '>(</span>parentNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>get_attributes<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>xmlNamedNodeMap<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      bResult<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+      bResult<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>S_OK</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>xmlNamedNodeMap<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>setNamedItem<span style='color:#0000ff; '>(</span>xmlAttr<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>attrNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    bResult<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  xmlNamedNodeMap<span style='color:#0000ff; '>.</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  xmlAttr<span style='color:#0000ff; '>.</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  name<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> bResult<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlDocument<span style='color:#0000ff; '>::</span>CreateNode<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> nodeName<span style='color:#0000ff; '>,</span>CXmlNode <span style='color:#0000ff; '>*</span>node<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlDoc<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  CComVariant type<span style='color:#0000ff; '>=</span>NODE_ELEMENT<span style='color:#0000ff; '>;</span>
+  CComBSTR name<span style='color:#0000ff; '>=</span>nodeName<span style='color:#0000ff; '>;</span>
+  CComBSTR uri<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> hr<span style='color:#0000ff; '>=</span>m_XmlDoc<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>createNode<span style='color:#0000ff; '>(</span>type<span style='color:#0000ff; '>,</span>name<span style='color:#0000ff; '>,</span>uri<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>node<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  name<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  uri<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>S_OK</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> hr<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CXmlNode Construction/Destruction</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+CXmlNode<span style='color:#0000ff; '>::</span>CXmlNode<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_XmlNode<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CXmlNode<span style='color:#0000ff; '>::</span>CXmlNode<span style='color:#0000ff; '>(</span>CComPtr<span style='color:#0000ff; '>&lt;</span>IXMLDOMNode<span style='color:#0000ff; '>></span> pXmlNode<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_XmlNode<span style='color:#0000ff; '>=</span>pXmlNode<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CXmlNode<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CXmlNode<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_XmlNode<span style='color:#0000ff; '>.</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlNode<span style='color:#0000ff; '>::</span>SelectNode<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> queryString<span style='color:#0000ff; '>,</span>CXmlNode<span style='color:#0000ff; '>*</span> node<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlNode<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  CComBSTR str<span style='color:#0000ff; '>(</span>queryString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> hr<span style='color:#0000ff; '>=</span>m_XmlNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>selectSingleNode<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>node<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  str<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>S_OK</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> hr<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlNode<span style='color:#0000ff; '>::</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> queryString<span style='color:#0000ff; '>,</span>CXmlNodeList<span style='color:#0000ff; '>*</span> nodeList<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlNode<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  CComBSTR str<span style='color:#0000ff; '>(</span>queryString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> hr<span style='color:#0000ff; '>=</span>m_XmlNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>selectNodes<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>nodeList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNodeList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  str<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>S_OK</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> hr<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CString</span> CXmlNode<span style='color:#0000ff; '>::</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> attrName<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlNode<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  BSTR value<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  CComBSTR str<span style='color:#0000ff; '>(</span>attrName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  CComPtr<span style='color:#0000ff; '>&lt;</span>IXMLDOMNode<span style='color:#0000ff; '>></span> iNode<span style='color:#0000ff; '>;</span>
+  m_XmlNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>selectSingleNode<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>iNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>iNode<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>  
+    iNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>get_text<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  iNode<span style='color:#0000ff; '>.</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  str<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>)</span>value<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CXmlNode<span style='color:#0000ff; '>::</span>SetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> attrName<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>CString</span> attrValue<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlNode<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+  CComBSTR str<span style='color:#0000ff; '>(</span>attrName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  CComPtr<span style='color:#0000ff; '>&lt;</span>IXMLDOMNode<span style='color:#0000ff; '>></span> iNode<span style='color:#0000ff; '>;</span>
+  m_XmlNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>selectSingleNode<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>iNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>iNode<span style='color:#0000ff; '>)</span>
+    iNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>put_text<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>BSTR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPCTSTR</span><span style='color:#0000ff; '>)</span>attrValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  iNode<span style='color:#0000ff; '>.</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  str<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CString</span> CXmlNode<span style='color:#0000ff; '>::</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlNode<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  BSTR value<span style='color:#0000ff; '>;</span>
+  m_XmlNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>get_text<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>)</span>value<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CXmlNode<span style='color:#0000ff; '>::</span>SetValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> value<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_XmlNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>put_text<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>BSTR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPCTSTR</span><span style='color:#0000ff; '>)</span>value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CString</span> CXmlNode<span style='color:#0000ff; '>::</span>GetNodeValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> nodeName<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  CXmlNode node<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>SelectNode<span style='color:#0000ff; '>(</span>nodeName<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>node<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> node<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CXmlNode<span style='color:#0000ff; '>::</span>SetNodeValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> nodeName<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>CString</span> value<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  CXmlNode node<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>SelectNode<span style='color:#0000ff; '>(</span>nodeName<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>node<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    node<span style='color:#0000ff; '>.</span>SetValue<span style='color:#0000ff; '>(</span>value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlNode<span style='color:#0000ff; '>::</span>AppendChild<span style='color:#0000ff; '>(</span>CXmlNode <span style='color:#0000ff; '>*</span> child<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlNode<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  CComPtr<span style='color:#0000ff; '>&lt;</span>IXMLDOMNode<span style='color:#0000ff; '>></span> outNode<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> hr<span style='color:#0000ff; '>=</span>m_XmlNode<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>appendChild<span style='color:#0000ff; '>(</span>child<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNode<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>outNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  outNode<span style='color:#0000ff; '>.</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>S_OK</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>hr<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CXmlNodeList Construction/Destruction</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+CXmlNodeList<span style='color:#0000ff; '>::</span>CXmlNodeList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_XmlNodeList<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CXmlNodeList<span style='color:#0000ff; '>::</span>CXmlNodeList<span style='color:#0000ff; '>(</span>CComPtr<span style='color:#0000ff; '>&lt;</span>IXMLDOMNodeList<span style='color:#0000ff; '>></span> pXmlNodeList<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_XmlNodeList<span style='color:#0000ff; '>=</span>pXmlNodeList<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CXmlNodeList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CXmlNodeList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_XmlNodeList<span style='color:#0000ff; '>.</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>long</span> CXmlNodeList<span style='color:#0000ff; '>::</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlNodeList<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>long</span> len<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  m_XmlNodeList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>get_length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>len<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> len<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CXmlNodeList<span style='color:#0000ff; '>::</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>long</span> i<span style='color:#0000ff; '>,</span>CXmlNode <span style='color:#0000ff; '>*</span> node<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_XmlNodeList<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>S_OK</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>m_XmlNodeList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>get_item<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>node<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_XmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

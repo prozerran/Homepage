@@ -1,0 +1,206 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/11/2005</span>
+<span style='color:#008000; '>// File:    SMTP.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    This is the SMTP class implementation file. This file</span>
+<span style='color:#008000; '>//          implements all necessary variables and funtions to create</span>
+<span style='color:#008000; '>//          an open socket that connects to a remote SMTP Email Server,</span>
+<span style='color:#008000; '>//          and sends a contructed email to the recipient.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//          Currently, this implementation only supports TCP connection</span>
+<span style='color:#008000; '>//          and is only an MUA (Mail User Agent). What's cool about this</span>
+<span style='color:#008000; '>//          class and implementation is it is cross platform independent</span>
+<span style='color:#008000; '>//          and may be compiled on Windows or Unix machines.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Legal:   Copyright (c) Yee Hsu 2005</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>SMTP.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  SMTP()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: SMTP Constructor</span>
+<span style='color:#008000; '>//              Initialize default Email fields</span>
+<span style='color:#008000; '>//              User should overside these variables before sending Email</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+SMTP<span style='color:#0000ff; '>::</span>SMTP<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// initialize default SMTP Server</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SMTP_Server   <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// initialize default Email fields</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>From          <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>postmaster@localhost</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Rcpt          <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>postmaster@localhost</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>To            <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Cc            <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Subject       <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Body          <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// initialize Send Mail Vars</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  ~SMTP()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: SMTP Destructor</span>
+<span style='color:#008000; '>//              Deinitialize all Email fiends</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+SMTP<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>SMTP<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// empty all Email fields</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>From<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Rcpt<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>To<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Cc<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Subject<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Body<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Send(void)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Post:        Email is sent to the SMTP server which will deliver</span>
+<span style='color:#008000; '>//              the email to the recipent(s)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Calls:       Many socket system calls to deliver the email message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     True if email sent successfully, False otherwise</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Send generates the Email packet and sends it to the</span>
+<span style='color:#008000; '>//              recipient. The packet is created by first opening a</span>
+<span style='color:#008000; '>//              socket and connecting to the destination SMTP server,</span>
+<span style='color:#008000; '>//              the email packet is created and finally sent off to</span>
+<span style='color:#008000; '>//              the recipient. This is an email sent via TCP stream</span>
+<span style='color:#008000; '>//              and currently is only an MUA.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> SMTP<span style='color:#0000ff; '>::</span>Send<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>SOCKET</span> sd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>struct</span> sockaddr_in sock<span style='color:#0000ff; '>,</span> sockName<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>hostent</span> <span style='color:#0000ff; '>*</span>pHost<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// initialize Window Socket DLL</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WinInit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// translate domain name to ip address</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>pHost <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>gethostbyname</span><span style='color:#0000ff; '>(</span>SMTP_Server<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: gethostbyname()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// setup server socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>sock<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>sock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    sock<span style='color:#0000ff; '>.</span>sin_family <span style='color:#0000ff; '>=</span> AF_INET<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>sock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>,</span> pHost<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>h_addr_list<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> pHost<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>h_length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    sock<span style='color:#0000ff; '>.</span>sin_port <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>htons</span><span style='color:#0000ff; '>(</span>SMTP_PORT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// setup local socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>sockName<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>sockName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    sockName<span style='color:#0000ff; '>.</span>sin_family <span style='color:#0000ff; '>=</span> AF_INET<span style='color:#0000ff; '>;</span>
+    sockName<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>.</span>s_addr <span style='color:#0000ff; '>=</span> INADDR_ANY<span style='color:#0000ff; '>;</span>
+    sockName<span style='color:#0000ff; '>.</span>sin_port <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>htons</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// Create a Socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>sd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>socket</span><span style='color:#0000ff; '>(</span>PF_INET<span style='color:#0000ff; '>,</span> SOCK_STREAM<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: socket()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// Bind to Socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>bind</span><span style='color:#0000ff; '>(</span>sd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>sockName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>sockName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: bind()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// Make TCP Connection to Socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>connect</span><span style='color:#0000ff; '>(</span>sd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>sock<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>sock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: connect()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// Contruct the Email Message according to SMTP Protocol</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet<span style='color:#0000ff; '>.</span>erase<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// Contruct Email Source and Recipient address</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>MAIL FROM:&lt;</span><span style='color:#0000e6; '>"</span>   <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>From    <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>></span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>RCPT TO:&lt;</span><span style='color:#0000e6; '>"</span>     <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Rcpt    <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>></span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// Contruct Email Subject and Body</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DATA</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>From: </span><span style='color:#0000e6; '>"</span>        <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>From    <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>To: </span><span style='color:#0000e6; '>"</span>          <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>To      <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Cc: </span><span style='color:#0000e6; '>"</span>          <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Cc      <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Subject: </span><span style='color:#0000e6; '>"</span>     <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Subject <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span>              <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Body    <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// Tag Email termination seqeunce</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>.</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>QUIT</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// Finally, Send the Email</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>send</span><span style='color:#0000ff; '>(</span>sd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Packet<span style='color:#0000ff; '>.</span>length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: send()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// Close all open sockets and release Window Socket DLL</span>
+    close<span style='color:#0000ff; '>(</span>sd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WinTerm<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  WinInit(void)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: A must to init for Window Socket.</span>
+<span style='color:#008000; '>//              This should be called at the beginning of every</span>
+<span style='color:#008000; '>//              program when using Window Sockets. This function opens</span>
+<span style='color:#008000; '>//              and utilizes an WinSock DLL.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> SMTP<span style='color:#0000ff; '>::</span>WinInit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _WIN32</span>
+    <span style='color:#0000ff; font-weight:bold; '>WORD</span> wVersionRequested<span style='color:#0000ff; '>;</span>
+    WSADATA wsaData<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> err <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    wVersionRequested <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>MAKEWORD</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    err <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>WSAStartup</span><span style='color:#0000ff; '>(</span>wVersionRequested<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>wsaData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: unable to initialize WinSock DLL</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  WinTerm(void)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: A must to term for Window Socket.</span>
+<span style='color:#008000; '>//              This should be called at the end of every</span>
+<span style='color:#008000; '>//              program when using Window Sockets.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> SMTP<span style='color:#0000ff; '>::</span>WinTerm<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _WIN32</span>
+    <span style='color:#0000ff; font-weight:bold; '>WSACleanup</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

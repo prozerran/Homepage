@@ -1,0 +1,141 @@
+<pre style='color:#000000;background:#f1f0f0;'># Author<span style='color:#806030; '>:</span>       Yee Hsu
+# Filename<span style='color:#806030; '>:</span>     <span style='color:#e60000; '>"project2.s"</span>
+# Date<span style='color:#806030; '>:</span>         <span style='color:#c00000; '>3</span><span style='color:#806030; '>/</span><span style='color:#c00000; '>22</span><span style='color:#806030; '>/</span><span style='color:#c00000; '>98</span>
+
+# Description<span style='color:#806030; '>:</span>  <span style='color:#bb7977; font-weight:bold; '>SAL</span><span style='color:#806030; '>/</span>MAL program calculates sum of exponents giving by the
+#               arrays of base numbers<span style='color:#806030; '>,</span> powers<span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>and</span> number of terms 
+#               entered by the user. Program contains nested funtion where
+#               it calls sum_pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> sum_pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> calls function pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>.
+
+                <span style='color:#004a43; '>.data</span>
+#initialization
+<span style='color:#e34adc; '>num_arr:</span>        .<span style='color:#400000; font-weight:bold; '>word</span>   <span style='color:#c00000; '>0</span>               # number of arrays
+<span style='color:#e34adc; '>num_terms:</span>      .<span style='color:#400000; font-weight:bold; '>word</span>   <span style='color:#c00000; '>0</span>               # number of terms
+<span style='color:#e34adc; '>power:</span>          .<span style='color:#400000; font-weight:bold; '>word</span>   <span style='color:#c00000; '>0</span>               # power to be raised
+<span style='color:#e34adc; '>sum:</span>            .<span style='color:#400000; font-weight:bold; '>word</span>   <span style='color:#c00000; '>0</span>               # sum of powers
+<span style='color:#e34adc; '>i:</span>              .<span style='color:#400000; font-weight:bold; '>word</span>   <span style='color:#c00000; '>0</span>               # counter
+
+<span style='color:#e34adc; '>x:</span>              .<span style='color:#400000; font-weight:bold; '>word</span>   <span style='color:#c00000; '>0</span><span style='color:#806030; '>:</span><span style='color:#c00000; '>100</span>           # <span style='color:#400000; font-weight:bold; '>int</span> x<span style='color:#806030; '>[</span><span style='color:#c00000; '>100</span><span style='color:#806030; '>]</span> <span style='color:#806030; '>=</span> <span style='color:#806030; '>{</span><span style='color:#c00000; '>0</span><span style='color:#806030; '>}</span><span style='color:#c34e00; '>;</span>
+<span style='color:#e34adc; '>ptr_x:</span>          .<span style='color:#400000; font-weight:bold; '>word</span>   <span style='color:#c00000; '>0</span>               # <span style='color:#400000; font-weight:bold; '>int</span> <span style='color:#806030; '>*</span>ptr_x <span style='color:#806030; '>=</span> &amp;x<span style='color:#c34e00; '>;</span>
+
+# cout prompts <span style='color:#004a43; '>for</span> inputs
+<span style='color:#e34adc; '>prompt1:</span>        .asciiz <span style='color:#e60000; '>"Please enter number of items in array (&lt; 100):"</span>
+<span style='color:#e34adc; '>prompt2:</span>        .asciiz <span style='color:#e60000; '>"Enter array items:\n"</span>
+<span style='color:#e34adc; '>prompt3:</span>        .asciiz <span style='color:#e60000; '>"Please enter a non-negative power (-1 to quit):"</span>
+<span style='color:#e34adc; '>prompt4:</span>        .asciiz <span style='color:#e60000; '>"Please enter the number of terms to sum:"</span>
+
+# cout outputs to the screen
+<span style='color:#e34adc; '>output1:</span>        .asciiz <span style='color:#e60000; '>"Sum of "</span>
+<span style='color:#e34adc; '>output2:</span>        .asciiz <span style='color:#e60000; '>" array items to the power "</span>
+<span style='color:#e34adc; '>output3:</span>        .asciiz <span style='color:#e60000; '>" = "</span>
+<span style='color:#e34adc; '>output4:</span>        .asciiz <span style='color:#e60000; '>"\n\n"</span>
+
+                .text
+<span style='color:#e34adc; '>__start:</span>                                # main<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>{</span>
+        puts    prompt1                 # cout statement prompt <span style='color:#c00000; '>1</span>
+        get     num_arr                 # cin<span style='color:#806030; '>></span><span style='color:#806030; '>></span>num_arr<span style='color:#c34e00; '>;</span>
+
+        puts    prompt2                 # cout statement prompt <span style='color:#c00000; '>2</span>
+        la      ptr_x<span style='color:#806030; '>,</span> x                # ptr_x <span style='color:#806030; '>=</span> &amp;x<span style='color:#c34e00; '>;</span>
+
+<span style='color:#e34adc; '>for1:</span>   get     M<span style='color:#806030; '>[</span>ptr_x<span style='color:#806030; '>]</span>                # <span style='color:#004a43; '>for</span> <span style='color:#806030; '>(</span>i <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#c34e00; '>; i &lt; num_arr, i++) {</span>
+        <span style='color:#400000; font-weight:bold; '>add</span>     ptr_x<span style='color:#806030; '>,</span> ptr_x<span style='color:#806030; '>,</span> <span style='color:#c00000; '>4</span>         #       cin<span style='color:#806030; '>&lt;</span><span style='color:#806030; '>&lt;</span>x<span style='color:#806030; '>[</span>i<span style='color:#806030; '>]</span><span style='color:#c34e00; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>add</span>     i<span style='color:#806030; '>,</span> i<span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span>                 #       ptr_x<span style='color:#806030; '>+</span><span style='color:#806030; '>+</span><span style='color:#c34e00; '>;</span>
+        blt     i<span style='color:#806030; '>,</span> num_arr<span style='color:#806030; '>,</span> for1        # <span style='color:#806030; '>}</span>
+
+        puts    prompt3                 # cout statement prompt <span style='color:#c00000; '>3</span>
+        get     power                   # cin<span style='color:#806030; '>></span><span style='color:#806030; '>></span>power<span style='color:#c34e00; '>;</span>
+
+        beq     power<span style='color:#806030; '>,</span> <span style='color:#c00000; '>-1</span><span style='color:#806030; '>,</span> <span style='color:#004a43; '>end</span>          # <span style='color:#004a43; '>if</span> <span style='color:#806030; '>(</span>power <span style='color:#806030; '>=</span><span style='color:#806030; '>=</span> <span style='color:#c00000; '>-1</span><span style='color:#806030; '>)</span> then <span style='color:#004a43; '>goto</span> <span style='color:#004a43; '>end</span>
+<span style='color:#e34adc; '>while:</span>  puts    prompt4                 # <span style='color:#004a43; '>while</span> <span style='color:#806030; '>(</span>power <span style='color:#806030; '>!</span><span style='color:#806030; '>=</span> <span style='color:#c00000; '>-1</span><span style='color:#806030; '>)</span>
+        get     num_terms               # <span style='color:#806030; '>{</span>
+                                        #       cout statement prompt <span style='color:#c00000; '>4</span>
+        la      ptr_x<span style='color:#806030; '>,</span> x                #       cin<span style='color:#806030; '>></span><span style='color:#806030; '>></span>num_terms<span style='color:#c34e00; '>;</span>
+        lw      $a0<span style='color:#806030; '>,</span> ptr_x              #       ptr_x <span style='color:#806030; '>=</span> &amp;x<span style='color:#c34e00; '>;</span>
+        lw      $a1<span style='color:#806030; '>,</span> power
+        lw      $a2<span style='color:#806030; '>,</span> num_terms
+        jal     <span style='color:#e34adc; '>sum_pow</span>                 #       sum <span style='color:#806030; '>=</span> sum_pow<span style='color:#806030; '>(</span>x<span style='color:#806030; '>,</span> power<span style='color:#806030; '>,</span>
+        sw      $v0<span style='color:#806030; '>,</span> sum                #                    num_terms<span style='color:#806030; '>)</span><span style='color:#c34e00; '>;</span>
+
+        puts    output1                 #       cout statement output <span style='color:#c00000; '>1</span>
+        put     num_terms               #       cout<span style='color:#806030; '>&lt;</span><span style='color:#806030; '>&lt;</span>num_terms<span style='color:#c34e00; '>;</span>
+        puts    output2                 #       cout statement output <span style='color:#c00000; '>2</span>
+        put     power                   #       cout<span style='color:#806030; '>&lt;</span><span style='color:#806030; '>&lt;</span>power<span style='color:#c34e00; '>;</span>
+        puts    output3                 #       cout statement output <span style='color:#c00000; '>3</span>
+        put     sum                     #       cout<span style='color:#806030; '>&lt;</span><span style='color:#806030; '>&lt;</span>sum<span style='color:#c34e00; '>;</span>
+        puts    output4                 #       cout statement output <span style='color:#c00000; '>4</span>
+        puts    prompt3                 #       cout statement prompt <span style='color:#c00000; '>3</span>
+        get     power                   #       cin<span style='color:#806030; '>></span><span style='color:#806030; '>></span>power<span style='color:#c34e00; '>;</span>
+        bne     power<span style='color:#806030; '>,</span> <span style='color:#c00000; '>-1</span><span style='color:#806030; '>,</span> <span style='color:#004a43; '>while</span>        # <span style='color:#806030; '>}</span> <span style='color:#806030; '>/</span><span style='color:#806030; '>/</span><span style='color:#004a43; '>end</span> <span style='color:#004a43; '>while</span>
+<span style='color:#e34adc; '>end:</span>    done                            # <span style='color:#806030; '>}</span> <span style='color:#806030; '>/</span><span style='color:#806030; '>/</span><span style='color:#004a43; '>end</span> main<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+
+# Function <span style='color:#004a43; '>name</span><span style='color:#806030; '>:</span> sum_pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+# sum_pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> takes three arguments<span style='color:#806030; '>,</span> x<span style='color:#806030; '>,</span> power<span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>and</span> num_terms. The address of
+# x is stored <span style='color:#400000; font-weight:bold; '>in</span> arg0 <span style='color:#400000; font-weight:bold; '>and</span> incremented by <span style='color:#c00000; '>4</span>. sum_pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> calls function pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+# passing argument <span style='color:#806030; '>*</span>arg0 <span style='color:#400000; font-weight:bold; '>and</span> power. Result is return when <span style='color:#004a43; '>for</span> <span style='color:#400000; font-weight:bold; '>loop</span> <span style='color:#e34adc; '>is</span> no
+# longer <span style='color:#004a43; '>true</span> when counter is equal to num_terms.
+
+#       Arguments
+#       $a0     arg0    ptr_x
+#       $a1     arg1    power
+#       $a2     arg2    num_terms
+
+#       <span style='color:#004a43; '>Local</span> Variables
+#       $s0     i       <span style='color:#400000; font-weight:bold; '>loop</span> <span style='color:#e34adc; '>counter</span>
+#       $s1     arg0    incrementation of ptr_x
+#       $v0     result  result used to return back to main<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+#       $v1             returned result from function pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+
+# <span style='color:#400000; font-weight:bold; '>int</span> sum_pow<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>int</span> <span style='color:#806030; '>*</span>arg0<span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>int</span> arg1<span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>int</span> arg2<span style='color:#806030; '>)</span>
+<span style='color:#e34adc; '>sum_pow:</span>
+        sw      <span style='color:#c00000; '>$31</span><span style='color:#806030; '>,</span> <span style='color:#806030; '>(</span>$<span style='color:#000080; '>sp</span><span style='color:#806030; '>)</span>              # <span style='color:#400000; font-weight:bold; '>push</span> <span style='color:#c00000; '>$31</span> on <span style='color:#004a43; '>stack</span>
+        sw      $s0<span style='color:#806030; '>,</span> <span style='color:#c00000; '>-4</span><span style='color:#806030; '>(</span>$<span style='color:#000080; '>sp</span><span style='color:#806030; '>)</span>            # <span style='color:#400000; font-weight:bold; '>push</span> $s0 on <span style='color:#004a43; '>stack</span>
+        sw      $s1<span style='color:#806030; '>,</span> <span style='color:#c00000; '>-8</span><span style='color:#806030; '>(</span>$<span style='color:#000080; '>sp</span><span style='color:#806030; '>)</span>            # <span style='color:#400000; font-weight:bold; '>push</span> $s1 on <span style='color:#004a43; '>stack</span>
+        <span style='color:#400000; font-weight:bold; '>add</span>     $<span style='color:#000080; '>sp</span><span style='color:#806030; '>,</span> $<span style='color:#000080; '>sp</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>-12</span>           # update <span style='color:#004a43; '>stack</span> pointer
+
+        li      $s0<span style='color:#806030; '>,</span> <span style='color:#c00000; '>0</span>                  # <span style='color:#400000; font-weight:bold; '>int</span> i <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#c34e00; '>;</span>
+        li      $v0<span style='color:#806030; '>,</span> <span style='color:#c00000; '>0</span>                  # <span style='color:#400000; font-weight:bold; '>int</span> result <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#c34e00; '>;</span>
+        move    $s1<span style='color:#806030; '>,</span> $a0                # arg0 <span style='color:#806030; '>=</span> arg0<span style='color:#c34e00; '>;</span>
+
+<span style='color:#e34adc; '>for2:</span>   lw      $a0<span style='color:#806030; '>,</span> <span style='color:#806030; '>(</span>$s1<span style='color:#806030; '>)</span>              # <span style='color:#004a43; '>for</span> <span style='color:#806030; '>(</span>i <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span> i <span style='color:#806030; '>&lt;</span> arg2<span style='color:#806030; '>,</span> i<span style='color:#806030; '>+</span><span style='color:#806030; '>+</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>{</span>
+        jal     <span style='color:#e34adc; '>pow</span>                     #       temp <span style='color:#806030; '>=</span> <span style='color:#806030; '>*</span>arg0<span style='color:#c34e00; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>add</span>     $v0<span style='color:#806030; '>,</span> $v0<span style='color:#806030; '>,</span> $v1           #       result <span style='color:#806030; '>+</span><span style='color:#806030; '>=</span> pow<span style='color:#806030; '>(</span>temp<span style='color:#806030; '>,</span> arg1<span style='color:#806030; '>)</span><span style='color:#c34e00; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>add</span>     $s1<span style='color:#806030; '>,</span> $s1<span style='color:#806030; '>,</span> <span style='color:#c00000; '>4</span>             #       arg0<span style='color:#806030; '>+</span><span style='color:#806030; '>+</span><span style='color:#c34e00; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>add</span>     $s0<span style='color:#806030; '>,</span> $s0<span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span>             # <span style='color:#806030; '>}</span>
+        blt     $s0<span style='color:#806030; '>,</span> $a2<span style='color:#806030; '>,</span> for2
+
+        <span style='color:#400000; font-weight:bold; '>add</span>     $<span style='color:#000080; '>sp</span><span style='color:#806030; '>,</span> $<span style='color:#000080; '>sp</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>12</span>            # update <span style='color:#004a43; '>stack</span> pointer
+        lw      $s1<span style='color:#806030; '>,</span> <span style='color:#c00000; '>-8</span><span style='color:#806030; '>(</span>$<span style='color:#000080; '>sp</span><span style='color:#806030; '>)</span>            # <span style='color:#400000; font-weight:bold; '>pop</span> $s1 from <span style='color:#004a43; '>stack</span>
+        lw      $s0<span style='color:#806030; '>,</span> <span style='color:#c00000; '>-4</span><span style='color:#806030; '>(</span>$<span style='color:#000080; '>sp</span><span style='color:#806030; '>)</span>            # <span style='color:#400000; font-weight:bold; '>pop</span> $s0 from <span style='color:#004a43; '>stack</span>
+        lw      <span style='color:#c00000; '>$31</span><span style='color:#806030; '>,</span> <span style='color:#806030; '>(</span>$<span style='color:#000080; '>sp</span><span style='color:#806030; '>)</span>              # <span style='color:#400000; font-weight:bold; '>pop</span> <span style='color:#c00000; '>$31</span> from <span style='color:#004a43; '>stack</span>
+        jr      <span style='color:#c00000; '>$31</span>                     # return result<span style='color:#c34e00; '>;</span>
+
+# Funtion <span style='color:#004a43; '>name</span><span style='color:#806030; '>:</span> pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+# pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> accepts two arguments from function sum_pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> arg0 <span style='color:#400000; font-weight:bold; '>and</span> arg1.
+# pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> calculates arg0 raised to the power of arg1. pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>returns</span> result
+# when <span style='color:#004a43; '>for</span> <span style='color:#400000; font-weight:bold; '>loop</span> <span style='color:#e34adc; '>is</span> no longer <span style='color:#004a43; '>true</span> when counter is equal to arg1.
+
+#       Arguments
+#       $a0     arg0    temp
+#       $a1     arg1    power
+
+#       <span style='color:#004a43; '>Local</span> Variables
+#       $s0     i       <span style='color:#400000; font-weight:bold; '>loop</span> <span style='color:#e34adc; '>counter</span>
+#       $v1     result  result used to return back to sum_pow<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+
+# <span style='color:#400000; font-weight:bold; '>int</span> pow<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>int</span> arg0<span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>int</span> arg1<span style='color:#806030; '>)</span>
+<span style='color:#e34adc; '>pow:</span>
+        <span style='color:#400000; font-weight:bold; '>add</span>     $<span style='color:#000080; '>sp</span><span style='color:#806030; '>,</span> $<span style='color:#000080; '>sp</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>-4</span>            # update <span style='color:#004a43; '>stack</span> pointer
+        sw      $s0<span style='color:#806030; '>,</span> <span style='color:#c00000; '>4</span><span style='color:#806030; '>(</span>$<span style='color:#000080; '>sp</span><span style='color:#806030; '>)</span>             # <span style='color:#400000; font-weight:bold; '>push</span> $s0 on <span style='color:#004a43; '>stack</span>
+
+        li      $s0<span style='color:#806030; '>,</span> <span style='color:#c00000; '>0</span>                  # <span style='color:#400000; font-weight:bold; '>int</span> i <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#c34e00; '>;</span>
+        li      $v1<span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span>                  # <span style='color:#400000; font-weight:bold; '>int</span> result <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#c34e00; '>;</span>
+
+<span style='color:#e34adc; '>for3:</span>   <span style='color:#400000; font-weight:bold; '>mul</span>     $v1<span style='color:#806030; '>,</span> $v1<span style='color:#806030; '>,</span> $a0           # <span style='color:#004a43; '>for</span> <span style='color:#806030; '>(</span>i <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#c34e00; '>; i &lt; arg1; i++) {</span>
+        <span style='color:#400000; font-weight:bold; '>add</span>     $s0<span style='color:#806030; '>,</span> $s0<span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span>             #       result <span style='color:#806030; '>*</span><span style='color:#806030; '>=</span> arg0<span style='color:#c34e00; '>;</span>
+        blt     $s0<span style='color:#806030; '>,</span> $a1<span style='color:#806030; '>,</span> for3          # <span style='color:#806030; '>}</span>
+
+        <span style='color:#400000; font-weight:bold; '>add</span>     $<span style='color:#000080; '>sp</span><span style='color:#806030; '>,</span> $<span style='color:#000080; '>sp</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>4</span>             # update <span style='color:#004a43; '>stack</span> pointer
+        lw      $s0<span style='color:#806030; '>,</span> <span style='color:#806030; '>(</span>$<span style='color:#000080; '>sp</span><span style='color:#806030; '>)</span>              # <span style='color:#400000; font-weight:bold; '>pop</span> $s0 from <span style='color:#004a43; '>stack</span>
+        jr      <span style='color:#c00000; '>$31</span>                     # return result<span style='color:#c34e00; '>;</span>
+</pre>

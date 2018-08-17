@@ -1,0 +1,319 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>/* ================================================================ */</span>
+<span style='color:#008000; '>/* Copyright (c) 2003 Yee Hsu.                                      */</span>
+<span style='color:#008000; '>/*                                                                  */</span>
+<span style='color:#008000; '>/* @ cgi.cpp                                                        */</span>
+<span style='color:#008000; '>/* @ 05-28-03                                                       */</span>
+<span style='color:#008000; '>/*                                                                  */</span>
+<span style='color:#008000; '>/* class CGI implementation file -                                  */</span>
+<span style='color:#008000; '>/*      This class implements the CGI engine that will serve as     */</span>
+<span style='color:#008000; '>/*      the bridge to connect the underlying data structure to      */</span>
+<span style='color:#008000; '>/*      the web (www). All queries will be supplied by the form     */</span>
+<span style='color:#008000; '>/*      input from the HTTP request and passed into this engine     */</span>
+<span style='color:#008000; '>/*      to search for the inventory record stored in the data list. */</span>
+<span style='color:#008000; '>/*      The information is then passwd by up to the HTML generator  */</span>
+<span style='color:#008000; '>/*      for GUI display to the user.                                */</span>
+<span style='color:#008000; '>/*                                                                  */</span>
+<span style='color:#008000; '>/* Member Functions/Variables -                                     */</span>
+<span style='color:#008000; '>/*      CGI();                                                      */</span>
+<span style='color:#008000; '>/*      ~CGI();                                                     */</span>
+<span style='color:#008000; '>/*      pcgi getcgivars(void);                                      */</span>
+<span style='color:#008000; '>/*      cgiv getcgivalue(const char*);                              */</span>
+<span style='color:#008000; '>/*      char x2c(char*);                                            */</span>
+<span style='color:#008000; '>/*      void unescape_url(char*);                                   */</span>
+<span style='color:#008000; '>/*      void process_cgivars(void);                                 */</span>
+<span style='color:#008000; '>/*                                                                  */</span>
+<span style='color:#008000; '>/*      pcgi cgivars;                                               */</span>
+<span style='color:#008000; '>/* ================================================================ */</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>invent.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ====================================================================</span>
+<span style='color:#008000; '>// CGI constructor</span>
+<span style='color:#008000; '>// ====================================================================</span>
+
+CGI<span style='color:#0000ff; '>::</span>CGI<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>cgivars <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>process_cgivars<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ====================================================================</span>
+<span style='color:#008000; '>// CGI destructor</span>
+<span style='color:#008000; '>// ====================================================================</span>
+
+CGI<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CGI<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/** Free anything that needs to be freed **/</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>free</span><span style='color:#0000ff; '>(</span>cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>free</span><span style='color:#0000ff; '>(</span>cgivars<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+    cgivars <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ====================================================================</span>
+<span style='color:#008000; '>// Identifier:  pcgi CGI::getcgivars(void)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Returns the CGI key-value pair...</span>
+<span style='color:#008000; '>//              cgivar[0] = key[0]      cgivar[1] = value[0]</span>
+<span style='color:#008000; '>//              cgivar[2] = key[1]      cgivar[3] = value[1]</span>
+<span style='color:#008000; '>//              cgivar[4] = key[2]      cgivar[5] = value[2]</span>
+<span style='color:#008000; '>//              ...                     ...</span>
+<span style='color:#008000; '>//              cgivar[i] = NULL</span>
+<span style='color:#008000; '>// ====================================================================</span>
+
+pcgi CGI<span style='color:#0000ff; '>::</span>getcgivars<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>cgivars<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ====================================================================</span>
+<span style='color:#008000; '>// Identifier:  cgiv CGI::getcgivalue(const char* cgivar_key)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameters:  char* cgivar_key    - the first pair (name) of CGI</span>
+<span style='color:#008000; '>//                                    name-value pair</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     cgi variable base on given key</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Searches the cgi variable table base on the given key</span>
+<span style='color:#008000; '>//              and returns the value associated to it</span>
+<span style='color:#008000; '>// ====================================================================</span>
+
+cgiv CGI<span style='color:#0000ff; '>::</span>getcgivalue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> cgivar_key<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>strcasecmp<span style='color:#0000ff; '>(</span>cgivar_key<span style='color:#0000ff; '>,</span> cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ====================================================================</span>
+<span style='color:#008000; '>// Identifier:  char CGI::x2c(char *what)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameters:  char* what      - the hexidecimal representation of</span>
+<span style='color:#008000; '>//                                the character</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     digit - the character represented by the hex(what)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Converts the 2-character hexidecimal character into the</span>
+<span style='color:#008000; '>//              character it represents and return it</span>
+<span style='color:#008000; '>// ====================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>char</span> CGI<span style='color:#0000ff; '>::</span>x2c<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>what<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+   <span style='color:#0000ff; font-weight:bold; '>register</span> <span style='color:#0000ff; font-weight:bold; '>char</span> digit<span style='color:#0000ff; '>;</span>
+
+   digit <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>what<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'A'</span> <span style='color:#0000ff; '>?</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>what<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>&amp;</span> <span style='color:#800000; '>0xdf</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> <span style='color:#000080; '>'A'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>+</span><span style='color:#800000; '>10</span> <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; '>(</span>what<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>-</span> <span style='color:#000080; '>'0'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   digit <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>16</span><span style='color:#0000ff; '>;</span>
+   digit <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>what<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'A'</span> <span style='color:#0000ff; '>?</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>what<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>&amp;</span> <span style='color:#800000; '>0xdf</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> <span style='color:#000080; '>'A'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>+</span><span style='color:#800000; '>10</span> <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; '>(</span>what<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>-</span> <span style='color:#000080; '>'0'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>(</span>digit<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ====================================================================</span>
+<span style='color:#008000; '>// Identifier:  void CGI::unescape_url(char *url)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameters:  char* url       - the QUERY_STRING remaining part of</span>
+<span style='color:#008000; '>//                                the URL to be unescaped.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Reduce any %xx escape sequences to the characters</span>
+<span style='color:#008000; '>//              they represent.</span>
+<span style='color:#008000; '>// ====================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CGI<span style='color:#0000ff; '>::</span>unescape_url<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>url<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>register</span> <span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>,</span>j<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span><span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>j<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> url<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>i<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>j<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>url<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> url<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'%'</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            url<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> x2c<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>url<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    url<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ====================================================================</span>
+<span style='color:#008000; '>// Identifier:  void CGI::process_cgivars()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Post:        the member variable cgivars is created and contains</span>
+<span style='color:#008000; '>//              all the name-value paris from the CGI input</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: The CGI engine. This module looks through the</span>
+<span style='color:#008000; '>//              environment table and searches for the QUERY_STRING</span>
+<span style='color:#008000; '>//              string and parse it's structure into tokenized</span>
+<span style='color:#008000; '>//              cgivar paris. Method of input is either an</span>
+<span style='color:#008000; '>//              HTTP GET or POST request</span>
+<span style='color:#008000; '>// ====================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CGI<span style='color:#0000ff; '>::</span>process_cgivars<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>register</span> <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> content_length<span style='color:#0000ff; '>,</span> paircount<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>request_method<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>*</span>cgiinput<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>*</span>nvpair<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>*</span>eqpos<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span>pairlist<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>/** Depending on the request method, read all CGI input into cgiinput. **/</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>request_method <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>getenv</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REQUEST_METHOD</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>/* DEVELOPMENT ONLY - perform any final task for production         */</span>
+        <span style='color:#008000; '>/* remove the next function during the final development phase      */</span>
+        <span style='color:#008000; '>/* it is only here to execute BEFORE testing on the browser         */</span>
+        epilogue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>/* REUEST_METHOD environment variable not found, meaning this was   */</span>
+        <span style='color:#008000; '>/* executed on command prompt.                                      */</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: please execute CGI on browser.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>strcmp</span><span style='color:#0000ff; '>(</span>request_method<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GET</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>strcmp</span><span style='color:#0000ff; '>(</span>request_method<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HEAD</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>/* Some servers apparently don't provide QUERY_STRING if it's empty, */</span>
+        <span style='color:#008000; '>/*   so avoid strdup()'ing a NULL pointer here.                      */</span>
+        <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>qs <span style='color:#0000ff; '>;</span>
+        qs <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>getenv</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>QUERY_STRING</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        cgiinput <span style='color:#0000ff; '>=</span> strdup<span style='color:#0000ff; '>(</span>qs  <span style='color:#0000ff; '>?</span> qs  <span style='color:#0000ff; '>:</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>strcmp</span><span style='color:#0000ff; '>(</span>request_method<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>POST</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>/* strcasecmp() is not supported in Windows-- use strcmpi() instead */</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> strcasecmp<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>getenv</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>CONTENT_TYPE</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>application/x-www-form-urlencoded</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Content-Type: text/plain</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>getcgivars(): Unsupported Content-Type.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>(</span>content_length <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>getenv</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>CONTENT_LENGTH</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Content-Type: text/plain</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>getcgivars(): No Content-Length was sent with the POST request.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>(</span>cgiinput<span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>malloc</span><span style='color:#0000ff; '>(</span>content_length<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Content-Type: text/plain</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>getcgivars(): Couldn't malloc for cgiinput.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>fread</span><span style='color:#0000ff; '>(</span>cgiinput<span style='color:#0000ff; '>,</span> content_length<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>stdin</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Content-Type: text/plain</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>getcgivars(): Couldn't read CGI input from STDIN.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        cgiinput<span style='color:#0000ff; '>[</span>content_length<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span> <span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Content-Type: text/plain</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>getcgivars(): Unsupported REQUEST_METHOD.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>/** Change all plusses back to spaces. **/</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> cgiinput<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>cgiinput<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'+'</span><span style='color:#0000ff; '>)</span> cgiinput<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>' '</span> <span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>/** First, split on "&amp;" and ";" to extract the name-value pairs into **/</span>
+    <span style='color:#008000; '>/**   pairlist.                                                      **/</span>
+    pairlist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>malloc</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>256</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+    paircount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>;</span>
+    nvpair <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strtok</span><span style='color:#0000ff; '>(</span>cgiinput<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>&amp;;</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>nvpair<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        pairlist<span style='color:#0000ff; '>[</span>paircount<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> strdup<span style='color:#0000ff; '>(</span>nvpair<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>(</span>paircount<span style='color:#0000ff; '>%</span><span style='color:#800000; '>256</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            pairlist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>realloc</span><span style='color:#0000ff; '>(</span>pairlist<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>(</span>paircount<span style='color:#0000ff; '>+</span><span style='color:#800000; '>256</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        nvpair <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strtok</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>&amp;;</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    pairlist<span style='color:#0000ff; '>[</span>paircount<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>/* terminate the list with NULL */</span>
+
+    <span style='color:#008000; '>/** Then, from the list of pairs, extract the names and values. **/</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>cgivars <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>malloc</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>paircount<span style='color:#0000ff; '>*</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> paircount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>eqpos<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>strchr</span><span style='color:#0000ff; '>(</span>pairlist<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'='</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; '>*</span>eqpos <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span> <span style='color:#0000ff; '>;</span>
+            unescape_url<span style='color:#0000ff; '>(</span>cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>*</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> strdup<span style='color:#0000ff; '>(</span>eqpos<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; '>{</span>
+            unescape_url<span style='color:#0000ff; '>(</span>cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>*</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> strdup<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        unescape_url<span style='color:#0000ff; '>(</span>cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>*</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> strdup<span style='color:#0000ff; '>(</span>pairlist<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    cgivars<span style='color:#0000ff; '>[</span>paircount<span style='color:#0000ff; '>*</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>;</span>   <span style='color:#008000; '>/* terminate the list with NULL */</span>
+    
+    <span style='color:#008000; '>/** Free anything that needs to be freed. **/</span>
+    <span style='color:#0000ff; font-weight:bold; '>free</span><span style='color:#0000ff; '>(</span>cgiinput<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> pairlist<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>free</span><span style='color:#0000ff; '>(</span>pairlist<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>free</span><span style='color:#0000ff; '>(</span>pairlist<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ====================================================================</span>
+<span style='color:#008000; '>// Identifier:  void CGI::ParseInputForBadData(void) const</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: This module acts as a secondary security subroutine</span>
+<span style='color:#008000; '>//              behind the firewall. It parses the input supplied</span>
+<span style='color:#008000; '>//              by the user to search for any possible hacker's</span>
+<span style='color:#008000; '>//              code. If there are any anomolies within the input,</span>
+<span style='color:#008000; '>//              the query is dropped and is considered to be</span>
+<span style='color:#008000; '>//              tampering by an intruder looking for possible</span>
+<span style='color:#008000; '>//              vulnerabilities in the system for any opportunity</span>
+<span style='color:#008000; '>//              of security breach.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//              If the event that the input string is considered bad,</span>
+<span style='color:#008000; '>//              the session is logged for further analysis.</span>
+<span style='color:#008000; '>// ====================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CGI<span style='color:#0000ff; '>::</span>ParseInputForBadData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/*  Table Symbol to filter out in cgivar input buffer           */</span>
+    <span style='color:#008000; '>/*  SYMBOL      FILTER CHARACTER        REASON                  */</span>
+    <span style='color:#008000; '>/*  ==========================================================  */</span>
+    <span style='color:#008000; '>/*  `           backquote               beg/end comannd         */</span>
+    <span style='color:#008000; '>/*  ~           tilde                   enter ambigious dir     */</span>
+    <span style='color:#008000; '>/*  !           exclamation mark        not                     */</span>
+    <span style='color:#008000; '>/*  @           at                      email                   */</span>
+    <span style='color:#008000; '>/*  #           pound                   script header           */</span>
+    <span style='color:#008000; '>/*  $           dollar                  access env variable     */</span>
+    <span style='color:#008000; '>/*  %           percent                 mod / hex               */</span>
+    <span style='color:#008000; '>/*  ^           carot                   grep / awk              */</span>
+    <span style='color:#008000; '>/*  &amp;           ampersand               and / separator         */</span>
+    <span style='color:#008000; '>/*  [           left bracket            begin test              */</span>
+    <span style='color:#008000; '>/*  ]           right bracket           end test                */</span>
+    <span style='color:#008000; '>/*  {           left parenthesis        begin expression        */</span>
+    <span style='color:#008000; '>/*  }           right parenthesis       end expression          */</span>
+    <span style='color:#008000; '>/*  '           single quote            encapsulate string      */</span>
+    <span style='color:#008000; '>/*  :           colon                   separator               */</span>
+    <span style='color:#008000; '>/*  ;           semi-colon              next shell command      */</span>
+    <span style='color:#008000; '>/*  &lt;           left redirection        get file                */</span>
+    <span style='color:#008000; '>/*  >           right redirection       modify file             */</span>
+    <span style='color:#008000; '>/*  ?           question mark           character wild card     */</span>
+    <span style='color:#008000; '>/*  |           pipe                    pipe I/O                */</span>
+    <span style='color:#008000; '>/*  =           equal                   assignment              */</span>
+    <span style='color:#008000; '>/*  +           plus                    add / concatenation     */</span>
+    <span style='color:#008000; '>/*  ,           comma                   separator               */</span>
+    <span style='color:#008000; '>/*  \           backslash               access back characters  */</span>
+    <span style='color:#008000; '>/*  \n          newline                 new command             */</span>
+    <span style='color:#008000; '>/*  \t          tab                     separator               */</span>
+    <span style='color:#008000; '>/*  "           double quote            encapsulate string      */</span>
+    <span style='color:#008000; '>/*  ==========================================================  */</span>
+    <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> filter<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>`~!@#$%^&amp;*[]{}':;&lt;>?|=+,</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>/*  ==========================================================  */</span>
+    <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span>  tablelen <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strlen</span><span style='color:#0000ff; '>(</span>filter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>        <span style='color:#008000; '>// loop all cgivars</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> e <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> e <span style='color:#0000ff; '>&lt;</span> tablelen<span style='color:#0000ff; '>;</span> e<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>          <span style='color:#008000; '>// loop filter table</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>strchr</span><span style='color:#0000ff; '>(</span>cgivars<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> filter<span style='color:#0000ff; '>[</span>e<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Content-Type: text/plain</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>BAD INPUT ( </span><span style='color:#007997; '>%c</span><span style='color:#0000e6; '> ). TRY AGAIN.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> filter<span style='color:#0000ff; '>[</span>e<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>fflush</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stdout</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#008000; '>/* log intruder session                             */</span>
+                logsession<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

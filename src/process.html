@@ -1,0 +1,388 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/10/2007</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Process Enumerator. Lists all the Windows processes that are</span>
+<span style='color:#008000; '>//          currently running.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>tlhelp32.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>vdmdbg.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>md5.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>IntCommon.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#0000ff; font-weight:bold; '>typedef</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CALLBACK</span> <span style='color:#0000ff; '>*</span>PROCENUMPROC<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>WORD</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPSTR</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPSTR</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPARAM</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>typedef</span> <span style='color:#0000ff; font-weight:bold; '>struct</span> EnumInfoStruct
+<span style='color:#0000ff; '>{</span>
+   <span style='color:#0000ff; font-weight:bold; '>DWORD</span>          dwPID<span style='color:#0000ff; '>;</span>
+   PROCENUMPROC   lpProc<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>DWORD</span>          lParam<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>BOOL</span>           bEnd<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span> <span style='color:#0000ff; '>*</span>pEnumProcInfo<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> EnumProcs<span style='color:#0000ff; '>(</span>PROCENUMPROC lpProc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPARAM</span> lParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> Enum16<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwThreadId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>WORD</span> hMod16<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>WORD</span> hTask16<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>PSZ</span> pszModName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>PSZ</span> pszFileName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPARAM</span> lpUserDefined<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+
+<span style='color:#008000; '>// global STL process map</span>
+lProcessList listProcessList<span style='color:#0000ff; '>;</span> 
+
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// The EnumProcs function takes a pointer to a callback function</span>
+<span style='color:#008000; '>// that will be called once per process with the process filename</span>
+<span style='color:#008000; '>// and process ID.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// lpProc -- Address of callback routine.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// lParam -- A user-defined LPARAM value to be passed to</span>
+<span style='color:#008000; '>//           the callback routine.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Callback function definition:</span>
+<span style='color:#008000; '>// BOOL CALLBACK Proc(DWORD dw, WORD w, LPCSTR lpstr, LPARAM lParam);</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> EnumProcs<span style='color:#0000ff; '>(</span>PROCENUMPROC lpProc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPARAM</span> lParam<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+   <span style='color:#0000ff; font-weight:bold; '>OSVERSIONINFO</span>  osver<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>HINSTANCE</span>      hInstLib  <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>HINSTANCE</span>      hInstLib2 <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>HANDLE</span>         hSnapShot <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>LPDWORD</span>        lpdwPIDs  <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+   PROCESSENTRY32 procentry<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>BOOL</span>           bFlag<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>DWORD</span>          dwSize<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>DWORD</span>          dwSize2<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>DWORD</span>          dwIndex<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>HMODULE</span>        hMod<span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>HANDLE</span>         hProcess<span style='color:#0000ff; '>;</span>
+   EnumInfoStruct sInfo<span style='color:#0000ff; '>;</span>
+
+   <span style='color:#0000ff; font-weight:bold; '>char</span>           szFileName<span style='color:#0000ff; '>[</span>MAX_PATH<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>char</span>           szFilePath<span style='color:#0000ff; '>[</span>MAX_PATH<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+   <span style='color:#008000; '>// ToolHelp Function Pointers.</span>
+   <span style='color:#0000ff; font-weight:bold; '>HANDLE</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span>lpfCreateToolhelp32Snapshot<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span>lpfProcess32First<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span> LPPROCESSENTRY32<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span>lpfProcess32Next<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span> LPPROCESSENTRY32<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+   <span style='color:#008000; '>// PSAPI Function Pointers.</span>
+   <span style='color:#0000ff; font-weight:bold; '>BOOL</span>  <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span>lpfEnumProcesses<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>BOOL</span>  <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span>lpfEnumProcessModules<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>HMODULE</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPDWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span>lpfGetModuleBaseName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>HMODULE</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPTSTR</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span>lpfGetModuleFileNameEx<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>HMODULE</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPTSTR</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+   <span style='color:#008000; '>// VDMDBG Function Pointers.</span>
+   <span style='color:#0000ff; font-weight:bold; '>INT</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span>lpfVDMEnumTaskWOWEx<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> TASKENUMPROCEX<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPARAM</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+   <span style='color:#008000; '>// Retrieve the OS version</span>
+   osver<span style='color:#0000ff; '>.</span>dwOSVersionInfoSize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>osver<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>GetVersionEx</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>osver<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+
+   <span style='color:#008000; '>// If Windows NT 4.0 / XP / 2K</span>
+   <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>osver<span style='color:#0000ff; '>.</span>dwPlatformId <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> VER_PLATFORM_WIN32_NT
+         <span style='color:#008000; '>/*&amp;&amp; osver.dwMajorVersion == 4*/</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>__try</span> <span style='color:#0000ff; '>{</span>
+
+         <span style='color:#008000; '>// Get the procedure addresses explicitly. We do</span>
+         <span style='color:#008000; '>// this so we don't have to worry about modules</span>
+         <span style='color:#008000; '>// failing to load under OSes other than Windows NT 4.0</span>
+         <span style='color:#008000; '>// because references to PSAPI.DLL can't be resolved.</span>
+         hInstLib <span style='color:#0000ff; '>=</span> LoadLibraryA<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>PSAPI.DLL</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hInstLib <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+
+         hInstLib2 <span style='color:#0000ff; '>=</span> LoadLibraryA<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>VDMDBG.DLL</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hInstLib2 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#008000; '>// Get procedure addresses.</span>
+         lpfEnumProcesses <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>EnumProcesses</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         lpfEnumProcessModules <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>HMODULE</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span>
+               <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPDWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>,</span>
+               <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>EnumProcessModules</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         lpfGetModuleBaseName <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>HMODULE</span><span style='color:#0000ff; '>,</span>
+               <span style='color:#0000ff; font-weight:bold; '>LPTSTR</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>,</span>
+               <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GetModuleBaseNameA</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         lpfGetModuleFileNameEx <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>HMODULE</span><span style='color:#0000ff; '>,</span>
+               <span style='color:#0000ff; font-weight:bold; '>LPTSTR</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>,</span>
+               <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GetModuleFileNameExA</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         lpfVDMEnumTaskWOWEx <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>INT</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> TASKENUMPROCEX<span style='color:#0000ff; '>,</span>
+               <span style='color:#0000ff; font-weight:bold; '>LPARAM</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib2<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>VDMEnumTaskWOWEx</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lpfEnumProcesses <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span>
+               <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> lpfEnumProcessModules <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span>
+               <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> lpfGetModuleBaseName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span>
+               <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> lpfGetModuleFileNameEx <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span>
+               <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> lpfVDMEnumTaskWOWEx <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#008000; '>//</span>
+         <span style='color:#008000; '>// Call the PSAPI function EnumProcesses to get all of the</span>
+         <span style='color:#008000; '>// ProcID's currently in the system.</span>
+         <span style='color:#008000; '>//</span>
+         <span style='color:#008000; '>// NOTE: In the documentation, the third parameter of</span>
+         <span style='color:#008000; '>// EnumProcesses is named cbNeeded, which implies that you</span>
+         <span style='color:#008000; '>// can call the function once to find out how much space to</span>
+         <span style='color:#008000; '>// allocate for a buffer and again to fill the buffer.</span>
+         <span style='color:#008000; '>// This is not the case. The cbNeeded parameter returns</span>
+         <span style='color:#008000; '>// the number of PIDs returned, so if your buffer size is</span>
+         <span style='color:#008000; '>// zero cbNeeded returns zero.</span>
+         <span style='color:#008000; '>//</span>
+         <span style='color:#008000; '>// NOTE: The "HeapAlloc" loop here ensures that we</span>
+         <span style='color:#008000; '>// actually allocate a buffer large enough for all the</span>
+         <span style='color:#008000; '>// PIDs in the system.</span>
+         <span style='color:#008000; '>//</span>
+         dwSize2 <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>256</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; font-weight:bold; '>do</span> <span style='color:#0000ff; '>{</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lpdwPIDs<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+               <span style='color:#0000ff; font-weight:bold; '>HeapFree</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>GetProcessHeap</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> lpdwPIDs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+               dwSize2 <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            lpdwPIDs <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPDWORD</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>HeapAlloc</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>GetProcessHeap</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>
+                  dwSize2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lpdwPIDs <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>lpfEnumProcesses<span style='color:#0000ff; '>(</span>lpdwPIDs<span style='color:#0000ff; '>,</span> dwSize2<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>dwSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>dwSize <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> dwSize2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#008000; '>// How many ProcID's did we get?</span>
+         dwSize <span style='color:#0000ff; '>/</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#008000; '>// Loop through each ProcID.</span>
+         <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>dwIndex <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> dwIndex <span style='color:#0000ff; '>&lt;</span> dwSize<span style='color:#0000ff; '>;</span> dwIndex<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+            szFileName<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            szFilePath<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Open the process (if we can... security does not</span>
+            <span style='color:#008000; '>// permit every process in the system to be opened).</span>
+            hProcess <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>OpenProcess</span><span style='color:#0000ff; '>(</span>
+                  <span style='color:#808080; font-weight:bold; '>PROCESS_QUERY_INFORMATION</span> <span style='color:#0000ff; '>|</span> <span style='color:#808080; font-weight:bold; '>PROCESS_VM_READ</span><span style='color:#0000ff; '>,</span>
+                  FALSE<span style='color:#0000ff; '>,</span> lpdwPIDs<span style='color:#0000ff; '>[</span>dwIndex<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hProcess <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+               <span style='color:#008000; '>// Here we call EnumProcessModules to get only the</span>
+               <span style='color:#008000; '>// first module in the process. This will be the</span>
+               <span style='color:#008000; '>// EXE module for which we will retrieve the name.</span>
+               <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lpfEnumProcessModules<span style='color:#0000ff; '>(</span>hProcess<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>hMod<span style='color:#0000ff; '>,</span>
+                     <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>hMod<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>dwSize2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+                  <span style='color:#008000; '>// Get the module name</span>
+                  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>lpfGetModuleBaseName<span style='color:#0000ff; '>(</span>hProcess<span style='color:#0000ff; '>,</span> hMod<span style='color:#0000ff; '>,</span>
+                        szFileName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>szFileName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        szFileName<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+                  <span style='color:#008000; '>// Get the full path to module name</span>
+                  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>lpfGetModuleFileNameEx<span style='color:#0000ff; '>(</span>hProcess<span style='color:#0000ff; '>,</span> hMod<span style='color:#0000ff; '>,</span>
+                        szFilePath<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>szFilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        szFilePath<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+               <span style='color:#0000ff; '>}</span>
+               <span style='color:#0000ff; font-weight:bold; '>CloseHandle</span><span style='color:#0000ff; '>(</span>hProcess<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#008000; '>// Regardless of OpenProcess success or failure, we</span>
+            <span style='color:#008000; '>// still call the enum func with the ProcID.</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>lpProc<span style='color:#0000ff; '>(</span>lpdwPIDs<span style='color:#0000ff; '>[</span>dwIndex<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> szFileName<span style='color:#0000ff; '>,</span> szFilePath<span style='color:#0000ff; '>,</span> lParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Did we just bump into an NTVDM?</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_stricmp<span style='color:#0000ff; '>(</span>szFileName<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>NTVDM.EXE</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+               <span style='color:#008000; '>// Fill in some info for the 16-bit enum proc.</span>
+               sInfo<span style='color:#0000ff; '>.</span>dwPID <span style='color:#0000ff; '>=</span> lpdwPIDs<span style='color:#0000ff; '>[</span>dwIndex<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+               sInfo<span style='color:#0000ff; '>.</span>lpProc <span style='color:#0000ff; '>=</span> lpProc<span style='color:#0000ff; '>;</span>
+               sInfo<span style='color:#0000ff; '>.</span>lParam <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span> lParam<span style='color:#0000ff; '>;</span>
+               sInfo<span style='color:#0000ff; '>.</span>bEnd <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+
+               <span style='color:#008000; '>// Enum the 16-bit stuff.</span>
+               lpfVDMEnumTaskWOWEx<span style='color:#0000ff; '>(</span>lpdwPIDs<span style='color:#0000ff; '>[</span>dwIndex<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span>
+                  <span style='color:#0000ff; '>(</span>TASKENUMPROCEX<span style='color:#0000ff; '>)</span> Enum16<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPARAM</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>sInfo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+               <span style='color:#008000; '>// Did our main enum func say quit?</span>
+               <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sInfo<span style='color:#0000ff; '>.</span>bEnd<span style='color:#0000ff; '>)</span>
+                  <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+         <span style='color:#0000ff; '>}</span>
+
+      <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>__finally</span> <span style='color:#0000ff; '>{</span>
+
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>FreeLibrary</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hInstLib2<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>FreeLibrary</span><span style='color:#0000ff; '>(</span>hInstLib2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lpdwPIDs<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>HeapFree</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>GetProcessHeap</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> lpdwPIDs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+
+   <span style='color:#008000; '>// If Win98 // If any OS other than Windows NT 4.0.</span>
+   <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>osver<span style='color:#0000ff; '>.</span>dwPlatformId <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> VER_PLATFORM_WIN32_WINDOWS
+         <span style='color:#008000; '>/*|| (osver.dwPlatformId == VER_PLATFORM_WIN32_NT</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&amp;&amp; osver.dwMajorVersion > 4)*/</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>__try</span> <span style='color:#0000ff; '>{</span>
+
+         hInstLib <span style='color:#0000ff; '>=</span> LoadLibraryA<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Kernel32.DLL</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hInstLib <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#008000; '>// If NT-based OS, load VDMDBG.DLL.</span>
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>osver<span style='color:#0000ff; '>.</span>dwPlatformId <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> VER_PLATFORM_WIN32_NT<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            hInstLib2 <span style='color:#0000ff; '>=</span> LoadLibraryA<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>VDMDBG.DLL</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hInstLib2 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; '>}</span>
+
+         <span style='color:#008000; '>// Get procedure addresses. We are linking to</span>
+         <span style='color:#008000; '>// these functions explicitly, because a module using</span>
+         <span style='color:#008000; '>// this code would fail to load under Windows NT,</span>
+         <span style='color:#008000; '>// which does not have the Toolhelp32</span>
+         <span style='color:#008000; '>// functions in KERNEL32.DLL.</span>
+         lpfCreateToolhelp32Snapshot <span style='color:#0000ff; '>=</span>
+               <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>CreateToolhelp32Snapshot</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         lpfProcess32First <span style='color:#0000ff; '>=</span>
+               <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span>LPPROCESSENTRY32<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Process32First</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         lpfProcess32Next <span style='color:#0000ff; '>=</span>
+               <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HANDLE</span><span style='color:#0000ff; '>,</span>LPPROCESSENTRY32<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Process32Next</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lpfProcess32Next <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span>
+               <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> lpfProcess32First <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span>
+               <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> lpfCreateToolhelp32Snapshot <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>osver<span style='color:#0000ff; '>.</span>dwPlatformId <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> VER_PLATFORM_WIN32_NT<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            lpfVDMEnumTaskWOWEx <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>INT</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WINAPI</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>,</span> TASKENUMPROCEX<span style='color:#0000ff; '>,</span>
+                  <span style='color:#0000ff; font-weight:bold; '>LPARAM</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span>hInstLib2<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>VDMEnumTaskWOWEx</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lpfVDMEnumTaskWOWEx <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+               <span style='color:#0000ff; font-weight:bold; '>__leave</span><span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; '>}</span>
+
+         <span style='color:#008000; '>// Get a handle to a Toolhelp snapshot of all processes.</span>
+         hSnapShot <span style='color:#0000ff; '>=</span> lpfCreateToolhelp32Snapshot<span style='color:#0000ff; '>(</span>TH32CS_SNAPPROCESS<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hSnapShot <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>FreeLibrary</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; '>}</span>
+
+         <span style='color:#008000; '>// Get the first process' information.</span>
+         procentry<span style='color:#0000ff; '>.</span>dwSize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>PROCESSENTRY32<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+         bFlag <span style='color:#0000ff; '>=</span> lpfProcess32First<span style='color:#0000ff; '>(</span>hSnapShot<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>procentry<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#008000; '>// While there are processes, keep looping.</span>
+         <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>bFlag<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+            <span style='color:#008000; '>// Call the enum func with the filename and ProcID.</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lpProc<span style='color:#0000ff; '>(</span>procentry<span style='color:#0000ff; '>.</span>th32ProcessID<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>
+                procentry<span style='color:#0000ff; '>.</span>szExeFile<span style='color:#0000ff; '>,</span> procentry<span style='color:#0000ff; '>.</span>szExeFile<span style='color:#0000ff; '>,</span> lParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+               <span style='color:#008000; '>// Did we just bump into an NTVDM?</span>
+               <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_stricmp<span style='color:#0000ff; '>(</span>procentry<span style='color:#0000ff; '>.</span>szExeFile<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>NTVDM.EXE</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+                  <span style='color:#008000; '>// Fill in some info for the 16-bit enum proc.</span>
+                  sInfo<span style='color:#0000ff; '>.</span>dwPID <span style='color:#0000ff; '>=</span> procentry<span style='color:#0000ff; '>.</span>th32ProcessID<span style='color:#0000ff; '>;</span>
+                  sInfo<span style='color:#0000ff; '>.</span>lpProc <span style='color:#0000ff; '>=</span> lpProc<span style='color:#0000ff; '>;</span>
+                  sInfo<span style='color:#0000ff; '>.</span>lParam <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span> lParam<span style='color:#0000ff; '>;</span>
+                  sInfo<span style='color:#0000ff; '>.</span>bEnd <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+
+                  <span style='color:#008000; '>// Enum the 16-bit stuff.</span>
+                  lpfVDMEnumTaskWOWEx<span style='color:#0000ff; '>(</span>procentry<span style='color:#0000ff; '>.</span>th32ProcessID<span style='color:#0000ff; '>,</span>
+                     <span style='color:#0000ff; '>(</span>TASKENUMPROCEX<span style='color:#0000ff; '>)</span> Enum16<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPARAM</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>sInfo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                  <span style='color:#008000; '>// Did our main enum func say quit?</span>
+                  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sInfo<span style='color:#0000ff; '>.</span>bEnd<span style='color:#0000ff; '>)</span>
+                     <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+               <span style='color:#0000ff; '>}</span>
+
+               procentry<span style='color:#0000ff; '>.</span>dwSize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>PROCESSENTRY32<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+               bFlag <span style='color:#0000ff; '>=</span> lpfProcess32Next<span style='color:#0000ff; '>(</span>hSnapShot<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>procentry<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>else</span>
+               bFlag <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+         <span style='color:#0000ff; '>}</span>
+
+      <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>__finally</span> <span style='color:#0000ff; '>{</span>
+
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>FreeLibrary</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+         <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hInstLib2<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>FreeLibrary</span><span style='color:#0000ff; '>(</span>hInstLib2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+
+   <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>else</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+
+   <span style='color:#008000; '>// Free the library.</span>
+   <span style='color:#0000ff; font-weight:bold; '>FreeLibrary</span><span style='color:#0000ff; '>(</span>hInstLib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+   <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> Enum16<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwThreadId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>WORD</span> hMod16<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>WORD</span> hTask16<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>PSZ</span> pszModName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>PSZ</span> pszFileName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPARAM</span> lpUserDefined<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+   <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bRet<span style='color:#0000ff; '>;</span>
+
+   EnumInfoStruct <span style='color:#0000ff; '>*</span>psInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>EnumInfoStruct <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span>lpUserDefined<span style='color:#0000ff; '>;</span>
+
+   bRet <span style='color:#0000ff; '>=</span> psInfo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>lpProc<span style='color:#0000ff; '>(</span>psInfo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>dwPID<span style='color:#0000ff; '>,</span> hTask16<span style='color:#0000ff; '>,</span> pszFileName<span style='color:#0000ff; '>,</span> pszFileName<span style='color:#0000ff; '>,</span> psInfo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>lParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+   <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>bRet<span style='color:#0000ff; '>)</span>
+      psInfo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bEnd <span style='color:#0000ff; '>=</span> TRUE<span style='color:#0000ff; '>;</span>
+
+   <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>!</span>bRet<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; font-weight:bold; '>CALLBACK</span> MyProcessEnumerator<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwPID<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>WORD</span> wTask<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPCSTR</span> szProcess<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPCSTR</span> szProcessPath<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPARAM</span> lParam<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+   <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>wTask <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+   <span style='color:#0000ff; '>{</span>
+        ProcessBlock proc<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>char</span> szMD5Buffer<span style='color:#0000ff; '>[</span><span style='color:#800000; '>32</span><span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+        proc<span style='color:#0000ff; '>.</span>sProcessID                  <span style='color:#0000ff; '>=</span> dwPID<span style='color:#0000ff; '>;</span>            <span style='color:#008000; '>// process ID</span>
+        proc<span style='color:#0000ff; '>.</span>sProcessName                <span style='color:#0000ff; '>=</span> szProcess<span style='color:#0000ff; '>;</span>        <span style='color:#008000; '>// process name</span>
+        proc<span style='color:#0000ff; '>.</span>sProcessPath                <span style='color:#0000ff; '>=</span> szProcessPath<span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// process full path</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>proc<span style='color:#0000ff; '>.</span>sProcessName<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>szMD5Buffer<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>szMD5Buffer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            MD5File<span style='color:#0000ff; '>(</span>proc<span style='color:#0000ff; '>.</span>sProcessPath<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> szMD5Buffer<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>szMD5Buffer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            proc<span style='color:#0000ff; '>.</span>sMD5 <span style='color:#0000ff; '>=</span> szMD5Buffer<span style='color:#0000ff; '>;</span>            
+            proc<span style='color:#0000ff; '>.</span>sProcessPath <span style='color:#0000ff; '>=</span> RemovePathTaggingFileName<span style='color:#0000ff; '>(</span>proc<span style='color:#0000ff; '>.</span>sProcessPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            proc<span style='color:#0000ff; '>.</span>sProcessPath <span style='color:#0000ff; '>=</span> ConvertPathToShortPath<span style='color:#0000ff; '>(</span>proc<span style='color:#0000ff; '>.</span>sProcessPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            listProcessList<span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>proc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>//////////////////////////////////////////////////////////////////// FLUSH TO STDOUT for real time parsing</span>
+            <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\\</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> proc<span style='color:#0000ff; '>.</span>sProcessPath<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> proc<span style='color:#0000ff; '>.</span>sProcessName<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#008000; '>//////////////////////////////////////////////////////////////////////////////////////////////////////////        </span>
+        <span style='color:#0000ff; '>}</span>        
+   <span style='color:#0000ff; '>}</span>
+   <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> GetProcList<span style='color:#0000ff; '>(</span>lProcessList<span style='color:#0000ff; '>&amp;</span> lProcess<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bSuccess    <span style='color:#0000ff; '>=</span> EnumProcs<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>PROCENUMPROC<span style='color:#0000ff; '>)</span> MyProcessEnumerator<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    lProcess        <span style='color:#0000ff; '>=</span> listProcessList<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bSuccess<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

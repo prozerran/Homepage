@@ -1,0 +1,431 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    9/5/2008</span>
+<span style='color:#008000; '>// File:    Registry.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Registry class wrapper API that allows easier functions to </span>
+<span style='color:#008000; '>//          manipulate the registry. Access, write, read, and query the</span>
+<span style='color:#008000; '>//          registry using this class.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Registry.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>IntCommon.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Registry()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Registry Constructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+Registry<span style='color:#0000ff; '>::</span>Registry<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span><span style='color:#808080; font-weight:bold; '>HKEY_CLASSES_ROOT</span><span style='color:#0000ff; '>]</span>      <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HKEY_CLASSES_ROOT</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span><span style='color:#808080; font-weight:bold; '>HKEY_CURRENT_USER</span><span style='color:#0000ff; '>]</span>      <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HKEY_CURRENT_USER</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span><span style='color:#808080; font-weight:bold; '>HKEY_LOCAL_MACHINE</span><span style='color:#0000ff; '>]</span>     <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HKEY_LOCAL_MACHINE</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span>HKEY_USERS<span style='color:#0000ff; '>]</span>             <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HKEY_USERS</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span><span style='color:#808080; font-weight:bold; '>HKEY_CURRENT_CONFIG</span><span style='color:#0000ff; '>]</span>    <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HKEY_CURRENT_CONFIG</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Registry()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Registry Destructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+Registry<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Registry<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  EnumRegistryKey()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Enumerates the registries base on keyname</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+MapRegistry Registry<span style='color:#0000ff; '>::</span>EnumRegistryKey<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>HKEY</span> hKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sKeyName<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey <span style='color:#0000ff; '>=</span> hKey<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sKeyName <span style='color:#0000ff; '>=</span> sKeyName<span style='color:#0000ff; '>;</span>
+
+    VectorEnumKey       ListEnumKey<span style='color:#0000ff; '>;</span>
+    VectorEnumKeyValue  ListEnumKeyValue<span style='color:#0000ff; '>;</span>
+    RegistryInfo        RegInfo<span style='color:#0000ff; '>;</span>
+
+    EnumRegistryKey<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey<span style='color:#0000ff; '>,</span> sKeyName<span style='color:#0000ff; '>,</span> ListEnumKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>VectorEnumKey<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iKey <span style='color:#0000ff; '>=</span> ListEnumKey<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iKey <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> ListEnumKey<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iKey<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        RegInfo<span style='color:#0000ff; '>.</span>sFullKeyName <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sKeyName <span style='color:#0000ff; '>+</span> iKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        EnumRegistryKeyValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey<span style='color:#0000ff; '>,</span> RegInfo<span style='color:#0000ff; '>.</span>sFullKeyName<span style='color:#0000ff; '>,</span> ListEnumKeyValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        RegInfo<span style='color:#0000ff; '>.</span>ListEnumKeyValue <span style='color:#0000ff; '>=</span> ListEnumKeyValue<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>[</span>RegInfo<span style='color:#0000ff; '>.</span>sFullKeyName<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> RegInfo<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetRegistryType()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets registry type</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span> Registry<span style='color:#0000ff; '>::</span>GetRegistryType<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwRegType<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>string</span> sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>dwRegType<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_SZ</span><span style='color:#e34adc; font-weight:bold; '>:</span>                            sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_SZ</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>                            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_EXPAND_SZ</span><span style='color:#e34adc; font-weight:bold; '>:</span>                     sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_EXPAND_SZ</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>                     <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_MULTI_SZ</span><span style='color:#e34adc; font-weight:bold; '>:</span>                      sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_MULTI_SZ</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>                      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_BINARY</span><span style='color:#e34adc; font-weight:bold; '>:</span>                        sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_BINARY</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_RESOURCE_LIST</span><span style='color:#e34adc; font-weight:bold; '>:</span>                 sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_RESOURCE_LIST</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>                 <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_FULL_RESOURCE_DESCRIPTOR</span><span style='color:#e34adc; font-weight:bold; '>:</span>      sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_FULL_RESOURCE_DESCRIPTOR</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_RESOURCE_REQUIREMENTS_LIST</span><span style='color:#e34adc; font-weight:bold; '>:</span>    sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_RESOURCE_REQUIREMENTS_LIST</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_DWORD</span><span style='color:#e34adc; font-weight:bold; '>:</span>                         sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_DWORD</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>                         <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>                                sRegType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>REG_UNKNOWN</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>                       <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> sRegType<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetRegistryData()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets registry data type</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span> Registry<span style='color:#0000ff; '>::</span>GetRegistryData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwRegType<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> RegData m_RegData<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>string</span> sRegData <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>dwRegType<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_SZ</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_EXPAND_SZ</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_MULTI_SZ</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            sRegData <span style='color:#0000ff; '>=</span> m_RegData<span style='color:#0000ff; '>.</span>sData<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_BINARY</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_RESOURCE_LIST</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_FULL_RESOURCE_DESCRIPTOR</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_RESOURCE_REQUIREMENTS_LIST</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_RegData<span style='color:#0000ff; '>.</span>pData<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> sRegData <span style='color:#0000ff; '>=</span> m_RegData<span style='color:#0000ff; '>.</span>pData<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>REG_DWORD</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>char</span> szValue<span style='color:#0000ff; '>[</span><span style='color:#800000; '>32</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>szValue<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>0x</span><span style='color:#007997; '>%08x</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> m_RegData<span style='color:#0000ff; '>.</span>dwData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            sRegData <span style='color:#0000ff; '>=</span> szValue<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> sRegData<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetHKeyString()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets registry HKEY string</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span> Registry<span style='color:#0000ff; '>::</span>GetHKeyString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>HKEY</span> hKey<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span>hKey<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetHKeyString()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets registry HKEY string</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span> Registry<span style='color:#0000ff; '>::</span>GetHKeyString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  EnumRegistryTree()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Enumererates the entire registry tree</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+MapRegistry Registry<span style='color:#0000ff; '>::</span>EnumRegistryTree<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HKEY</span> hKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sKeyName<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey <span style='color:#0000ff; '>=</span> hKey<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sKeyName <span style='color:#0000ff; '>=</span> sKeyName<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>EnumRegistryKey<span style='color:#0000ff; '>(</span>sKeyName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  EnumRegistryKey()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Enumererates registry tree by keyname recursively</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Registry<span style='color:#0000ff; '>::</span>EnumRegistryKey<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sKeyName<span style='color:#0000ff; '>)</span>       <span style='color:#008000; '>// TOP DOG RECURSIVE FUNCTION!</span>
+<span style='color:#0000ff; '>{</span>
+    VectorEnumKey ListEnumKey<span style='color:#0000ff; '>;</span>
+
+    EnumRegistryKey<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey<span style='color:#0000ff; '>,</span> sKeyName<span style='color:#0000ff; '>,</span> ListEnumKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> ListEnumKey<span style='color:#0000ff; '>.</span>size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        RegistryInfo RegInfo<span style='color:#0000ff; '>;</span>
+        VectorEnumKeyValue ListEnumKeyValue<span style='color:#0000ff; '>;</span>
+
+        RegInfo<span style='color:#0000ff; '>.</span>sFullKeyName <span style='color:#0000ff; '>=</span> sKeyName <span style='color:#0000ff; '>+</span> ListEnumKey<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>EnumRegistryKeyValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey<span style='color:#0000ff; '>,</span> RegInfo<span style='color:#0000ff; '>.</span>sFullKeyName<span style='color:#0000ff; '>,</span> ListEnumKeyValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        RegInfo<span style='color:#0000ff; '>.</span>ListEnumKeyValue <span style='color:#0000ff; '>=</span> ListEnumKeyValue<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>[</span>RegInfo<span style='color:#0000ff; '>.</span>sFullKeyName<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> RegInfo<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>//////////////////////////////////////////////////////////////////// FLUSH TO STDOUT for real time parsing</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> RegInfo<span style='color:#0000ff; '>.</span>sFullKeyName<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>//////////////////////////////////////////////////////////////////////////////////////////////////////////  </span>
+
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>EnumRegistryKey<span style='color:#0000ff; '>(</span>sKeyName <span style='color:#0000ff; '>+</span> ListEnumKey<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  FlushRegistryToTxt()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Writes registry information to tect file</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Registry<span style='color:#0000ff; '>::</span>FlushRegistryToTxt<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FILE</span><span style='color:#0000ff; '>*</span> fp<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>MapRegistry<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iRegistry <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iRegistry <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iRegistry<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>/</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> iRegistry<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>first<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>VectorEnumKeyValue<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iSubKey <span style='color:#0000ff; '>=</span> iRegistry<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>ListEnumKeyValue<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            iSubKey <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> iRegistry<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>ListEnumKeyValue<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iSubKey<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// PRINT ONLY KEYS FOR DisplayName OR DisplayVersion</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sRegKeyName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DisplayName</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sRegKeyName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DisplayVersion</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>-</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>-</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                    iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sRegKeyName<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetRegistryType<span style='color:#0000ff; '>(</span>iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>dwRegType<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetRegistryData<span style='color:#0000ff; '>(</span>iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>dwRegType<span style='color:#0000ff; '>,</span> iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_RegData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  FlushRegistryToXml()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Writes registry information to XML file</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Registry<span style='color:#0000ff; '>::</span>FlushRegistryToXml<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FILE</span><span style='color:#0000ff; '>*</span> fp<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>&lt;Registry Path=</span><span style='color:#0000e6; '>\"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\"</span><span style='color:#0000e6; '>></span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mHKey<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hKey<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>MapRegistry<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iRegistry <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iRegistry <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mRegistry<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iRegistry<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>&lt;RegSub Key=</span><span style='color:#0000e6; '>\"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\"</span><span style='color:#0000e6; '>></span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ConvertStringToXmlCompliant<span style='color:#0000ff; '>(</span>iRegistry<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>sFullKeyName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>VectorEnumKeyValue<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iSubKey <span style='color:#0000ff; '>=</span> iRegistry<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>ListEnumKeyValue<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            iSubKey <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> iRegistry<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>ListEnumKeyValue<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iSubKey<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// PRINT ONLY KEYS FOR DisplayName OR DisplayVersion</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sRegKeyName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DisplayName</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sRegKeyName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DisplayVersion</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>&lt;Reg Name=</span><span style='color:#0000e6; '>\"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\"</span><span style='color:#0000e6; '> Type=</span><span style='color:#0000e6; '>\"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\"</span><span style='color:#0000e6; '> Data=</span><span style='color:#0000e6; '>\"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\"</span><span style='color:#0000e6; '> /></span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                    iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sRegKeyName<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetRegistryType<span style='color:#0000ff; '>(</span>iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>dwRegType<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                    ConvertStringToXmlCompliant<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetRegistryData<span style='color:#0000ff; '>(</span>iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>dwRegType<span style='color:#0000ff; '>,</span> iSubKey<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_RegData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>&lt;/RegSub></span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>&lt;/Registry></span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+
+<span style='color:#008000; '>/* ****************************** DONT MODIFY BELOW OR DIE *********************************************** */</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  EnumRegistryKey()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Enumerates the regsitry hive</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Registry<span style='color:#0000ff; '>::</span>EnumRegistryKey<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HKEY</span> hKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sKeyName<span style='color:#0000ff; '>,</span> VectorEnumKey<span style='color:#0000ff; '>&amp;</span> ListEnumKey<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>LONG</span> retcode <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>HKEY</span> hOpenKey <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> str<span style='color:#0000ff; '>[</span>MAX_PATH<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span> str<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    ListEnumKey<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>sKeyName<span style='color:#0000ff; '>.</span>length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        retcode <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RegOpenKey</span><span style='color:#0000ff; '>(</span> hKey<span style='color:#0000ff; '>,</span> sKeyName<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>hOpenKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+        hOpenKey <span style='color:#0000ff; '>=</span> hKey<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> retcode <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span> <span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> retCode <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span><span style='color:#0000ff; '>;</span> retCode <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> 
+    <span style='color:#0000ff; '>{</span>
+        retCode <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RegEnumKey</span><span style='color:#0000ff; '>(</span>hOpenKey<span style='color:#0000ff; '>,</span> i<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>,</span> MAX_PATH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>retCode <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span><span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> sNewKeyName<span style='color:#0000ff; '>;</span>
+            sNewKeyName <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>;</span>
+            
+            <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>sNewKeyName<span style='color:#0000ff; '>.</span>length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                ListEnumKey<span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span> sNewKeyName <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>hKey<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>RegCloseKey</span><span style='color:#0000ff; '>(</span> hOpenKey <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  EnumRegistryKeyValue()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Enumerates and gets the registry base on key</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Registry<span style='color:#0000ff; '>::</span>EnumRegistryKeyValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HKEY</span> hKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sKeyName<span style='color:#0000ff; '>,</span> VectorEnumKeyValue<span style='color:#0000ff; '>&amp;</span> ListEnumKey<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>LONG</span> retcode <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>HKEY</span> hOpenKey <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwType <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>REG_SZ</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> str<span style='color:#0000ff; '>[</span>MAX_REG_KEY_NAME<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span> str<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>sKeyName<span style='color:#0000ff; '>.</span>length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        retcode <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RegOpenKeyEx</span><span style='color:#0000ff; '>(</span>hKey<span style='color:#0000ff; '>,</span> sKeyName<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>KEY_READ</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>hOpenKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+        hOpenKey <span style='color:#0000ff; '>=</span> hKey<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> retcode <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span> <span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>BYTE</span> <span style='color:#0000ff; '>*</span>data<span style='color:#0000ff; '>;</span>
+    data <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>BYTE</span><span style='color:#0000ff; '>[</span>MAX_REG_KEY_VALUE<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span> data<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    ListEnumKey<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>DWORD</span> Size<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwNo <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    RegKeyDetail KeyValue<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> retCode <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span><span style='color:#0000ff; '>;</span> retCode <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> 
+    <span style='color:#0000ff; '>{</span>
+        Size <span style='color:#0000ff; '>=</span> MAX_REG_KEY_NAME<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwNo <span style='color:#0000ff; '>=</span> MAX_REG_KEY_VALUE<span style='color:#0000ff; '>;</span>
+        
+        retCode <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RegEnumValue</span><span style='color:#0000ff; '>(</span>hOpenKey<span style='color:#0000ff; '>,</span> i<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>Size<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>dwType<span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>dwNo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>retCode <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span> ERROR_NO_MORE_ITEMS<span style='color:#0000ff; '>)</span><span style='color:#008000; '>// &amp;&amp; retCode != ERROR_INSUFFICIENT_BUFFER)</span>
+        <span style='color:#0000ff; '>{</span>
+            KeyValue<span style='color:#0000ff; '>.</span>sRegKeyName <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>;</span>
+            KeyValue<span style='color:#0000ff; '>.</span>dwRegType <span style='color:#0000ff; '>=</span> dwType<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>dwType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>REG_SZ</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> dwNo <span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> dwNo <span style='color:#0000ff; '>&lt;</span> MAX_REG_KEY_VALUE <span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    data<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>(</span>dwNo<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+                    KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>sData <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span>data<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; '>{</span>
+                    KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>sData <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>dwType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>REG_EXPAND_SZ</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> dwNo <span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> dwNo <span style='color:#0000ff; '>&lt;</span> MAX_REG_KEY_VALUE <span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    data<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>(</span>dwNo<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+                    KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>sData <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span>data<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; '>{</span>
+                    KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>sData <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>dwType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>REG_MULTI_SZ</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> dwNo <span style='color:#0000ff; '>></span> <span style='color:#800000; '>1</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> dwNo <span style='color:#0000ff; '>&lt;</span> MAX_REG_KEY_VALUE <span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>for</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>i<span style='color:#0000ff; '>&lt;</span>dwNo<span style='color:#0000ff; '>;</span>i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> data<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#000080; '>'\0'</span> <span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            data<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\r'</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+                    data<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>(</span>dwNo<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+                    data<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>(</span>dwNo<span style='color:#0000ff; '>-</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+
+                    KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>sData <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span>data<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; '>{</span>
+                    KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>sData <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>(</span>dwType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>REG_BINARY</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>dwType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>REG_RESOURCE_LIST<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>dwType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>REG_FULL_RESOURCE_DESCRIPTOR<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>dwType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>REG_RESOURCE_REQUIREMENTS_LIST<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> dwNo <span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> dwNo <span style='color:#0000ff; '>&lt;</span> MAX_REG_KEY_VALUE <span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>char</span> temp<span style='color:#0000ff; '>[</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>temp<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>temp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>pData <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>[</span>dwNo<span style='color:#0000ff; '>*</span><span style='color:#800000; '>3</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>10</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span> KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>pData<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>dwNo<span style='color:#0000ff; '>*</span><span style='color:#800000; '>3</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>for</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>&lt;</span>dwNo<span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>temp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%02X</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>long</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span>data<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>lstrcat</span><span style='color:#0000ff; '>(</span> KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>pData<span style='color:#0000ff; '>,</span> temp <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; '>{</span>
+                    KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>pData <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>dwType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>REG_DWORD</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>&amp;</span>KeyValue<span style='color:#0000ff; '>.</span>m_RegData<span style='color:#0000ff; '>.</span>dwData<span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            
+            <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>KeyValue<span style='color:#0000ff; '>.</span>sRegKeyName<span style='color:#0000ff; '>.</span>length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                ListEnumKey<span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span> KeyValue <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            retCode <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>ERROR_SUCCESS</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>hKey<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>RegCloseKey</span><span style='color:#0000ff; '>(</span> hOpenKey <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> <span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

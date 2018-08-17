@@ -1,0 +1,194 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#c34e00; '>' Yee Hsu</span>
+<span style='color:#c34e00; '>' 9/4/2004</span>
+<span style='color:#c34e00; '>'</span>
+<span style='color:#c34e00; '>' List all files</span>
+<span style='color:#c34e00; '>' Determine if file is XML validated</span>
+<span style='color:#c34e00; '>' Combine XML files into giant XML file</span>
+
+<span style='color:#400000; font-weight:bold; '>Option Explicit</span>
+
+Main
+
+<span style='color:#400000; font-weight:bold; '>Sub</span> Main
+
+        <span style='color:#400000; font-weight:bold; '>Const</span> ForReading        <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>1</span>
+        <span style='color:#400000; font-weight:bold; '>Const</span> ForWriting        <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>2</span>
+        <span style='color:#400000; font-weight:bold; '>Const</span> ForAppending      <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>8</span>
+        <span style='color:#400000; font-weight:bold; '>Const</span> XMLFileName       <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"CombineXML.xml"</span>
+        <span style='color:#400000; font-weight:bold; '>Const</span> LOGFileName       <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"CombineXML.txt"</span>
+
+        <span style='color:#400000; font-weight:bold; '>Dim</span> Path<span style='color:#806030; '>,</span> Valid<span style='color:#806030; '>,</span> FileName<span style='color:#806030; '>,</span> WSHShell<span style='color:#806030; '>,</span> TempFile<span style='color:#806030; '>,</span> xmlDoc<span style='color:#806030; '>,</span> xmlLog<span style='color:#806030; '>,</span> xmlTmp<span style='color:#806030; '>,</span> xmlBuf
+        
+        <span style='color:#400000; font-weight:bold; '>Set</span> WSHShell <span style='color:#806030; '>=</span> WScript<span style='color:#8c0000; '>.</span><span style='color:#400000; font-weight:bold; '>CreateObject</span><span style='color:#806030; '>(</span><span style='color:#e60000; '>"WScript.Shell"</span><span style='color:#806030; '>)</span>
+        <span style='color:#400000; font-weight:bold; '>Set</span> TempFile <span style='color:#806030; '>=</span> WScript<span style='color:#8c0000; '>.</span><span style='color:#400000; font-weight:bold; '>CreateObject</span><span style='color:#806030; '>(</span><span style='color:#e60000; '>"Scripting.FileSystemObject"</span><span style='color:#806030; '>)</span>       
+
+        <span style='color:#400000; font-weight:bold; '>Select</span> <span style='color:#400000; font-weight:bold; '>Case</span> WScript<span style='color:#8c0000; '>.</span>Arguments<span style='color:#8c0000; '>.</span>Count
+                <span style='color:#400000; font-weight:bold; '>Case</span> <span style='color:#8c0000; '>0</span><span style='color:#806030; '>:</span> Path <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"*.*"</span>            <span style='color:#c34e00; '>' list current directory</span>
+                <span style='color:#400000; font-weight:bold; '>Case</span> <span style='color:#8c0000; '>1</span><span style='color:#806030; '>:</span> Path <span style='color:#806030; '>=</span> WScript<span style='color:#8c0000; '>.</span>Arguments<span style='color:#806030; '>(</span><span style='color:#8c0000; '>0</span><span style='color:#806030; '>)</span>
+                <span style='color:#400000; font-weight:bold; '>Case</span> <span style='color:#400000; font-weight:bold; '>Else</span><span style='color:#806030; '>:</span> WScript<span style='color:#8c0000; '>.</span>Echo <span style='color:#e60000; '>"Invalid number of arguments."</span><span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Sub</span>
+        <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>Select</span>
+        <span style='color:#400000; font-weight:bold; '>Dim</span> a<span style='color:#806030; '>:</span> a <span style='color:#806030; '>=</span> ListDir<span style='color:#806030; '>(</span>Path<span style='color:#806030; '>)</span>
+
+        <span style='color:#400000; font-weight:bold; '>If</span> <span style='color:#400000; font-weight:bold; '>UBound</span><span style='color:#806030; '>(</span>a<span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> <span style='color:#806030; '>-</span><span style='color:#8c0000; '>1</span> <span style='color:#400000; font-weight:bold; '>then</span>
+                WScript<span style='color:#8c0000; '>.</span>Echo <span style='color:#e60000; '>"No XML files found."</span>
+                <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Sub</span>
+        <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+        
+        <span style='color:#c34e00; '>' Delete the old XML file</span>
+        <span style='color:#400000; font-weight:bold; '>If</span> TempFile<span style='color:#8c0000; '>.</span>FileExists<span style='color:#806030; '>(</span>XMLFileName<span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span>
+                TempFile<span style='color:#8c0000; '>.</span>DeleteFile XMLFileName<span style='color:#806030; '>,</span> <span style='color:#0f4d75; '>True</span>
+        <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+        
+        <span style='color:#c34e00; '>' Delete old log file</span>
+        <span style='color:#400000; font-weight:bold; '>If</span> TempFile<span style='color:#8c0000; '>.</span>FileExists<span style='color:#806030; '>(</span>LOGFileName<span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span>
+                TempFile<span style='color:#8c0000; '>.</span>DeleteFile LOGFileName<span style='color:#806030; '>,</span> <span style='color:#0f4d75; '>True</span>
+        <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>  
+        
+        TempFile<span style='color:#8c0000; '>.</span>CreateTextFile<span style='color:#806030; '>(</span>XMLFileName<span style='color:#806030; '>)</span>
+        TempFile<span style='color:#8c0000; '>.</span>CreateTextFile<span style='color:#806030; '>(</span>LOGFileName<span style='color:#806030; '>)</span>
+                
+        <span style='color:#400000; font-weight:bold; '>Set</span> xmlDoc <span style='color:#806030; '>=</span> TempFile<span style='color:#8c0000; '>.</span>OpenTextFile<span style='color:#806030; '>(</span>XMLFileName<span style='color:#806030; '>,</span> ForWriting<span style='color:#806030; '>)</span>
+        <span style='color:#400000; font-weight:bold; '>Set</span> xmlLog <span style='color:#806030; '>=</span> TempFile<span style='color:#8c0000; '>.</span>OpenTextFile<span style='color:#806030; '>(</span>LOGFileName<span style='color:#806030; '>,</span> ForWriting<span style='color:#806030; '>)</span>
+                
+        <span style='color:#c34e00; '>' Create XML header</span>
+        xmlDoc<span style='color:#8c0000; '>.</span>WriteLine <span style='color:#e60000; '>"&lt;OesisXML>"</span>
+
+        <span style='color:#400000; font-weight:bold; '>For</span> <span style='color:#400000; font-weight:bold; '>Each</span> FileName In a
+                <span style='color:#c34e00; '>'WScript.Echo FileName</span>
+                Valid <span style='color:#806030; '>=</span> ValidateAsXmlFile<span style='color:#806030; '>(</span>FileName<span style='color:#806030; '>)</span>
+                
+                <span style='color:#400000; font-weight:bold; '>If</span> Valid <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span> <span style='color:#400000; font-weight:bold; '>Then</span>
+                        xmlLog<span style='color:#8c0000; '>.</span>WriteLine <span style='color:#400000; font-weight:bold; '>now</span> <span style='color:#806030; '>&amp;</span> <span style='color:#e60000; '>" : "</span> <span style='color:#806030; '>&amp;</span> <span style='color:#e60000; '>"XML VALIDATED - "</span> <span style='color:#806030; '>&amp;</span> FileName
+                        
+                        <span style='color:#c34e00; '>'XML file is validated, thus append to BIG XML file</span>
+                        <span style='color:#400000; font-weight:bold; '>Set</span> xmlTmp <span style='color:#806030; '>=</span> TempFile<span style='color:#8c0000; '>.</span>OpenTextFile<span style='color:#806030; '>(</span>FileName<span style='color:#806030; '>,</span> ForReading<span style='color:#806030; '>)</span>
+                        
+                        xmlBuf <span style='color:#806030; '>=</span> xmlTmp<span style='color:#8c0000; '>.</span>ReadAll
+                        xmlDoc<span style='color:#8c0000; '>.</span>Write xmlBuf
+                        xmlDoc<span style='color:#8c0000; '>.</span>WriteLine
+                        xmlTmp<span style='color:#8c0000; '>.</span><span style='color:#400000; font-weight:bold; '>Close</span>
+                        
+                <span style='color:#400000; font-weight:bold; '>Else</span>
+                        xmlLog<span style='color:#8c0000; '>.</span>WriteLine <span style='color:#400000; font-weight:bold; '>now</span> <span style='color:#806030; '>&amp;</span> <span style='color:#e60000; '>" : "</span> <span style='color:#806030; '>&amp;</span> <span style='color:#e60000; '>"------> ERROR NOT VALID - "</span> <span style='color:#806030; '>&amp;</span> FileName
+                <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+        <span style='color:#400000; font-weight:bold; '>Next</span>
+        
+        <span style='color:#c34e00; '>' End with XML Footer</span>
+        xmlDoc<span style='color:#8c0000; '>.</span>WriteLine <span style='color:#e60000; '>"&lt;/OesisXML>"</span>
+        xmlDoc<span style='color:#8c0000; '>.</span><span style='color:#400000; font-weight:bold; '>Close</span>
+        xmlLog<span style='color:#8c0000; '>.</span><span style='color:#400000; font-weight:bold; '>Close</span>
+<span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>Sub</span>
+
+<span style='color:#c34e00; '>' Returns an array with the file names that match Path.</span>
+<span style='color:#c34e00; '>' The Path string may contain the wildcard characters "*"</span>
+<span style='color:#c34e00; '>' and "?" in the file name component. The same rules apply</span>
+<span style='color:#c34e00; '>' as with the MSDOS DIR command.</span>
+<span style='color:#c34e00; '>' If Path is a directory, the contents of this directory is listed.</span>
+<span style='color:#c34e00; '>' If Path is empty, the current directory is listed.</span>
+<span style='color:#400000; font-weight:bold; '>Public</span> <span style='color:#400000; font-weight:bold; '>Function</span> ListDir <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>ByVal</span> Path<span style='color:#806030; '>)</span>
+   <span style='color:#400000; font-weight:bold; '>Dim</span> fso<span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Set</span> fso <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>CreateObject</span><span style='color:#806030; '>(</span><span style='color:#e60000; '>"Scripting.FileSystemObject"</span><span style='color:#806030; '>)</span>
+   <span style='color:#400000; font-weight:bold; '>If</span> Path <span style='color:#806030; '>=</span> <span style='color:#e60000; '>""</span> <span style='color:#400000; font-weight:bold; '>then</span> Path <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"*.*"</span>
+   <span style='color:#400000; font-weight:bold; '>Dim</span> Parent<span style='color:#806030; '>,</span> Filter
+   <span style='color:#400000; font-weight:bold; '>if</span> fso<span style='color:#8c0000; '>.</span>FolderExists<span style='color:#806030; '>(</span>Path<span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>     <span style='color:#c34e00; '>' Path is a directory</span>
+      Parent <span style='color:#806030; '>=</span> Path
+      Filter <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"*"</span>
+     <span style='color:#400000; font-weight:bold; '>Else</span>
+      Parent <span style='color:#806030; '>=</span> fso<span style='color:#8c0000; '>.</span>GetParentFolderName<span style='color:#806030; '>(</span>Path<span style='color:#806030; '>)</span>
+      <span style='color:#400000; font-weight:bold; '>If</span> Parent <span style='color:#806030; '>=</span> <span style='color:#e60000; '>""</span> <span style='color:#400000; font-weight:bold; '>Then</span> <span style='color:#400000; font-weight:bold; '>If</span> <span style='color:#400000; font-weight:bold; '>Right</span><span style='color:#806030; '>(</span>Path<span style='color:#806030; '>,</span><span style='color:#8c0000; '>1</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> <span style='color:#e60000; '>":"</span> <span style='color:#400000; font-weight:bold; '>Then</span> Parent <span style='color:#806030; '>=</span> Path<span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Else</span> Parent <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"."</span>
+      Filter <span style='color:#806030; '>=</span> fso<span style='color:#8c0000; '>.</span>GetFileName<span style='color:#806030; '>(</span>Path<span style='color:#806030; '>)</span>
+      <span style='color:#400000; font-weight:bold; '>If</span> Filter <span style='color:#806030; '>=</span> <span style='color:#e60000; '>""</span> <span style='color:#400000; font-weight:bold; '>Then</span> Filter <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"*"</span>
+      <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+   <span style='color:#400000; font-weight:bold; '>ReDim</span> a<span style='color:#806030; '>(</span><span style='color:#8c0000; '>10</span><span style='color:#806030; '>)</span>
+   <span style='color:#400000; font-weight:bold; '>Dim</span> n<span style='color:#806030; '>:</span> n <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+   <span style='color:#400000; font-weight:bold; '>Dim</span> Folder<span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Set</span> Folder <span style='color:#806030; '>=</span> fso<span style='color:#8c0000; '>.</span>GetFolder<span style='color:#806030; '>(</span>Parent<span style='color:#806030; '>)</span>
+   <span style='color:#400000; font-weight:bold; '>Dim</span> Files<span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Set</span> Files <span style='color:#806030; '>=</span> Folder<span style='color:#8c0000; '>.</span>Files
+   <span style='color:#400000; font-weight:bold; '>Dim</span> File
+   <span style='color:#400000; font-weight:bold; '>For</span> <span style='color:#400000; font-weight:bold; '>Each</span> File In Files
+      <span style='color:#400000; font-weight:bold; '>If</span> CompareFileName<span style='color:#806030; '>(</span>File<span style='color:#8c0000; '>.</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>,</span>Filter<span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span>
+         <span style='color:#400000; font-weight:bold; '>If</span> n <span style='color:#806030; '>></span> <span style='color:#400000; font-weight:bold; '>UBound</span><span style='color:#806030; '>(</span>a<span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span> <span style='color:#400000; font-weight:bold; '>ReDim</span> Preserve a<span style='color:#806030; '>(</span>n<span style='color:#806030; '>*</span><span style='color:#8c0000; '>2</span><span style='color:#806030; '>)</span>
+         a<span style='color:#806030; '>(</span>n<span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> File<span style='color:#8c0000; '>.</span>Path
+         n <span style='color:#806030; '>=</span> n <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>1</span>
+         <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+      <span style='color:#400000; font-weight:bold; '>Next</span>
+   <span style='color:#400000; font-weight:bold; '>ReDim</span> Preserve a<span style='color:#806030; '>(</span>n<span style='color:#806030; '>-</span><span style='color:#8c0000; '>1</span><span style='color:#806030; '>)</span>
+   ListDir <span style='color:#806030; '>=</span> a
+<span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+
+<span style='color:#c34e00; '>' Validates the XML file</span>
+<span style='color:#400000; font-weight:bold; '>Function</span> ValidateAsXmlFile<span style='color:#806030; '>(</span>strFileName<span style='color:#806030; '>)</span>
+    <span style='color:#400000; font-weight:bold; '>DIM</span> xmlDoc<span style='color:#806030; '>,</span> strResult
+    <span style='color:#400000; font-weight:bold; '>Set</span> xmlDoc <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>CreateObject</span><span style='color:#806030; '>(</span><span style='color:#e60000; '>"Msxml2.DOMDocument.5.0"</span><span style='color:#806030; '>)</span>
+    xmlDoc<span style='color:#8c0000; '>.</span>validateOnParse <span style='color:#806030; '>=</span> <span style='color:#0f4d75; '>True</span>
+    xmlDoc<span style='color:#8c0000; '>.</span>async <span style='color:#806030; '>=</span> <span style='color:#0f4d75; '>False</span>
+    xmlDoc<span style='color:#8c0000; '>.</span>load<span style='color:#806030; '>(</span>strFileName<span style='color:#806030; '>)</span>
+
+    <span style='color:#400000; font-weight:bold; '>Select</span> <span style='color:#400000; font-weight:bold; '>Case</span> xmlDoc<span style='color:#8c0000; '>.</span>parseError<span style='color:#8c0000; '>.</span>errorCode
+
+       <span style='color:#400000; font-weight:bold; '>Case</span> <span style='color:#8c0000; '>0</span> 
+            strResult <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+
+            <span style='color:#c34e00; '>'strResult = "Valid: " &amp; strFileName &amp; vbCr</span>
+       <span style='color:#400000; font-weight:bold; '>Case</span> <span style='color:#400000; font-weight:bold; '>Else</span>
+            strResult <span style='color:#806030; '>=</span> <span style='color:#806030; '>-</span><span style='color:#8c0000; '>1</span>
+
+
+           <span style='color:#c34e00; '>'strResult = vbCrLf &amp; "ERROR! Failed to validate " &amp; _</span>
+           <span style='color:#c34e00; '>'strFileName &amp; vbCrLf &amp; xmlDoc.parseError.reason &amp; vbCr &amp; _</span>
+           <span style='color:#c34e00; '>'"Error code: " &amp; xmlDoc.parseError.errorCode &amp; ", Line: " &amp; _</span>
+           <span style='color:#c34e00; '>'                xmlDoc.parseError.line &amp; ", Character: " &amp; _</span>
+           <span style='color:#c34e00; '>'                xmlDoc.parseError.linepos &amp; ", Source: " &amp; _</span>
+           <span style='color:#c34e00; '>'                Chr(34) &amp; xmlDoc.parseError.srcText &amp; _</span>
+           <span style='color:#c34e00; '>'                Chr(34) &amp; " - " &amp; Now &amp; vbCrLf </span>
+    <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>Select</span>
+
+    <span style='color:#400000; font-weight:bold; '>Set</span> xmlDoc <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>Nothing</span>
+    ValidateAsXmlFile <span style='color:#806030; '>=</span> strResult
+<span style='color:#400000; font-weight:bold; '>End</span>  <span style='color:#400000; font-weight:bold; '>Function</span>
+
+
+<span style='color:#400000; font-weight:bold; '>Private</span> <span style='color:#400000; font-weight:bold; '>Function</span> CompareFileName <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>ByVal</span> <span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>ByVal</span> Filter<span style='color:#806030; '>)</span> <span style='color:#c34e00; '>' (recursive)</span>
+   CompareFileName <span style='color:#806030; '>=</span> <span style='color:#0f4d75; '>False</span>
+   <span style='color:#400000; font-weight:bold; '>Dim</span> np<span style='color:#806030; '>,</span> fp<span style='color:#806030; '>:</span> np <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>1</span><span style='color:#806030; '>:</span> fp <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>1</span>
+   <span style='color:#400000; font-weight:bold; '>Do</span>
+      <span style='color:#400000; font-weight:bold; '>If</span> fp <span style='color:#806030; '>></span> <span style='color:#400000; font-weight:bold; '>Len</span><span style='color:#806030; '>(</span>Filter<span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span> CompareFileName <span style='color:#806030; '>=</span> np <span style='color:#806030; '>></span> <span style='color:#400000; font-weight:bold; '>len</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>name</span><span style='color:#806030; '>)</span><span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+      <span style='color:#400000; font-weight:bold; '>If</span> <span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span>Filter<span style='color:#806030; '>,</span>fp<span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> <span style='color:#e60000; '>".*"</span> <span style='color:#400000; font-weight:bold; '>Then</span>       <span style='color:#c34e00; '>' special case: ".*" at end of filter</span>
+         <span style='color:#400000; font-weight:bold; '>If</span> np <span style='color:#806030; '>></span> <span style='color:#400000; font-weight:bold; '>Len</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span> CompareFileName <span style='color:#806030; '>=</span> <span style='color:#0f4d75; '>True</span><span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+         <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+      <span style='color:#400000; font-weight:bold; '>Dim</span> fc<span style='color:#806030; '>:</span> fc <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span>Filter<span style='color:#806030; '>,</span>fp<span style='color:#806030; '>,</span><span style='color:#8c0000; '>1</span><span style='color:#806030; '>)</span><span style='color:#806030; '>:</span> fp <span style='color:#806030; '>=</span> fp <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>1</span>
+      <span style='color:#400000; font-weight:bold; '>Select</span> <span style='color:#400000; font-weight:bold; '>Case</span> fc
+         <span style='color:#400000; font-weight:bold; '>Case</span> <span style='color:#e60000; '>"*"</span>
+            CompareFileName <span style='color:#806030; '>=</span> CompareFileName2<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>name</span><span style='color:#806030; '>,</span>np<span style='color:#806030; '>,</span>filter<span style='color:#806030; '>,</span>fp<span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+         <span style='color:#400000; font-weight:bold; '>Case</span> <span style='color:#e60000; '>"?"</span>
+            <span style='color:#400000; font-weight:bold; '>If</span> np <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>Len</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>)</span> And <span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>,</span>np<span style='color:#806030; '>,</span><span style='color:#8c0000; '>1</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>"."</span> <span style='color:#400000; font-weight:bold; '>Then</span> np <span style='color:#806030; '>=</span> np <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>1</span>
+         <span style='color:#400000; font-weight:bold; '>Case</span> <span style='color:#400000; font-weight:bold; '>Else</span>
+            <span style='color:#400000; font-weight:bold; '>If</span> np <span style='color:#806030; '>></span> <span style='color:#400000; font-weight:bold; '>Len</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+            <span style='color:#400000; font-weight:bold; '>Dim</span> nc<span style='color:#806030; '>:</span> nc <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>,</span>np<span style='color:#806030; '>,</span><span style='color:#8c0000; '>1</span><span style='color:#806030; '>)</span><span style='color:#806030; '>:</span> np <span style='color:#806030; '>=</span> np <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>1</span>
+            <span style='color:#400000; font-weight:bold; '>If</span> <span style='color:#400000; font-weight:bold; '>Strcomp</span><span style='color:#806030; '>(</span>fc<span style='color:#806030; '>,</span>nc<span style='color:#806030; '>,</span>vbTextCompare<span style='color:#806030; '>)</span><span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span><span style='color:#8c0000; '>0</span> <span style='color:#400000; font-weight:bold; '>Then</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+         <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>Select</span>
+      <span style='color:#400000; font-weight:bold; '>Loop</span>
+<span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+
+<span style='color:#400000; font-weight:bold; '>Private</span> <span style='color:#400000; font-weight:bold; '>Function</span> CompareFileName2 <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>ByVal</span> <span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>ByVal</span> np0<span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>ByVal</span> Filter<span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>ByVal</span> fp0<span style='color:#806030; '>)</span>
+   <span style='color:#400000; font-weight:bold; '>Dim</span> fp<span style='color:#806030; '>:</span> fp <span style='color:#806030; '>=</span> fp0
+   <span style='color:#400000; font-weight:bold; '>Dim</span> fc2
+   <span style='color:#400000; font-weight:bold; '>Do</span>
+      <span style='color:#400000; font-weight:bold; '>If</span> fp <span style='color:#806030; '>></span> <span style='color:#400000; font-weight:bold; '>Len</span><span style='color:#806030; '>(</span>Filter<span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span> CompareFileName2 <span style='color:#806030; '>=</span> <span style='color:#0f4d75; '>True</span><span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+      <span style='color:#400000; font-weight:bold; '>If</span> <span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span>Filter<span style='color:#806030; '>,</span>fp<span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> <span style='color:#e60000; '>".*"</span> <span style='color:#400000; font-weight:bold; '>Then</span>    <span style='color:#c34e00; '>' special case: ".*" at end of filter</span>
+         CompareFileName2 <span style='color:#806030; '>=</span> <span style='color:#0f4d75; '>True</span><span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+         <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+      fc2 <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span>Filter<span style='color:#806030; '>,</span>fp<span style='color:#806030; '>,</span><span style='color:#8c0000; '>1</span><span style='color:#806030; '>)</span><span style='color:#806030; '>:</span> fp <span style='color:#806030; '>=</span> fp <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>1</span>
+      <span style='color:#400000; font-weight:bold; '>If</span> fc2 <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>"*"</span> And fc2 <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>"?"</span> <span style='color:#400000; font-weight:bold; '>Then</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Do</span>
+      <span style='color:#400000; font-weight:bold; '>Loop</span>
+   <span style='color:#400000; font-weight:bold; '>Dim</span> np
+   <span style='color:#400000; font-weight:bold; '>For</span> np <span style='color:#806030; '>=</span> np0 <span style='color:#400000; font-weight:bold; '>To</span> <span style='color:#400000; font-weight:bold; '>Len</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>)</span>
+      <span style='color:#400000; font-weight:bold; '>Dim</span> nc<span style='color:#806030; '>:</span> nc <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>,</span>np<span style='color:#806030; '>,</span><span style='color:#8c0000; '>1</span><span style='color:#806030; '>)</span>
+      <span style='color:#400000; font-weight:bold; '>If</span> <span style='color:#400000; font-weight:bold; '>StrComp</span><span style='color:#806030; '>(</span>fc2<span style='color:#806030; '>,</span>nc<span style='color:#806030; '>,</span>vbTextCompare<span style='color:#806030; '>)</span><span style='color:#806030; '>=</span><span style='color:#8c0000; '>0</span> <span style='color:#400000; font-weight:bold; '>Then</span>
+         <span style='color:#400000; font-weight:bold; '>If</span> CompareFileName<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>Name</span><span style='color:#806030; '>,</span>np<span style='color:#806030; '>+</span><span style='color:#8c0000; '>1</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span><span style='color:#400000; font-weight:bold; '>Mid</span><span style='color:#806030; '>(</span>Filter<span style='color:#806030; '>,</span>fp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>Then</span>
+            CompareFileName2 <span style='color:#806030; '>=</span> <span style='color:#0f4d75; '>True</span><span style='color:#806030; '>:</span> <span style='color:#400000; font-weight:bold; '>Exit</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+                <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+                <span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>If</span>
+      <span style='color:#400000; font-weight:bold; '>Next</span>
+   CompareFileName2 <span style='color:#806030; '>=</span> <span style='color:#0f4d75; '>False</span>
+<span style='color:#400000; font-weight:bold; '>End</span> <span style='color:#400000; font-weight:bold; '>Function</span>
+</pre>

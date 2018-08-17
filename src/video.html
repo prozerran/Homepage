@@ -1,0 +1,275 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// VideoWnd.cpp : implementation file</span>
+<span style='color:#008000; '>//</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>taxi4u.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Common.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>VideoWnd.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _DEBUG</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> new DEBUG_NEW</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>undef</span><span style='color:#004a43; '> THIS_FILE</span>
+<span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>char</span> THIS_FILE<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> __FILE__<span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CVideoWnd</span>
+
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hPlayNextHandle    <span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>CreateEvent</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hPlayVideoThread    <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>//The process handle for normal playlist</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hPlayTriggThread    <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>//The process handle for trigger playlist</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hPlayBtnAdThread    <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>//The process handle for news playlist</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bExitPlayThread    <span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bPlayNews        <span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> PlayVideoProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> PlayTriggProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> PlayBtnAdProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>extern</span> CConfig    g_Config<span style='color:#0000ff; '>;</span>      <span style='color:#008000; '>// The config file</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> CScheduler<span style='color:#0000ff; '>*</span>  g_pSchedule<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> CButtonWnd<span style='color:#0000ff; '>*</span>  g_pButtonWnd<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span>      g_bCustomerOn<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span>      g_bResetTriggerPlay<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span>      g_bUserChangedSetting<span style='color:#0000ff; '>;</span>
+
+CVideoWnd<span style='color:#0000ff; '>::</span>CVideoWnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HWND</span> parent<span style='color:#0000ff; '>,</span>CAdWnd<span style='color:#0000ff; '>*</span>pAdWnd<span style='color:#0000ff; '>,</span>CBottomAdWnd<span style='color:#0000ff; '>*</span>pAdBottomWnd<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_LAUNCHPLAYER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_hParentWnd <span style='color:#0000ff; '>=</span> parent<span style='color:#0000ff; '>;</span>
+  m_pAdWnd<span style='color:#0000ff; '>=</span>pAdWnd<span style='color:#0000ff; '>;</span>
+  m_pAdBottomWnd<span style='color:#0000ff; '>=</span>pAdBottomWnd<span style='color:#0000ff; '>;</span>
+  m_pCurrentVideo<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+  m_bTriggeredPlay<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CVideoWnd<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CVideoWnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#008000; '>//Release handle</span>
+  MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_CLOSEPLAYER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  ClosePlayer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>StartPlayer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bExitPlayThread<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    g_bExitPlayThread<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+    g_hPlayVideoThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>PlayVideoProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_hPlayTriggThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>PlayTriggProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_hPlayBtnAdThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>PlayBtnAdProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>ClosePlayer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bExitPlayThread<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    g_bExitPlayThread<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>SetEvent</span><span style='color:#0000ff; '>(</span>g_hPlayNextHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hPlayVideoThread<span style='color:#0000ff; '>,</span>INFINITE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hPlayTriggThread<span style='color:#0000ff; '>,</span>INFINITE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hPlayBtnAdThread<span style='color:#0000ff; '>,</span>INFINITE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_STOP<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetPlayList<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetPlayList<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_bTriggeredPlay<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>PlayContent<span style='color:#0000ff; '>(</span>CVideoItem<span style='color:#0000ff; '>*</span> pVideo<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ResourceType <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> BINTYPE<span style='color:#0000ff; '>)</span>  
+      <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayExecutable<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+      <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayMedia<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>PlayNext<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>SetEvent</span><span style='color:#0000ff; '>(</span>g_hPlayNextHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>PlayMedia<span style='color:#0000ff; '>(</span>CVideoItem<span style='color:#0000ff; '>*</span> pVideo<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pVideo <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ResourceType <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> VIDEOTYPE<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>g_pButtonWnd <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; '>!</span>g_bUserChangedSetting<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#008000; '>//reset sound level if user has no preference</span>
+      <span style='color:#008000; '>//g_pButtonWnd->SetSoundLevel(g_Config.m_SoundLevel.DefaultNightLevel);</span>
+      
+      <span style='color:#008000; '>//set sound level base on xml settings</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AudioLevel<span style='color:#0000ff; '>.</span>IsEmpty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        g_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetSoundLevel<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AudioLevel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayVideo<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bPlayNews<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayBottomAd<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>PlayVideo<span style='color:#0000ff; '>(</span>CVideoItem<span style='color:#0000ff; '>*</span> pVideo<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_pAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetPlayList<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_RightPictureList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  MediaPlayerPlayFile<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>UINT</span> wait<span style='color:#0000ff; '>=</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_pCurrentVideo<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    wait<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>500</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span>wait<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>SendMessage</span><span style='color:#0000ff; '>(</span>m_hParentWnd<span style='color:#0000ff; '>,</span>WM_VIDEO_PLAYNEXT<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WPARAM</span><span style='color:#0000ff; '>)</span>pVideo<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pCurrentVideo<span style='color:#0000ff; '>=</span>pVideo<span style='color:#0000ff; '>;</span>    
+  m_pAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>// include play right ad</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>PlayBottomAd<span style='color:#0000ff; '>(</span>CVideoItem<span style='color:#0000ff; '>*</span> pVideo<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetPlayList<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_BottomPictureList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CVideoWnd<span style='color:#0000ff; '>::</span>PlayExecutable<span style='color:#0000ff; '>(</span>CVideoItem<span style='color:#0000ff; '>*</span> pExe<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#008000; '>// stop videos and triggered effects</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_bTriggeredPlay<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//MediaPlayerControl(CMD_CLOSEPLAYER);</span>
+  KillProcess<span style='color:#0000ff; '>(</span>pExe<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>500</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>StartProcess<span style='color:#0000ff; '>(</span>pExe<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>do</span> 
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>500</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>  <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>IsProcessRunning<span style='color:#0000ff; '>(</span>pExe<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>SetForegroundWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hParentWnd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Starts play video</span>
+  <span style='color:#008000; '>//if (pExe->m_GUID.Compare(L"") != 0)    // TO DO</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bCustomerOn<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hParentWnd<span style='color:#0000ff; '>,</span>WM_CONTINUE_PLAYING<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>  
+  <span style='color:#008000; '>//MediaPlayerControl(CMD_LAUNCHPLAYER);</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_bTriggeredPlay<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> PlayVideoProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Create Play video thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  CVideoWnd<span style='color:#0000ff; '>*</span> pVideoWnd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>CVideoWnd<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> pArg<span style='color:#0000ff; '>;</span>
+  CVideoItem<span style='color:#0000ff; '>*</span> pVideo<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>while</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bExitPlayThread<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hPlayNextHandle<span style='color:#0000ff; '>,</span>INFINITE<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> WAIT_OBJECT_0 <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; '>!</span>g_bExitPlayThread<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>ResetEvent</span><span style='color:#0000ff; '>(</span>g_hPlayNextHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+      <span style='color:#008000; '>//Play special videos</span>
+      pVideo <span style='color:#0000ff; '>=</span> g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PlayList<span style='color:#0000ff; '>.</span>m_SpecialVideoList<span style='color:#0000ff; '>.</span>Next<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pVideo <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Playing from </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PlayList<span style='color:#0000ff; '>.</span>m_SpecialVideoList<span style='color:#0000ff; '>.</span>m_GUID<span style='color:#0000ff; '>,</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_CUST<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId<span style='color:#0000ff; '>,</span> CButtonWnd<span style='color:#0000ff; '>::</span>c_iCurrAudiLevel<span style='color:#0000ff; '>,</span> CButtonWnd<span style='color:#0000ff; '>::</span>c_iCurrBrtnLevel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayContent<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    
+      <span style='color:#008000; '>//Play Normal Videos</span>
+      pVideo <span style='color:#0000ff; '>=</span> g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PlayList<span style='color:#0000ff; '>.</span>m_NormalVideoList<span style='color:#0000ff; '>.</span>Next<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pVideo <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Playing from </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PlayList<span style='color:#0000ff; '>.</span>m_NormalVideoList<span style='color:#0000ff; '>.</span>m_GUID<span style='color:#0000ff; '>,</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_NORM<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId<span style='color:#0000ff; '>,</span> CButtonWnd<span style='color:#0000ff; '>::</span>c_iCurrAudiLevel<span style='color:#0000ff; '>,</span> CButtonWnd<span style='color:#0000ff; '>::</span>c_iCurrBrtnLevel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayContent<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Exit Play video thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> PlayTriggProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Create Play trigger thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  CVideoWnd<span style='color:#0000ff; '>*</span> pVideoWnd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>CVideoWnd<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> pArg<span style='color:#0000ff; '>;</span>
+  CVideoItem<span style='color:#0000ff; '>*</span> pVideo<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>while</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bExitPlayThread<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>g_bCustomerOn<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#008000; '>//Play trigger videos</span>
+      pVideo <span style='color:#0000ff; '>=</span> g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PlayList<span style='color:#0000ff; '>.</span>m_TriggerVideoList<span style='color:#0000ff; '>.</span>Next<span style='color:#0000ff; '>(</span>pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_bTriggeredPlay<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pVideo <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//MYTRACE(L"Playing from %s: %s",g_pSchedule->m_PlayList.m_TriggerVideoList.m_GUID,pVideo->m_FilePath);</span>
+        pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        g_bResetTriggerPlay<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+        pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_bTriggeredPlay<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+        pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayMedia<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>5000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//LOGDATA(LOG_TYPE_NMEA, CGPRMCData::c_GprmcData);</span>
+    LogLocationData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Exit Play trigger thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> PlayBtnAdProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Create Play trigger ad thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  CVideoWnd<span style='color:#0000ff; '>*</span> pVideoWnd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>CVideoWnd<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> pArg<span style='color:#0000ff; '>;</span>
+  CVideoItem<span style='color:#0000ff; '>*</span> pVideo<span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>while</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bExitPlayThread<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>g_bCustomerOn<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#008000; '>//Play trigger ad videos</span>
+      pVideo <span style='color:#0000ff; '>=</span> g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PlayList<span style='color:#0000ff; '>.</span>m_TriggerAdVideoList<span style='color:#0000ff; '>.</span>Next<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pVideo <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>        
+        g_bPlayNews<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+        g_bResetTriggerPlay<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+        pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayBottomAd<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_NEWS<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId<span style='color:#0000ff; '>,</span> CButtonWnd<span style='color:#0000ff; '>::</span>c_iCurrAudiLevel<span style='color:#0000ff; '>,</span> CButtonWnd<span style='color:#0000ff; '>::</span>c_iCurrBrtnLevel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Exit Play trigger ad thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

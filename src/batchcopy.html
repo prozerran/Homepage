@@ -1,0 +1,55 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#806030; '>@</span><span style='color:#400000; font-weight:bold; '>REM</span><span style='color:#c34e00; '> BATCH </span><span style='color:#400000; font-weight:bold; '>FILE</span>
+<span style='color:#806030; '>@</span><span style='color:#400000; font-weight:bold; '>ECHO off</span>
+
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>==========================================================================</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>Author:  Yee Hsu</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>Date:    5/5/2012</span>
+<span style='color:#400000; font-weight:bold; '>REM</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>Desc:    Win32 System Batch file for copying files into another folder.</span>
+<span style='color:#400000; font-weight:bold; '>REM          </span><span style='color:#c34e00; '>Very handy for automating certain task in Windows.</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>==========================================================================</span>
+ 
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>file and version settings</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>assumes ini file has same name with batch file and contains ...</span>
+<span style='color:#400000; font-weight:bold; '>REM</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>[settings]</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>version=12.0.0.256</span>
+<span style='color:#400000; font-weight:bold; '>REM</span>
+<span style='color:#400000; font-weight:bold; '>SET</span> INIFILE<span style='color:#806030; '>=</span><span style='color:#e60000; '>"%~dpn0.ini"</span>
+<span style='color:#400000; font-weight:bold; '>call</span><span style='color:#806030; '>:</span>welcome <span style='color:#8c0000; '>%0</span>
+<span style='color:#400000; font-weight:bold; '>call</span><span style='color:#806030; '>:</span>getvalue %INIFILE% <span style='color:#e60000; '>"version"</span> <span style='color:#e60000; '>""</span> VERSION
+ 
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>Copy EXEs and DLLs</span>
+<span style='color:#400000; font-weight:bold; '>SET</span> SRC<span style='color:#806030; '>=</span>C<span style='color:#806030; '>:</span><span style='color:#806030; '>\</span>Work<span style='color:#806030; '>\</span>Projects<span style='color:#806030; '>\</span>output<span style='color:#806030; '>\</span>ETVD
+<span style='color:#400000; font-weight:bold; '>SET</span> DST<span style='color:#806030; '>=</span>C<span style='color:#806030; '>:</span><span style='color:#806030; '>\</span>Work<span style='color:#806030; '>\</span>ETLauncher<span style='color:#806030; '>\</span>Bin<span style='color:#806030; '>\</span>ET_W_%VERSION%
+<span style='color:#400000; font-weight:bold; '>XCOPY</span> <span style='color:#806030; '>/</span>C <span style='color:#806030; '>/</span>D <span style='color:#806030; '>/</span>Y <span style='color:#806030; '>/</span>I <span style='color:#806030; '>/</span>R <span style='color:#806030; '>/</span>S %SRC%<span style='color:#806030; '>\</span>*.dll %DST%
+<span style='color:#400000; font-weight:bold; '>XCOPY</span> <span style='color:#806030; '>/</span>C <span style='color:#806030; '>/</span>D <span style='color:#806030; '>/</span>Y <span style='color:#806030; '>/</span>I <span style='color:#806030; '>/</span>R <span style='color:#806030; '>/</span>S %SRC%<span style='color:#806030; '>\</span>*.exe %DST%
+ 
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>Copy locale files</span>
+<span style='color:#400000; font-weight:bold; '>SET</span> LOC<span style='color:#806030; '>=</span>%DST%<span style='color:#806030; '>\</span>locale
+<span style='color:#400000; font-weight:bold; '>XCOPY</span> <span style='color:#806030; '>/</span>C <span style='color:#806030; '>/</span>D <span style='color:#806030; '>/</span>Y <span style='color:#806030; '>/</span>I <span style='color:#806030; '>/</span>R <span style='color:#806030; '>/</span>S %SRC%<span style='color:#806030; '>\</span>*.<span style='color:#806030; '>?</span>st %LOC%
+ 
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>Copy DAT files</span>
+<span style='color:#400000; font-weight:bold; '>SET</span> DAT<span style='color:#806030; '>=</span>C<span style='color:#806030; '>:</span><span style='color:#806030; '>\</span>Work<span style='color:#806030; '>\</span>Projects<span style='color:#806030; '>\</span>main<span style='color:#806030; '>\</span>CORE<span style='color:#806030; '>\</span>dat
+<span style='color:#400000; font-weight:bold; '>XCOPY</span> <span style='color:#806030; '>/</span>C <span style='color:#806030; '>/</span>D <span style='color:#806030; '>/</span>Y <span style='color:#806030; '>/</span>I <span style='color:#806030; '>/</span>R <span style='color:#806030; '>/</span>S %DAT%<span style='color:#806030; '>\</span>*.xml %DST%
+ 
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>Delete unecessary files</span>
+<span style='color:#400000; font-weight:bold; '>DEL</span> <span style='color:#806030; '>/</span>F <span style='color:#806030; '>/</span>Q %SRC%<span style='color:#806030; '>\</span>*.dll
+<span style='color:#400000; font-weight:bold; '>DEL</span> <span style='color:#806030; '>/</span>F <span style='color:#806030; '>/</span>Q %SRC%<span style='color:#806030; '>\</span>*.exe
+<span style='color:#400000; font-weight:bold; '>goto</span><span style='color:#806030; '>:</span><span style='color:#400000; font-weight:bold; '>eof</span>
+ 
+<span style='color:#e34adc; '>:welcome</span>
+<span style='color:#400000; font-weight:bold; '>ECHO</span><span style='color:#e60000; '>.</span>
+<span style='color:#400000; font-weight:bold; '>ECHO</span><span style='color:#e60000; '> "[%1] - Specific File Copier"</span>
+<span style='color:#400000; font-weight:bold; '>ECHO</span><span style='color:#e60000; '>.</span>
+<span style='color:#400000; font-weight:bold; '>goto</span><span style='color:#806030; '>:</span><span style='color:#400000; font-weight:bold; '>eof</span>
+ 
+<span style='color:#e34adc; '>:getvalue</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>This function reads a value from an INI file and stored it in a variable</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>%1 = name of ini file to search in.</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>%2 = search term to look for</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>%3 = group name (not currently used)</span>
+<span style='color:#400000; font-weight:bold; '>REM </span><span style='color:#c34e00; '>%4 = variable to place search result</span>
+<span style='color:#400000; font-weight:bold; '>FOR</span> <span style='color:#806030; '>/</span>F <span style='color:#e60000; '>"eol=; eol=[ tokens=1,2* delims=="</span> %%i <span style='color:#400000; font-weight:bold; '>in</span> <span style='color:#806030; '>(</span>'<span style='color:#400000; font-weight:bold; '>findstr</span> <span style='color:#806030; '>/</span>b <span style='color:#806030; '>/</span>l <span style='color:#806030; '>/</span>i <span style='color:#8c0000; '>%~2</span><span style='color:#806030; '>=</span> <span style='color:#8c0000; '>%1</span>'<span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>DO</span> <span style='color:#400000; font-weight:bold; '>SET</span> <span style='color:#8c0000; '>%~4</span><span style='color:#806030; '>=</span>%%~j
+<span style='color:#400000; font-weight:bold; '>goto</span><span style='color:#806030; '>:</span><span style='color:#400000; font-weight:bold; '>eof</span>
+</pre>

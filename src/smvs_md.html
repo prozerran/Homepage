@@ -1,0 +1,119 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Author: Yee Hsu                                     #1-8748</span>
+<span style='color:#008000; '>// Instru: Dr. J. Wong</span>
+<span style='color:#008000; '>// Date:   May 2, 2001</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// File: SMVS.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// The Server driver. The server first forks a process and</span>
+<span style='color:#008000; '>// executes com pd1. Then it continueously listens to</span>
+<span style='color:#008000; '>// Com (pd1) and Clients (pd2) and service them if there is</span>
+<span style='color:#008000; '>// a request. Clients are created when Com issues a command</span>
+<span style='color:#008000; '>// to execute a process. The Server loops indefinitely to</span>
+<span style='color:#008000; '>// service the two in such algorithm:</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//      infinite loop ()</span>
+<span style='color:#008000; '>//          read from pipe1, service Com</span>
+<span style='color:#008000; '>//          read from pipe2, service Client</span>
+<span style='color:#008000; '>//      loop back</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+#include <span style='color:#0000ff; '>&lt;</span>iostream<span style='color:#0000ff; '>.</span>h<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>stdio<span style='color:#0000ff; '>.</span>h<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>h<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>sys<span style='color:#0000ff; '>/</span>types<span style='color:#0000ff; '>.</span>h<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>unistd<span style='color:#0000ff; '>.</span>h<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>fcntl<span style='color:#0000ff; '>.</span>h<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>time<span style='color:#0000ff; '>.</span>h<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Pcib.h</span><span style='color:#0000e6; '>"</span>
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>List.h</span><span style='color:#0000e6; '>"</span>
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Semaphore.h</span><span style='color:#0000e6; '>"</span>
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Message.h</span><span style='color:#0000e6; '>"</span>
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Server.h</span><span style='color:#0000e6; '>"</span>
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Host.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>/* ************************************************ */</span>
+<span style='color:#008000; '>/*                                                  */</span>
+<span style='color:#008000; '>/*              Server Main Driver                  */</span>
+<span style='color:#008000; '>/*                                                  */</span>
+<span style='color:#008000; '>/* ************************************************ */</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// declaration of all pipes</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> pipe1<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> pipe2<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> pipen<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// create pipe channels for communications</span>
+    pipe<span style='color:#0000ff; '>(</span>pipe1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> pipe<span style='color:#0000ff; '>(</span>pipe2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// set channels to be non-blocked</span>
+    fcntl<span style='color:#0000ff; '>(</span>pipe1<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> F_SETFL<span style='color:#0000ff; '>,</span> O_NONBLOCK<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    fcntl<span style='color:#0000ff; '>(</span>pipe2<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> F_SETFL<span style='color:#0000ff; '>,</span> O_NONBLOCK<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>fork<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// child executes Com pd1</span>
+        <span style='color:#0000ff; font-weight:bold; '>char</span> pd1<span style='color:#0000ff; '>[</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\0</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+        sprintf<span style='color:#0000ff; '>(</span>pd1<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>%d</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pipe1<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        execl<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>./Com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pd1<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        exit<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        Server s<span style='color:#0000ff; '>;</span>       <span style='color:#008000; '>// create Server [ActiveList and Semaphore(s)]</span>
+        ComMsg m1<span style='color:#0000ff; '>;</span>      <span style='color:#008000; '>// m1 - com     -> server</span>
+        RequestMsg m2<span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>// m2 - client  -> server</span>
+        ReplyMsg m3<span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// m3 - server  -> client</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// listen to com query from pipe1 and service if needed</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>read<span style='color:#0000ff; '>(</span>pipe1<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> &amp;m1<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>strcmp<span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>command<span style='color:#0000ff; '>,</span> RUN<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// create new pipe for process communication</span>
+                    pipe<span style='color:#0000ff; '>(</span>pipen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// fork and insert process to active list</span>
+                    <span style='color:#0000ff; font-weight:bold; '>int</span> retv <span style='color:#0000ff; '>=</span> fork<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>retv <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#008000; '>// child executes program</span>
+                        SetChannel<span style='color:#0000ff; '>(</span>pipen<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> pipe2<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        RunCommand<span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        exit<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>else</span>
+                        s<span style='color:#0000ff; '>.</span>Insert<span style='color:#0000ff; '>(</span>retv<span style='color:#0000ff; '>,</span> pipen<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> m1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>strcmp<span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>command<span style='color:#0000ff; '>,</span> LS<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// list information on server queues</span>
+                    s<span style='color:#0000ff; '>.</span>LsCommand<span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>strcmp<span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>command<span style='color:#0000ff; '>,</span> EXIT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// finalize and terminate server</span>
+                    s<span style='color:#0000ff; '>.</span>ExitCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    ClosePipes<span style='color:#0000ff; '>(</span>pipe1<span style='color:#0000ff; '>,</span> pipe2<span style='color:#0000ff; '>,</span> pipen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    exit<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// listen to client query from pipe2 and service if needed</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>read<span style='color:#0000ff; '>(</span>pipe2<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> &amp;m2<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m3 <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>SemAction<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                UpdateLogFile<span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>,</span> m2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>purpose <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> WAIT_SEM &amp;&amp; m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>purpose <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> VS_EXIT<span style='color:#0000ff; '>)</span>
+                        write<span style='color:#0000ff; '>(</span>pipen<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> &amp;m3<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m3<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

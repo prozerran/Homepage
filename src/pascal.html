@@ -1,0 +1,841 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#c34e00; '>(**** Yee hsu                   ******)</span>
+<span style='color:#c34e00; '>(**** 4/3/2001                  ******)</span>
+<span style='color:#c34e00; '>(**** Various Math Equations    ******)</span>
+
+<span style='color:#400000; font-weight:bold; '>program</span> math<span style='color:#806030; '>;</span>
+
+<span style='color:#400000; font-weight:bold; '>const</span>
+        pi <span style='color:#806030; '>=</span> <span style='color:#800000; '>3.141592654</span><span style='color:#806030; '>;</span>
+        e <span style='color:#806030; '>=</span> <span style='color:#800000; '>2.718281828</span><span style='color:#806030; '>;</span>
+
+<span style='color:#400000; font-weight:bold; '>var</span>
+        ans<span style='color:#806030; '>:</span> <span style='color:#800040; '>char</span><span style='color:#806030; '>;</span>
+        r<span style='color:#806030; '>,</span> count<span style='color:#806030; '>,</span> num<span style='color:#806030; '>,</span> Mnum<span style='color:#806030; '>,</span> oper<span style='color:#806030; '>:</span> <span style='color:#800040; '>integer</span><span style='color:#806030; '>;</span>
+        a<span style='color:#806030; '>,</span> c<span style='color:#806030; '>,</span> m<span style='color:#806030; '>,</span> b<span style='color:#806030; '>,</span> x<span style='color:#806030; '>,</span> y<span style='color:#806030; '>,</span> z<span style='color:#806030; '>,</span> d<span style='color:#806030; '>,</span> x1<span style='color:#806030; '>,</span> x2<span style='color:#806030; '>,</span> y1<span style='color:#806030; '>,</span> y2<span style='color:#806030; '>,</span> h<span style='color:#806030; '>:</span> <span style='color:#800040; '>real</span><span style='color:#806030; '>;</span>
+        name<span style='color:#806030; '>,</span> pass<span style='color:#806030; '>:</span> <span style='color:#800040; '>string</span><span style='color:#806030; '>;</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> greetings<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'               Welcome'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'In this program you will be able to calculate the many'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'math problems you do not know how to do.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'My name is Data-8 and I will be quilding you'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'along with us throughout the Net.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'First, I would need to know your name.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter your name?'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                                 '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>name<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> delta<span style='color:#806030; '>;</span>
+ <span style='color:#400000; font-weight:bold; '>procedure</span> Mnum_1<span style='color:#806030; '>;</span>
+  <span style='color:#400000; font-weight:bold; '>procedure</span> oper_1<span style='color:#806030; '>;</span>
+    <span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Add.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+          writeln<span style='color:#806030; '>;</span>
+          writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter two numbers you want to add.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+          writeln<span style='color:#806030; '>;</span>
+          readln<span style='color:#806030; '>(</span>x<span style='color:#806030; '>,</span> y<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+          z <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> x <span style='color:#806030; '>+</span> y<span style='color:#806030; '>;</span>
+          writeln<span style='color:#806030; '>;</span>
+          writeln<span style='color:#806030; '>(</span>x <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' + '</span><span style='color:#806030; '>,</span> y <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' = '</span><span style='color:#806030; '>,</span> z <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>repeat</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+    <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+      <span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+      <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+      <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+   <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(************************       END OF OPER_1 PROCEDURE ***************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_2<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Subtract.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter two numbers you want to subtract.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>x<span style='color:#806030; '>,</span> y<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        z <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> x <span style='color:#806030; '>-</span> y<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span>x <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' - '</span><span style='color:#806030; '>,</span> y <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' = '</span><span style='color:#806030; '>,</span> z <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+    <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(************************       END OF OPER_2   PROCEDURE       ***************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_3<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Multiply.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter two numbers you want to muliply.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>x<span style='color:#806030; '>,</span> y<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        z <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> x <span style='color:#806030; '>*</span> y<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span>x <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' x '</span><span style='color:#806030; '>,</span> y <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' = '</span><span style='color:#806030; '>,</span> z <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(***********************        END OF OPER_3 PROCEDURE ************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_4<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Divide.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter two numbers you want to divide.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>x<span style='color:#806030; '>,</span> y<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        z <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> x <span style='color:#806030; '>/</span> y<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span>x <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' / '</span><span style='color:#806030; '>,</span> y <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' = '</span><span style='color:#806030; '>,</span> z <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(***********************        END OF OPER_4 PROCEDURE ***************)</span>
+
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have now logged on with Basic Math Training'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Select the operation you want to do.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       1       ==>     Add'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       2       ==>     Subtract'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       3       ==>     Multiply'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       4       ==>     Divide'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>oper<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>></span> <span style='color:#c00000; '>4</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       Invalid Input, Please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>5</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>case</span> oper <span style='color:#400000; font-weight:bold; '>of</span>
+        <span style='color:#c00000; '>1</span><span style='color:#806030; '>:</span> 
+                oper_1<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>2</span><span style='color:#806030; '>:</span> 
+                oper_2<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>3</span><span style='color:#806030; '>:</span> 
+                oper_3<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>4</span><span style='color:#806030; '>:</span> 
+                oper_4<span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another operation? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+                <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+                <span style='color:#400000; font-weight:bold; '>begin</span>
+                        writeln<span style='color:#806030; '>;</span>
+                        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+                <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(********************   END OF MNUM_1   PROCEDURE       ******************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> Mnum_2<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_1<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Slope-Intercept Form.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter the slope , x , and b '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'and I will help you find the value of y.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       y = mx + b'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the slope in decimal form.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 m       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>m<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for b.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 b       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>b<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for x.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 x       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>x<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        y <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> m <span style='color:#806030; '>*</span> x <span style='color:#806030; '>+</span> b<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The value of y is '</span><span style='color:#806030; '>,</span> y <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(********************** END OF OPER_1 PROCEDURE ****************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_2<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Distance Formula.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter the x1, y1, x2 , y2 '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'and I will help you find the value of d.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the vale for x1.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 x1      =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>x1<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for y1.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 y1      =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>y1<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for x2.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 x2      =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>x2<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for y2.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 y2      =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>y2<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        d <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> sqrt<span style='color:#806030; '>(</span><span style='color:#806030; '>(</span>x2 <span style='color:#806030; '>-</span> x1<span style='color:#806030; '>)</span> <span style='color:#806030; '>*</span> <span style='color:#806030; '>(</span>x2 <span style='color:#806030; '>-</span> x1<span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#806030; '>(</span>y2 <span style='color:#806030; '>-</span> y1<span style='color:#806030; '>)</span> <span style='color:#806030; '>*</span> <span style='color:#806030; '>(</span>y2 <span style='color:#806030; '>-</span> y1<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The value of d is '</span><span style='color:#806030; '>,</span> d <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(********************   END OF OPER_2 PROCEDURE ******************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_3<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Phythagorean Thereom.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter the a and b value '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'and I will help you find the value of c.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for a.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 a       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>a<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for b.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 b       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>b<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        c <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> sqrt<span style='color:#806030; '>(</span><span style='color:#806030; '>(</span>a <span style='color:#806030; '>*</span> a<span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#806030; '>(</span>b <span style='color:#806030; '>*</span> b<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The value of c is '</span><span style='color:#806030; '>,</span> c <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(*******************    END OF OPER_3 PROCEDURE *****************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_4<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Quadratic Equation.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter the value for b, a, c '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'and I will help you find the value of x1 and x2.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for a.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 a       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>a<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for b.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 b       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>b<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for c.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 c       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>c<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        x1 <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#806030; '>-</span>b<span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#806030; '>(</span>sqrt<span style='color:#806030; '>(</span><span style='color:#806030; '>(</span>b <span style='color:#806030; '>*</span> b<span style='color:#806030; '>)</span> <span style='color:#806030; '>-</span> <span style='color:#c00000; '>4</span> <span style='color:#806030; '>*</span> a <span style='color:#806030; '>*</span> c<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>/</span> <span style='color:#806030; '>(</span><span style='color:#c00000; '>2</span> <span style='color:#806030; '>*</span> a<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        x2 <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#806030; '>-</span>b<span style='color:#806030; '>)</span> <span style='color:#806030; '>-</span> <span style='color:#806030; '>(</span>sqrt<span style='color:#806030; '>(</span><span style='color:#806030; '>(</span>b <span style='color:#806030; '>*</span> b<span style='color:#806030; '>)</span> <span style='color:#806030; '>-</span> <span style='color:#c00000; '>4</span> <span style='color:#806030; '>*</span> a <span style='color:#806030; '>*</span> c<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>/</span> <span style='color:#806030; '>(</span><span style='color:#c00000; '>2</span> <span style='color:#806030; '>*</span> a<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The value of x1 is '</span><span style='color:#806030; '>,</span> x1 <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The value of x2 is '</span><span style='color:#806030; '>,</span> x2 <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(*******************    END OF OPER_4 PROCEDURE ***************)</span>
+
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have now logged on to Learning Algebra'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Select the type of algebra you want to do.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'       1       ==>     Slop-Intercept Form'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'       2       ==>     Distance Formula'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'       3       ==>     Pythagorean Therom'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'       4       ==>     Quadratic Equation'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>oper<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>></span> <span style='color:#c00000; '>4</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, Please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>5</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>case</span> oper <span style='color:#400000; font-weight:bold; '>of</span>
+        <span style='color:#c00000; '>1</span><span style='color:#806030; '>:</span> 
+                oper_1<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>2</span><span style='color:#806030; '>:</span> 
+                oper_2<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>3</span><span style='color:#806030; '>:</span> 
+                oper_3<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>4</span><span style='color:#806030; '>:</span> 
+                oper_4
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do other algebra operations? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(***********************        END OF MUNM_2 PROCEDURE *************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> Mnum_3<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_1<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Area for Circle.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter the value for r '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'and I will help you find the value of A.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for r.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 r       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>r<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        a <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> pi <span style='color:#806030; '>*</span> r <span style='color:#806030; '>*</span> r<span style='color:#806030; '>;</span>
+        b <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> r <span style='color:#806030; '>*</span> r<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The Area is '</span><span style='color:#806030; '>,</span> a <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>' or '</span><span style='color:#806030; '>,</span> b <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>'�'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(********************** END OF OPER_1 PROCEDURE ***************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_2<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Area for Triangle.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter the value for b and h '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'and I will help you find the value of A.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for b.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 b       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>b<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for h.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 h       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>h<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        a <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span>b <span style='color:#806030; '>*</span> h<span style='color:#806030; '>)</span> <span style='color:#806030; '>/</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The value of A is '</span><span style='color:#806030; '>,</span> a <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(********************** END OF OPER_2 PROCEDURE **************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_3<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Area for Trapezoid.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter the value for h, b1, b2'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'and I will help you find the value of A.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for h.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 h       =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>h<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for b1.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 b1      =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>b<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the value for b2.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 b2      =       '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>d<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        a <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span>h <span style='color:#806030; '>*</span> <span style='color:#806030; '>(</span>b <span style='color:#806030; '>+</span> d<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>/</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The value of A is '</span><span style='color:#806030; '>,</span> a <span style='color:#806030; '>:</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(*********************  END OF OPER_3 PROCEDURE *************)</span>
+
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have now logged on to Learning Geometry'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Select the type of geometry you want to do.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'       1       ==>     Area of Circle'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'       2       ==>     Area of Triangle'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'       3       ==>     Area of Trapezoid'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'       4       ==>     Volume of Cylinders'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>oper<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>></span> <span style='color:#c00000; '>4</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, Please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>5</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>case</span> oper <span style='color:#400000; font-weight:bold; '>of</span>
+        <span style='color:#c00000; '>1</span><span style='color:#806030; '>:</span> 
+                oper_1<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>2</span><span style='color:#806030; '>:</span> 
+                oper_2<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>3</span><span style='color:#806030; '>:</span> 
+                oper_3<span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do other Geometry operation? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(************************       END OF MNUM_3 PROCEDURE **************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> Mnum_4<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_1<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Sin.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter a degree and I will help you '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'find the sin of the degree.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the degree.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 degree: '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>x<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+
+        z <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> sin<span style='color:#806030; '>(</span>x<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The sin of '</span><span style='color:#806030; '>,</span> x <span style='color:#806030; '>:</span> <span style='color:#c00000; '>3</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>3</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' is '</span><span style='color:#806030; '>,</span> z <span style='color:#806030; '>:</span> <span style='color:#c00000; '>3</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>8</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(***********************        END OF OPER_1 PROCEDURE *************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_2<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Cos.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter a degree and I will help you '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'find the cos of the degree.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please enter the degree.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 degree: '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>x<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+
+        z <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> cos<span style='color:#806030; '>(</span>x<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The cos of '</span><span style='color:#806030; '>,</span> x <span style='color:#806030; '>:</span> <span style='color:#c00000; '>3</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>3</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>' is '</span><span style='color:#806030; '>,</span> z <span style='color:#806030; '>:</span> <span style='color:#c00000; '>3</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>8</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(********************** END OF OPER_2 PROCEDURE ***************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_3<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Not Yet'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(********************** END OF OPER_3 PROCEDURE ***************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> oper_4<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have selected the Properties of Triangles.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You may enter the vaule of a, b, angle C'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'and I will help you find the value of c.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'a = '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>a<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'b = '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>b<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'angle C = '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>d<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+
+        c <span style='color:#806030; '>:</span><span style='color:#806030; '>=</span> sqrt<span style='color:#806030; '>(</span>a <span style='color:#806030; '>*</span> a <span style='color:#806030; '>+</span> b <span style='color:#806030; '>*</span> b <span style='color:#806030; '>-</span> <span style='color:#c00000; '>2</span> <span style='color:#806030; '>*</span> a <span style='color:#806030; '>*</span> b <span style='color:#806030; '>*</span> cos<span style='color:#806030; '>(</span>d<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The value of c is '</span><span style='color:#806030; '>,</span> c <span style='color:#806030; '>:</span> <span style='color:#c00000; '>2</span> <span style='color:#806030; '>:</span> <span style='color:#c00000; '>3</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do another one? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(********************** END OF OPER_4 PROCEDURE ***************)</span>
+
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'The Trigonometry function does not work properly.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you still want to continue? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'You have now logged on to Learning Trigonometry'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                <span style='color:#400000; font-weight:bold; '>repeat</span>
+                <span style='color:#400000; font-weight:bold; '>repeat</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Select the type of trigonometry you want to do.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'1      ==>     Sin'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'2      ==>     Cos'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'3      ==>     Tan'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'4      ==>     Properties of Triangles'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>;</span>
+                write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                readln<span style='color:#806030; '>(</span>oper<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+                <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>></span> <span style='color:#c00000; '>4</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+                <span style='color:#400000; font-weight:bold; '>begin</span>
+                        writeln<span style='color:#806030; '>;</span>
+                        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, Please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+                <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>oper <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>5</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+                <span style='color:#400000; font-weight:bold; '>case</span> oper <span style='color:#400000; font-weight:bold; '>of</span>
+                <span style='color:#c00000; '>1</span><span style='color:#806030; '>:</span> 
+                        oper_1<span style='color:#806030; '>;</span>
+                <span style='color:#c00000; '>2</span><span style='color:#806030; '>:</span> 
+                        oper_2<span style='color:#806030; '>;</span>
+                <span style='color:#c00000; '>3</span><span style='color:#806030; '>:</span> 
+                        oper_3<span style='color:#806030; '>;</span>
+                <span style='color:#c00000; '>4</span><span style='color:#806030; '>:</span> 
+                        oper_4<span style='color:#806030; '>;</span>
+                <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Do you want to do other Trigonometry operation? (y/n)'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>ans<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'y'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>until</span> ans <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'n'</span><span style='color:#806030; '>;</span>
+                                <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(************************       END OF MUNM_4 PROCEDURE **************)</span>
+
+<span style='color:#400000; font-weight:bold; '>procedure</span> credits<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Programmer:    Yee Feng Hsu'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Language:              Pascal'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'All rights reserved.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+<span style='color:#c34e00; '>(************************       END IF CREDIT PRODCEDURE        ************)</span>
+
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Hello '</span><span style='color:#806030; '>,</span> name<span style='color:#806030; '>,</span> <span style='color:#e60000; '>' Welcome to the Mathematics Solving Program.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        <span style='color:#400000; font-weight:bold; '>repeat</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Please choose the type of mathematics you want to do.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       1       ==>     Basic Math'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       2       ==>     Algebra'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       3       ==>     Geometry'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       4       ==>     Trigonometry'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       5       ==>     Credits'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                       0       ==>     Quit'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        writeln<span style='color:#806030; '>;</span>
+        write<span style='color:#806030; '>(</span><span style='color:#e60000; '>'                 '</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        readln<span style='color:#806030; '>(</span>Mnum<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span>Mnum <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span>Mnum <span style='color:#806030; '>></span> <span style='color:#c00000; '>5</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Invalid Input, Please try again.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> <span style='color:#806030; '>(</span>Mnum <span style='color:#806030; '>></span><span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span>Mnum <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>6</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>case</span> Mnum <span style='color:#400000; font-weight:bold; '>of</span>
+        <span style='color:#c00000; '>1</span><span style='color:#806030; '>:</span> 
+                Mnum_1<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>2</span><span style='color:#806030; '>:</span> 
+                Mnum_2<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>3</span><span style='color:#806030; '>:</span> 
+                Mnum_3<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>4</span><span style='color:#806030; '>:</span> 
+                Mnum_4<span style='color:#806030; '>;</span>
+        <span style='color:#c00000; '>5</span><span style='color:#806030; '>:</span> 
+                credits<span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>until</span> Mnum <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>procedure</span> bye<span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>begin</span>
+                writeln<span style='color:#806030; '>;</span>
+                writeln<span style='color:#806030; '>(</span><span style='color:#e60000; '>'Well, good-bye '</span><span style='color:#806030; '>,</span> name<span style='color:#806030; '>,</span> <span style='color:#e60000; '>', see you next time.'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>;</span>
+
+<span style='color:#400000; font-weight:bold; '>begin</span>
+        showtext<span style='color:#806030; '>;</span>
+        greetings<span style='color:#806030; '>;</span>
+        delta<span style='color:#806030; '>;</span>
+        bye<span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>end</span><span style='color:#806030; '>.</span>
+</pre>

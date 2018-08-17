@@ -1,0 +1,341 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    8/5/2008</span>
+<span style='color:#008000; '>// File:    Database.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Demonstrates use of databases and SQL queries in C# MySQL API</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> CommonLib<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MySql<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MySql<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>.</span>MySqlClient<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Controller
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> Database
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> MySQL mysql <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> Connect<span style='color:#0000ff; '>(</span>DBInformation dbinfo<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySQL<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>Connect<span style='color:#0000ff; '>(</span>dbinfo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Disconnect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>Disconnect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> UpdateBlock<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span> GetMapUpdates<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            MySqlDataReader myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sSQL <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT updateid FROM uidtable GROUP BY updateid;</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                    myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span> lUpdateId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> UpdateBlock<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span> mapUpdates <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> UpdateBlock<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// add updates to process in list</span>
+                    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>int</span> nUpdateId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        lUpdateId<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>nUpdateId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// now lets process list of update ids</span>
+                    <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> nId <span style='color:#0000ff; font-weight:bold; '>in</span> lUpdateId<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> UpdateBlock<span style='color:#0000ff; '>></span> upBlock <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>GetUpdateHistIdBlock<span style='color:#0000ff; '>(</span>nId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>upBlock <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                            mapUpdates<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>nId<span style='color:#0000ff; '>,</span> upBlock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> mapUpdates<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Common<span style='color:#0000ff; '>.</span>SendEmail<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> UpdateBlock<span style='color:#0000ff; '>></span> GetUpdateHistIdBlock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> nUpdateId<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            MySqlDataReader myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT updatehistid, idcount FROM uidtable WHERE updateid = '{0}' ORDER BY idcount DESC LIMIT {1};</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+                        nUpdateId<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> Configuration<span style='color:#0000ff; '>.</span>nNumHistories<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> lUpdateHistId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> UpdateBlock<span style='color:#0000ff; '>></span> mUpdateBlock <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> UpdateBlock<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// add updatehistid to process in list</span>
+                    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>string</span> sUpdateHistId <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        lUpdateHistId<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>sUpdateHistId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// now lets process list of updatehist ids</span>
+                    <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> sUpHistId <span style='color:#0000ff; font-weight:bold; '>in</span> lUpdateHistId<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        UpdateBlock ub <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>GetUpdateBlock<span style='color:#0000ff; '>(</span>sUpHistId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ub <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                            mUpdateBlock<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>,</span> ub<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> mUpdateBlock<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Common<span style='color:#0000ff; '>.</span>SendEmail<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> UpdateBlock GetUpdateBlock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> sUpdateHistId<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            MySqlDataReader myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT UNIX_TIMESTAMP(timestamp), defdate, defversion, defsignature, engineversion FROM deftable WHERE updatehistid = '{0}';</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sUpdateHistId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    UpdateBlock upBlock <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> UpdateBlock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                    upBlock<span style='color:#0000ff; '>.</span>fiFixInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>bool</span> bHasInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// add updatehistid to process in list</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DefInformation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo<span style='color:#0000ff; '>.</span>nTimeStamp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo<span style='color:#0000ff; '>.</span>sDefVersion <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo<span style='color:#0000ff; '>.</span>sDefSignature <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo<span style='color:#0000ff; '>.</span>sEngineVersion <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo<span style='color:#0000ff; '>.</span>sUpdateHistId <span style='color:#0000ff; '>=</span> sUpdateHistId<span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>// for some reason, defdate value is kinda different, lets get the correct one</span>
+                        <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> sDefDate <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Split<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>' '</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo<span style='color:#0000ff; '>.</span>sDefDate <span style='color:#0000ff; '>=</span> sDefDate<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>upBlock<span style='color:#0000ff; '>.</span>diDefinitionInfo<span style='color:#0000ff; '>.</span>sDefDate<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                            bHasInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>bHasInfo<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#008000; '>// now get patch links</span>
+                        sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT * FROM urllinktable WHERE updatehistid = '{0}' LIMIT 1</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sUpdateHistId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> UrlInformation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo<span style='color:#0000ff; '>.</span>lUrlInfos <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+                            upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo<span style='color:#0000ff; '>.</span>sPatchLink <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo<span style='color:#0000ff; '>.</span>sType <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo<span style='color:#0000ff; '>.</span>sPatchId <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo<span style='color:#0000ff; '>.</span>sUpdateHistId <span style='color:#0000ff; '>=</span> sUpdateHistId<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                        myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>// now get patch link instr url</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo<span style='color:#0000ff; '>.</span>lUrlInfos <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                            sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT * FROM urlinstrtable WHERE patchid = '{0}' GROUP BY urlinstr;</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo<span style='color:#0000ff; '>.</span>sPatchId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                <span style='color:#0000ff; font-weight:bold; '>string</span> sInstrUrl <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                upBlock<span style='color:#0000ff; '>.</span>plPatchLinkInfo<span style='color:#0000ff; '>.</span>lUrlInfos<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>sInstrUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+                            myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+
+                        <span style='color:#008000; '>// now get virusnames/vulner</span>
+                        upBlock<span style='color:#0000ff; '>.</span>fiFixInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>FixInformation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT fixhistid FROM fixidtable WHERE updatehistid = '{0}' LIMIT 1</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sUpdateHistId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT * FROM fixnametable WHERE fixhistid = ({0});</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            FixInformation fixinfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> FixInformation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                            fixinfo<span style='color:#0000ff; '>.</span>sFixHistId <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            fixinfo<span style='color:#0000ff; '>.</span>sFixName <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            fixinfo<span style='color:#0000ff; '>.</span>nType <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            fixinfo<span style='color:#0000ff; '>.</span>nSeverity <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            fixinfo<span style='color:#0000ff; '>.</span>sUrl <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            upBlock<span style='color:#0000ff; '>.</span>fiFixInfo<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>fixinfo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                        myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> upBlock<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Common<span style='color:#0000ff; '>.</span>SendEmail<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> GetVendorNameByUpdateId<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> nUpdateId<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            MySqlDataReader myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT vendorname FROM vendortable WHERE updateid = '{0}' GROUP BY vendorname;</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> nUpdateId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sVendorName <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> sVendorName<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Common<span style='color:#0000ff; '>.</span>SendEmail<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> GetMapVendors<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            MySqlDataReader myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT * FROM vendortable;</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> mapVendors <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>int</span> nUpdateId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>string</span> sVendorName <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        mapVendors<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>nUpdateId<span style='color:#0000ff; '>,</span> sVendorName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> mapVendors<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Common<span style='color:#0000ff; '>.</span>SendEmail<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> List<span style='color:#0000ff; '>&lt;</span>ProdInformation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span> GetKeyMaps<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> mapVendors <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>GetMapVendors<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> List<span style='color:#0000ff; '>&lt;</span>ProdInformation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span> mapKeyMaps <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> List<span style='color:#0000ff; '>&lt;</span>ProdInformation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                List<span style='color:#0000ff; '>&lt;</span>ProdInformation<span style='color:#0000ff; '>></span> lProd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>KeyValuePair<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> kv <span style='color:#0000ff; font-weight:bold; '>in</span> mapVendors<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    lProd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>GetProductList<span style='color:#0000ff; '>(</span>kv<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    mapKeyMaps<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>kv<span style='color:#0000ff; '>.</span>Key<span style='color:#0000ff; '>,</span> lProd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> mapKeyMaps<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Common<span style='color:#0000ff; '>.</span>SendEmail<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> List<span style='color:#0000ff; '>&lt;</span>ProdInformation<span style='color:#0000ff; '>></span> GetProductList<span style='color:#0000ff; '>(</span>KeyValuePair<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> kv<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            MySqlDataReader myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sSQL <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT * FROM producttable WHERE updateid = {0};</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> kv<span style='color:#0000ff; '>.</span>Key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    myResultSet <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mysql<span style='color:#0000ff; '>.</span>ReturnExecutedQuery<span style='color:#0000ff; '>(</span>sSQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    List<span style='color:#0000ff; '>&lt;</span>ProdInformation<span style='color:#0000ff; '>></span> lProd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>ProdInformation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        ProdInformation newprod <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ProdInformation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        newprod<span style='color:#0000ff; '>.</span>nUpdateId <span style='color:#0000ff; '>=</span> kv<span style='color:#0000ff; '>.</span>Key<span style='color:#0000ff; '>;</span>
+                        newprod<span style='color:#0000ff; '>.</span>sVendorName <span style='color:#0000ff; '>=</span> kv<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>;</span>
+                        newprod<span style='color:#0000ff; '>.</span>sProductName <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        newprod<span style='color:#0000ff; '>.</span>sProductVers <span style='color:#0000ff; '>=</span> myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        newprod<span style='color:#0000ff; '>.</span>nOS <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>myResultSet<span style='color:#0000ff; '>.</span>GetValue<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        lProd<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>newprod<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> lProd<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Common<span style='color:#0000ff; '>.</span>SendEmail<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                myResultSet<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

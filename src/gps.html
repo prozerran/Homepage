@@ -1,0 +1,214 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// GPGGAData.cpp: implementation of the CGPGGAData class.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>taxi4u.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>GPRMCData.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _DEBUG</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>undef</span><span style='color:#004a43; '> THIS_FILE</span>
+<span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>char</span> THIS_FILE<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>=</span>__FILE__<span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> new DEBUG_NEW</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// Construction/Destruction</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+<span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>double</span> _PI <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>3.14159265359</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>double</span> _2PI <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>3.14159265359</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>float</span> CGPRMCData<span style='color:#0000ff; '>::</span>c_Lat <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0.0</span><span style='color:#800000; '>f</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>float</span> CGPRMCData<span style='color:#0000ff; '>::</span>c_Lon <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0.0</span><span style='color:#800000; '>f</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>CString</span> CGPRMCData<span style='color:#0000ff; '>::</span>c_GprmcData <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+CGPRMCData<span style='color:#0000ff; '>::</span>CGPRMCData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#0000ff; '>}</span>
+
+CGPRMCData<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CGPRMCData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CGPRMCData<span style='color:#0000ff; '>::</span>ParseData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szGPSData<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CStringArray</span> datas<span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szGPSData<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> pos<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>CString</span> tmp <span style='color:#0000ff; '>=</span> szGPSData<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>while</span><span style='color:#0000ff; '>(</span>tmp<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>></span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>  
+      <span style='color:#0000ff; font-weight:bold; '>CString</span> data<span style='color:#0000ff; '>;</span>
+      pos<span style='color:#0000ff; '>=</span>tmp<span style='color:#0000ff; '>.</span>FindOneOf<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>,</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pos<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        data<span style='color:#0000ff; '>=</span>tmp<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>pos<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        tmp<span style='color:#0000ff; '>=</span>tmp<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span>pos<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+      <span style='color:#0000ff; '>{</span>
+        data<span style='color:#0000ff; '>=</span>tmp<span style='color:#0000ff; '>;</span>
+        tmp<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+      datas<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#008000; '>//MYTRACE(L"GPS Data: %s",data);</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>datas<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>&lt;</span><span style='color:#800000; '>12</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>datas<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>A</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Check GPS Data Type</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>datas<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>$GPRMC</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  
+  <span style='color:#008000; '>//Get UTC Time hhmmss.sss</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szUTCTime<span style='color:#0000ff; '>=</span>datas<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szUTCTime<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    m_UTCDataTime<span style='color:#0000ff; '>.</span>wHour<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szUTCTime<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m_UTCDataTime<span style='color:#0000ff; '>.</span>wMinute<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szUTCTime<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m_UTCDataTime<span style='color:#0000ff; '>.</span>wSecond<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szUTCTime<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m_UTCDataTime<span style='color:#0000ff; '>.</span>wMilliseconds<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szUTCTime<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>7</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//MYTRACE(L"GPS UTC Time: %s",szUTCTime);</span>
+  
+  <span style='color:#008000; '>//Get UTC Date ddmmyy</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szUTCDate<span style='color:#0000ff; '>=</span>datas<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>9</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szUTCDate<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>6</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>    
+    m_UTCDataTime<span style='color:#0000ff; '>.</span>wDay<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szUTCDate<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m_UTCDataTime<span style='color:#0000ff; '>.</span>wMonth<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szUTCDate<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m_UTCDataTime<span style='color:#0000ff; '>.</span>wYear<span style='color:#0000ff; '>=</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WORD</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szUTCDate<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//MYTRACE(L"GPS UTC Date: %s",szUTCDate);</span>
+  
+  <span style='color:#008000; '>//Get X Direction E,W</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szXDir<span style='color:#0000ff; '>=</span>datas<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>6</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szXDir<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>    
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  
+  <span style='color:#008000; '>//Get X dddmm.mmmm</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szX<span style='color:#0000ff; '>=</span>datas<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>5</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szX<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> ddd<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szX<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> mm<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szX<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> mmmm<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szX<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>6</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>double</span> x<span style='color:#0000ff; '>=</span>ddd<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>(</span>mm<span style='color:#0000ff; '>+</span>mmmm<span style='color:#0000ff; '>/</span><span style='color:#800000; '>10000.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>/</span><span style='color:#800000; '>60.0</span><span style='color:#0000ff; '>;</span>  
+    <span style='color:#008000; '>//double x=ddd*100+mm+mmmm/10000.0f;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szXDir<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>W</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> szXDir<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>w</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      x<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>-</span>x<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    m_Lon<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>float</span><span style='color:#0000ff; '>)</span>x<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//MYTRACE(L"GPS X: %s",szX);</span>
+  
+  
+  <span style='color:#008000; '>//Get Y Direction N,S</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szYDir<span style='color:#0000ff; '>=</span>datas<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szYDir<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>    
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#008000; '>//Get Y ddmm.mmmm</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szY<span style='color:#0000ff; '>=</span>datas<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szY<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>9</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> dd<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szY<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> mm<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szY<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> mmmm<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>szY<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>5</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>double</span> y<span style='color:#0000ff; '>=</span>dd<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>(</span>mm<span style='color:#0000ff; '>+</span>mmmm<span style='color:#0000ff; '>/</span><span style='color:#800000; '>10000.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>/</span><span style='color:#800000; '>60.0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>//double y=dd*100+mm+mmmm/10000.0f;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szYDir<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>S</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> szYDir<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      y<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>-</span>y<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    m_Lat<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>float</span><span style='color:#0000ff; '>)</span>y<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//MYTRACE(L"GPS Y: %s",szY);</span>
+
+  <span style='color:#008000; '>//assign to global lat/lon</span>
+  c_GprmcData <span style='color:#0000ff; '>=</span> szGPSData<span style='color:#0000ff; '>;</span>
+  c_Lat <span style='color:#0000ff; '>=</span> m_Lat<span style='color:#0000ff; '>;</span>
+  c_Lon <span style='color:#0000ff; '>=</span> m_Lon<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CGPRMCData<span style='color:#0000ff; '>::</span>CheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szGPSData<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  TRY
+  <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> pos <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>pos <span style='color:#0000ff; '>=</span> szGPSData<span style='color:#0000ff; '>.</span>FindOneOf<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>*</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>CString</span> szChkSum <span style='color:#0000ff; '>=</span> szGPSData<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span>pos<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> szGPSData<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>CString</span> szChkStr <span style='color:#0000ff; '>=</span> szGPSData<span style='color:#0000ff; '>.</span>Left<span style='color:#0000ff; '>(</span>pos<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>short</span> nSum <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> nLen <span style='color:#0000ff; '>=</span> szChkStr<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nLen<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>short</span> ch <span style='color:#0000ff; '>=</span> szChkStr<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            nSum <span style='color:#0000ff; '>=</span> nSum <span style='color:#0000ff; '>^</span> ch<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>CString</span> szXorSum <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        szXorSum<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%0X</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> nSum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szXorSum<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+            szXorSum<span style='color:#0000ff; '>.</span>Insert<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'0'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>szChkSum<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>szXorSum<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  CATCH<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CException</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; '>}</span>
+  END_CATCH
+  <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CGPRMCData<span style='color:#0000ff; '>::</span>IsLocationTriggered<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>float</span> x_Lat<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>float</span> x_Lon<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>float</span> x_Rad<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>  
+  TRY
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>double</span> rLat1 <span style='color:#0000ff; '>=</span> c_Lat <span style='color:#0000ff; '>*</span> _PI <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>180</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>double</span> rLon1 <span style='color:#0000ff; '>=</span> c_Lon <span style='color:#0000ff; '>*</span> _PI <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>180</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>double</span> rLat2 <span style='color:#0000ff; '>=</span> x_Lat <span style='color:#0000ff; '>*</span> _PI <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>180</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>double</span> rLon2 <span style='color:#0000ff; '>=</span> x_Lon <span style='color:#0000ff; '>*</span> _PI <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>180</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>double</span> dDist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>acos</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>cos</span><span style='color:#0000ff; '>(</span>rLat1<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>cos</span><span style='color:#0000ff; '>(</span>rLon1<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>cos</span><span style='color:#0000ff; '>(</span>rLat2<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>cos</span><span style='color:#0000ff; '>(</span>rLon2<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>cos</span><span style='color:#0000ff; '>(</span>rLat1<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>(</span>rLon1<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>cos</span><span style='color:#0000ff; '>(</span>rLat2<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>(</span>rLon2<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>(</span>rLat1<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>(</span>rLat2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>6378.137</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>1000</span><span style='color:#0000ff; '>;</span>    
+    <span style='color:#008000; '>//MYTRACE(L"Dist %0.1f, mLatLon[%0.4f, %0.4f], xLatLon[%0.4f, %0.4f]", dDist, m_Lat, m_Lon, x_Lat, x_Lon);</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>dDist <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> x_Rad<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  CATCH<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CException</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; '>}</span>
+  END_CATCH
+  <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

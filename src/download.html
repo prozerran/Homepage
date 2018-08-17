@@ -1,0 +1,766 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// XmlSchedule.cpp: implementation of the CXmlSchedule class.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Schedule.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>FileFind.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>GPRMCData.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _DEBUG</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>undef</span><span style='color:#004a43; '> THIS_FILE</span>
+<span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>char</span> THIS_FILE<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>=</span>__FILE__<span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> new DEBUG_NEW</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// Construction/Destruction</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+
+<span style='color:#0000ff; font-weight:bold; '>extern</span> CConfig  g_Config<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span>    g_bExitDownloadThread<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span>    IsFreeDiskSpaceEnough<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DWORDLONG</span> rdwDiskSpace<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>CString</span>  GetMacAddress<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>CString</span>  <span style='color:#0000ff; font-weight:bold; '>GetCurrentDirectory</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>CString</span>  GetSoftwareVersion<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CString</span> filePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+CScheduler<span style='color:#0000ff; '>::</span>CScheduler<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HWND</span> hParent<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>*** Scheduler Initiated.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_hParent<span style='color:#0000ff; '>=</span>hParent<span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>//Init all variables</span>
+  m_DownloadPath    <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_Content<span style='color:#0000ff; '>.</span>m_DownloadPath<span style='color:#0000ff; '>;</span>
+  m_UserName      <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_Content<span style='color:#0000ff; '>.</span>m_UserName<span style='color:#0000ff; '>;</span>
+  m_Password      <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_Content<span style='color:#0000ff; '>.</span>m_Password<span style='color:#0000ff; '>;</span>
+  m_MacAddress    <span style='color:#0000ff; '>=</span> GetMacAddress<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_ScheduleXmlId    <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  
+  m_DownloadTempPath<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>Temp</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>m_DownloadPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_VideosDownloadPath<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>Videos</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>m_DownloadPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_PicturesDownloadPath<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>Pictures</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>m_DownloadPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>//Create Paths</span>
+  <span style='color:#0000ff; font-weight:bold; '>CreateDirectory</span><span style='color:#0000ff; '>(</span>m_DownloadPath<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CreateDirectory</span><span style='color:#0000ff; '>(</span>m_VideosDownloadPath<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CreateDirectory</span><span style='color:#0000ff; '>(</span>m_PicturesDownloadPath<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CreateDirectory</span><span style='color:#0000ff; '>(</span>m_DownloadTempPath<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>//Load current schedule xml</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadSchedule<span style='color:#0000ff; '>(</span>m_DownloadPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Only allow delete of contents when # of minimum contents exist in XML file</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>//Delete all contents not on schedule list</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DeleteContents<span style='color:#0000ff; '>(</span>m_VideosDownloadPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DeleteContents<span style='color:#0000ff; '>(</span>m_PicturesDownloadPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  m_hRunCompleted<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>CreateEvent</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span>TRUE<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Run Completed Event</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  CTaskList<span style='color:#0000ff; '>::</span>Abort<span style='color:#0000ff; '>(</span>FALSE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsFreeDiskSpaceEnough<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1024</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>1024</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>ResetEvent</span><span style='color:#0000ff; '>(</span>m_hRunCompleted<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>*** Begin Download ***</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Download new schedule xml file</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bExitDownloadThread<span style='color:#0000ff; '>)</span>
+    DownloadScheduleFile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Download videos and pictures</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bExitDownloadThread<span style='color:#0000ff; '>)</span>
+    DownloadCurrentTask<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>      
+
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>*** End Download ***</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>SetEvent</span><span style='color:#0000ff; '>(</span>m_hRunCompleted<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>DownloadScheduleFile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> requestUrl<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> tempFileName<span style='color:#0000ff; '>=</span>XML_SCHEDULE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> appPath<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>GetCurrentDirectory</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>+</span>APP_FILE_NAME<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> tempSchedulePath<span style='color:#0000ff; '>=</span>m_DownloadTempPath<span style='color:#0000ff; '>+</span>tempFileName<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> csPlaylistPattern<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetPlayablePattern<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> sProdVersion<span style='color:#0000ff; '>=</span>GetSoftwareVersion<span style='color:#0000ff; '>(</span>appPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>// construct the URL request</span>
+  requestUrl<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>?Action=GET_SCH&amp;DevID=</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>&amp;AppID=</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>&amp;XmlID=</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>&amp;Gprmc=</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>&amp;CntStatus=</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+    g_Config<span style='color:#0000ff; '>.</span>m_Content<span style='color:#0000ff; '>.</span>m_ScheduleUrl<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_MacAddress<span style='color:#0000ff; '>,</span> sProdVersion<span style='color:#0000ff; '>,</span> m_ScheduleXmlId<span style='color:#0000ff; '>,</span> 
+    CGPRMCData<span style='color:#0000ff; '>::</span>c_GprmcData<span style='color:#0000ff; '>,</span>csPlaylistPattern<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  CTaskList dlSchTask<span style='color:#0000ff; '>;</span>
+  CTaskItem item<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>.</span>m_Url<span style='color:#0000ff; '>=</span>requestUrl<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>.</span>m_FileName  <span style='color:#0000ff; '>=</span> tempFileName<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>.</span>m_FilePath <span style='color:#0000ff; '>=</span> tempSchedulePath<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>.</span>m_UserName <span style='color:#0000ff; '>=</span> m_UserName<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>.</span>m_Password <span style='color:#0000ff; '>=</span> m_Password<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bDownloadScheduleSuccess<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Requesting Schedule File: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> item<span style='color:#0000ff; '>.</span>m_Url<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>25</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>DeleteFile</span><span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>.</span>m_FilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    bDownloadScheduleSuccess <span style='color:#0000ff; '>=</span> dlSchTask<span style='color:#0000ff; '>.</span>StartDownload<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// retry download schedule file on fails</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>bDownloadScheduleSuccess<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Download Schedule File: Ok.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_3G__<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>SUCC</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadSchedule<span style='color:#0000ff; '>(</span>m_DownloadTempPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>CopyFile</span><span style='color:#0000ff; '>(</span>tempSchedulePath<span style='color:#0000ff; '>,</span> g_Config<span style='color:#0000ff; '>.</span>m_Content<span style='color:#0000ff; '>.</span>m_DownloadPath<span style='color:#0000ff; '>+</span>XML_SCHEDULE<span style='color:#0000ff; '>,</span> FALSE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Retrying download Schedule File.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_3G__<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>FAIL</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>// within the 30sec, each sec check if customer is on, if so, exit all download and play videos</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>30</span><span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>      
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>g_bExitDownloadThread<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>DownloadCurrentTask<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szDownloadPath<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  CTaskList<span style='color:#0000ff; '>*</span> taskList<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>new</span> CTaskList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nCount <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CContentListProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+        <span style='color:#0000ff; font-weight:bold; '>int</span> nCont <span style='color:#0000ff; '>=</span> pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> nCont<span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CContentDetailProfile<span style='color:#0000ff; '>*</span> pdp <span style='color:#0000ff; '>=</span> pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetAt<span style='color:#0000ff; '>(</span>j<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      RESOURCETYPE type<span style='color:#0000ff; '>;</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_BIN<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        type<span style='color:#0000ff; '>=</span>BINTYPE<span style='color:#0000ff; '>,</span> szDownloadPath<span style='color:#0000ff; '>=</span>m_VideosDownloadPath<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_VIDEO<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        type<span style='color:#0000ff; '>=</span>VIDEOTYPE<span style='color:#0000ff; '>,</span> szDownloadPath<span style='color:#0000ff; '>=</span>m_VideosDownloadPath<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_PICTURE<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        type<span style='color:#0000ff; '>=</span>PICTURETYPE<span style='color:#0000ff; '>,</span> szDownloadPath<span style='color:#0000ff; '>=</span>m_PicturesDownloadPath<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+        szDownloadPath<span style='color:#0000ff; '>=</span>m_DownloadTempPath<span style='color:#0000ff; '>;</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>NeedToDownloadFile<span style='color:#0000ff; '>(</span>szDownloadPath<span style='color:#0000ff; '>+</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>,</span> _ttol<span style='color:#0000ff; '>(</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        CTaskItem <span style='color:#0000ff; '>*</span>item<span style='color:#0000ff; '>=</span>taskList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddItem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ResourceType<span style='color:#0000ff; '>=</span>type<span style='color:#0000ff; '>;</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Url<span style='color:#0000ff; '>=</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Url<span style='color:#0000ff; '>;</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>=</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>;</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>=</span>szDownloadPath<span style='color:#0000ff; '>+</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>;</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_UserName<span style='color:#0000ff; '>=</span>m_UserName<span style='color:#0000ff; '>;</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Password<span style='color:#0000ff; '>=</span>m_Password<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+      <span style='color:#0000ff; '>{</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> QA_RELEASE</span>
+        MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Completed Download File [</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>] 100</span><span style='color:#007997; '>%%</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> szDownloadPath<span style='color:#0000ff; '>+</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+      <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#008000; '>// start download all items</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>taskList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Run<span style='color:#0000ff; '>(</span>m_hParent<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> taskList<span style='color:#0000ff; '>;</span>
+    taskList<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>    
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#008000; '>// reload play list every time</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Reloading Playlist</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>m_hParent<span style='color:#0000ff; '>,</span>WM_PLAYLIST_CHANGED<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>DownloadFile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szUrl<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> sFileName<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;CTaskList task;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;CTaskItem item;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;item.m_Url = szUrl;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;item.m_FileName=sFileName;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;item.m_FilePath=glob_CurrentPath+glob_Config.m_Content.m_DownloadPath+item.m_FileName;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;item.m_UserName=glob_Config.m_Content.m_UserName;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;item.m_Password=glob_Config.m_Content.m_Password;</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;DeleteFile(item.m_FilePath);</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;if(task.StartDownload(&amp;item))  </span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;return TRUE;    </span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;return FALSE;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>NeedToDownloadFile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szFilePath<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwFileSize<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsEqualFileSize<span style='color:#0000ff; '>(</span>szFilePath<span style='color:#0000ff; '>,</span> dwFileSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>LoadSchedule<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> sXmlPath<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    CXmlDocument xmlDoc<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>CString</span> sFilePath<span style='color:#0000ff; '>=</span>sXmlPath<span style='color:#0000ff; '>+</span>XML_SCHEDULE<span style='color:#0000ff; '>;</span>
+
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Parsing Schedule File: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sFilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>.</span>Load<span style='color:#0000ff; '>(</span>sFilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ScheduleXmlId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetHeaderAttribute<span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@xmlid</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ParseVideoList<span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ParsePictureList<span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ParseContentList<span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ParseZoneList<span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Parsing Schedule File: Ok.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Unable to load Schedule File.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CString</span> CScheduler<span style='color:#0000ff; '>::</span>GetHeaderAttribute<span style='color:#0000ff; '>(</span>CXmlDocument<span style='color:#0000ff; '>&amp;</span> xmlDoc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> csAttr<span style='color:#0000ff; '>)</span>                  
+<span style='color:#0000ff; '>{</span>
+    CXmlNodeList xmlList<span style='color:#0000ff; '>;</span>
+  
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>.</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>schedule</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>    
+        CXmlNode xmlNode<span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlList<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span>csAttr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>    
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>ParseVideoList<span style='color:#0000ff; '>(</span>CXmlDocument<span style='color:#0000ff; '>&amp;</span> xmlDoc<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    CXmlNodeList xmlList<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>.</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>schedule/videolists/videolist</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>m_VideoListProfile<span style='color:#0000ff; '>.</span>RemoveAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> xmlList<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CXmlNode xmlNode<span style='color:#0000ff; '>;</span>
+            CXmlNodeList xmlDList<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>xmlList<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+
+            CVideoListProfile<span style='color:#0000ff; '>*</span> plist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>AddVideoProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ValidDays <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@validdays</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_VideoType <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@type</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlNode<span style='color:#0000ff; '>.</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>video</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlDList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> xmlDList<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    CXmlNode xmlDNode<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>xmlDList<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>j<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlDNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+
+                    CVideoContentProfile<span style='color:#0000ff; '>*</span> pp<span style='color:#0000ff; '>=</span> plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AdvId        <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@advid</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId      <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@contentid</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_RightPicListId  <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@rightpiclistid</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_BottomPicListId  <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@bottompiclistid</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Layout      <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@layout</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_StartTime      <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@starttime</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_EndTime      <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@endtime</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_CommenceDate    <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@commencedate</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ExpireDate    <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@expiredate</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ZoneId      <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@zoneid</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ZoneArea      <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@zonearea</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AudioLevel    <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@audiolevel</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_BrightnessLevel  <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@brightnesslevel</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>ParsePictureList<span style='color:#0000ff; '>(</span>CXmlDocument<span style='color:#0000ff; '>&amp;</span> xmlDoc<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    CXmlNodeList xmlList<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>.</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>schedule/picturelists/picturelist</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>m_PictureListProfile<span style='color:#0000ff; '>.</span>RemoveAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> xmlList<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CXmlNode xmlNode<span style='color:#0000ff; '>;</span>
+            CXmlNodeList xmlDList<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>xmlList<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+
+            CPictureListProfile<span style='color:#0000ff; '>*</span> plist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>AddPictureProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PictureId <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@id</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Duration <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@duration</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlNode<span style='color:#0000ff; '>.</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>picture</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlDList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> xmlDList<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    CXmlNode xmlDNode<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>xmlDList<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>j<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlDNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+
+                    CPictureDetailProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PictureId      <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@picid</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FlyDirection   <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@flydirection</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>ParseContentList<span style='color:#0000ff; '>(</span>CXmlDocument<span style='color:#0000ff; '>&amp;</span> xmlDoc<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    CXmlNodeList xmlList<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>.</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>schedule/contentlists/contentlist</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>m_ContentListProfile<span style='color:#0000ff; '>.</span>RemoveAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> xmlList<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CXmlNode xmlNode<span style='color:#0000ff; '>;</span>
+            CXmlNodeList xmlDList<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>xmlList<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+
+            CContentListProfile<span style='color:#0000ff; '>*</span> plist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>AddContentProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@id</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlNode<span style='color:#0000ff; '>.</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>content</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlDList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> xmlDList<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    CXmlNode xmlDNode<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>xmlDList<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>j<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlDNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+
+                    CContentDetailProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Url       <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@url</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName  <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@file</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType  <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@type</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileSize  <span style='color:#0000ff; '>=</span> xmlDNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@size</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>ParseZoneList<span style='color:#0000ff; '>(</span>CXmlDocument<span style='color:#0000ff; '>&amp;</span> xmlDoc<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    CXmlNodeList xmlList<span style='color:#0000ff; '>;</span>
+  
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlDoc<span style='color:#0000ff; '>.</span>SelectNodes<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>schedule/zonelists/zone</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>m_ZoneListProfile<span style='color:#0000ff; '>.</span>RemoveAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> xmlList<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CXmlNode xmlNode<span style='color:#0000ff; '>;</span>
+            CXmlNodeList xmlDList<span style='color:#0000ff; '>;</span>
+      
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>xmlList<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>xmlNode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+      
+            CZoneListProfile<span style='color:#0000ff; '>*</span> plist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>AddZoneProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Name   <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@name</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ZoneId <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@id</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Lat    <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@lat</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Lon    <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@lon</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            plist<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Radius <span style='color:#0000ff; '>=</span> xmlNode<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>@radius</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CVideoListProfile<span style='color:#0000ff; '>*</span> CScheduler<span style='color:#0000ff; '>::</span>GetPlayList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> csTypeId<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nCount <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetVideoSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CVideoListProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetVideoAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_VideoType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>csTypeId<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CPictureListProfile<span style='color:#0000ff; '>*</span> CScheduler<span style='color:#0000ff; '>::</span>GetPictureList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> csTypeId<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nCount <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetPictureSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CPictureListProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetPictureAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PictureId<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>csTypeId<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CContentListProfile<span style='color:#0000ff; '>*</span> CScheduler<span style='color:#0000ff; '>::</span>GetContentList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> csTypeId<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nCount <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CContentListProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>csTypeId<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CZoneListProfile<span style='color:#0000ff; '>*</span> CScheduler<span style='color:#0000ff; '>::</span>GetZoneList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> csTypeId<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nCount <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetZoneSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CZoneListProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetZoneAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ZoneId<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>csTypeId<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>LoadPlayList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_PlayList<span style='color:#0000ff; '>.</span>RemoveAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  CVideoList<span style='color:#0000ff; '>*</span> item<span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>// customer playlist</span>
+  item<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>&amp;</span>m_PlayList<span style='color:#0000ff; '>.</span>m_SpecialVideoList<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ValidDays<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>1,2,3,4,5,6,7</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_StartTimes<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ListType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>ListType<span style='color:#0000ff; '>)</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadVideoList<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>,</span> PLAYLIST_CUSTOMER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>// normal playlist</span>
+  item<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>&amp;</span>m_PlayList<span style='color:#0000ff; '>.</span>m_NormalVideoList<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ValidDays<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>1,2,3,4,5,6,7</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_StartTimes<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ListType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>ListType<span style='color:#0000ff; '>)</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadVideoList<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>,</span> PLAYLIST_NORMAL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>// trigger playlist</span>
+  item<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>&amp;</span>m_PlayList<span style='color:#0000ff; '>.</span>m_TriggerVideoList<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ValidDays<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>1,2,3,4,5,6,7</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_StartTimes<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ListType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>ListType<span style='color:#0000ff; '>)</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadVideoList<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>,</span> PLAYLIST_TRIGGER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>// news playlist</span>
+  item<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>&amp;</span>m_PlayList<span style='color:#0000ff; '>.</span>m_TriggerAdVideoList<span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ValidDays<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>1,2,3,4,5,6,7</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_StartTimes<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ListType<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>ListType<span style='color:#0000ff; '>)</span><span style='color:#800000; '>5</span><span style='color:#0000ff; '>;</span>
+  item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadVideoList<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>,</span> PLAYLIST_NEWS<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CScheduler<span style='color:#0000ff; '>::</span>LoadVideoList<span style='color:#0000ff; '>(</span>CVideoList<span style='color:#0000ff; '>*</span> videoList<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szPlayType<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    CVideoListProfile<span style='color:#0000ff; '>*</span> vid <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetPlayList<span style='color:#0000ff; '>(</span>szPlayType<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>vid <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nVidCount <span style='color:#0000ff; '>=</span> vid<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> iVid <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> iVid <span style='color:#0000ff; '>&lt;</span> nVidCount<span style='color:#0000ff; '>;</span> iVid<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CVideoContentProfile<span style='color:#0000ff; '>*</span> con <span style='color:#0000ff; '>=</span> vid<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetAt<span style='color:#0000ff; '>(</span>iVid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+        CContentListProfile<span style='color:#0000ff; '>*</span> clp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetContentList<span style='color:#0000ff; '>(</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        CContentDetailProfile<span style='color:#0000ff; '>*</span> cdp <span style='color:#0000ff; '>=</span> clp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    CVideoItem <span style='color:#0000ff; '>*</span>item<span style='color:#0000ff; '>=</span>videoList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddItem<span style='color:#0000ff; '>(</span>cdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AdvId<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AdvId<span style='color:#0000ff; '>.</span>IsEmpty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>?</span> con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId <span style='color:#0000ff; '>:</span> con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AdvId<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ContentId<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>=</span>m_VideosDownloadPath<span style='color:#0000ff; '>+</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_StartTime<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_StartTime<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_EndTime<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_EndTime<span style='color:#0000ff; '>;</span>    
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_CommenceDate<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_CommenceDate<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ExpireDate<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ExpireDate<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ZoneId<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ZoneId<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AudioLevel<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_AudioLevel<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_BrightnessLevel<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_BrightnessLevel<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Status<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsEqualFileSize<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>,</span> _ttol<span style='color:#0000ff; '>(</span>cdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ZonePlay<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ZoneArea<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>deny</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>?</span> FALSE <span style='color:#0000ff; '>:</span> TRUE<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>cdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_BIN<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+      item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ResourceType<span style='color:#0000ff; '>=</span>BINTYPE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>cdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_VIDEO<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+      item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ResourceType<span style='color:#0000ff; '>=</span>VIDEOTYPE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>cdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_PICTURE<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+      item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_ResourceType<span style='color:#0000ff; '>=</span>PICTURETYPE<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Status<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>CString</span> layout<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Layout<span style='color:#0000ff; '>;</span>
+      
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>layout<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Layout<span style='color:#0000ff; '>=</span>LAYOUT_FULLSCREEN<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Layout<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>Layout<span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>layout<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      
+      <span style='color:#0000ff; font-weight:bold; '>CString</span> rightPictureListID<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_RightPicListId<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>CString</span> bottomPictureListID<span style='color:#0000ff; '>=</span>con<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_BottomPicListId<span style='color:#0000ff; '>;</span>
+      
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>rightPictureListID<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_RightPictureList<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>new</span> CPictureList<span style='color:#0000ff; '>(</span>rightPictureListID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        LoadRefPictureList<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_RightPictureList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>//item->m_RightPictureList->Reset();      </span>
+      <span style='color:#0000ff; '>}</span>
+      
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bottomPictureListID<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_BottomPictureList<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>new</span> CPictureList<span style='color:#0000ff; '>(</span>bottomPictureListID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        LoadRefPictureList<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_BottomPictureList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>//item->m_BottomPictureList->Reset();      </span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CScheduler<span style='color:#0000ff; '>::</span>LoadRefPictureList<span style='color:#0000ff; '>(</span>CPictureList <span style='color:#0000ff; '>*</span>pictureList<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  CPictureListProfile<span style='color:#0000ff; '>*</span> pic <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetPictureList<span style='color:#0000ff; '>(</span>pictureList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pic <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nPicCount <span style='color:#0000ff; '>=</span> pic<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> duration<span style='color:#0000ff; '>=</span>pic<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Duration<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>duration<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    pictureList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Duration<span style='color:#0000ff; '>=</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    pictureList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Duration<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>duration<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    pictureList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Duration<span style='color:#0000ff; '>=</span>pictureList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Duration <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>1</span> <span style='color:#0000ff; '>?</span> <span style='color:#800000; '>1</span> <span style='color:#0000ff; '>:</span> pictureList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Duration<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> iPic <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> iPic <span style='color:#0000ff; '>&lt;</span> nPicCount<span style='color:#0000ff; '>;</span> iPic<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+    CPictureDetailProfile <span style='color:#0000ff; '>*</span>pd  <span style='color:#0000ff; '>=</span> pic<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetAt<span style='color:#0000ff; '>(</span>iPic<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    CPictureItem <span style='color:#0000ff; '>*</span> item<span style='color:#0000ff; '>=</span>pictureList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddItem<span style='color:#0000ff; '>(</span>pd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PictureId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>=</span>m_PicturesDownloadPath<span style='color:#0000ff; '>+</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Status<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsEqualFileSize<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FilePath<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetFileSizeInScheduleXml<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GUID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SizeMode<span style='color:#0000ff; '>=</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>//Get fly direction</span>
+    <span style='color:#0000ff; font-weight:bold; '>CString</span> direction<span style='color:#0000ff; '>=</span>pd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FlyDirection<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>direction<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FlyDirection<span style='color:#0000ff; '>=</span>FlyDirection_FromLeft<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+      item<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FlyDirection<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>FlyDirection<span style='color:#0000ff; '>)</span><span style='color:#0000ff; font-weight:bold; '>_ttoi</span><span style='color:#0000ff; '>(</span>direction<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>IsEqualFileSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szFilePath<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwFileSize<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bRet<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HANDLE</span> hFile <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateFile</span><span style='color:#0000ff; '>(</span>szFilePath<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>GENERIC_READ</span><span style='color:#0000ff; '>,</span> FILE_SHARE_READ<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>OPEN_EXISTING</span><span style='color:#0000ff; '>,</span> FILE_ATTRIBUTE_NORMAL<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hFile <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>GetFileSize</span><span style='color:#0000ff; '>(</span>hFile<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>dwFileSize<span style='color:#0000ff; '>)</span>
+      bRet<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>CloseHandle</span><span style='color:#0000ff; '>(</span>hFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> bRet<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>IsFileExistInScheduleXml<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szFileName<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nCount <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CContentListProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> nFiles <span style='color:#0000ff; '>=</span> pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> f <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> f <span style='color:#0000ff; '>&lt;</span> nFiles<span style='color:#0000ff; '>;</span> f<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CContentDetailProfile <span style='color:#0000ff; '>*</span>cd <span style='color:#0000ff; '>=</span> pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetAt<span style='color:#0000ff; '>(</span>f<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>cd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>.</span>CompareNoCase<span style='color:#0000ff; '>(</span>szFileName<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>LONG</span> CScheduler<span style='color:#0000ff; '>::</span>GetFileSizeInScheduleXml<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szFileName<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nCount <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CContentListProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> nFiles <span style='color:#0000ff; '>=</span> pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> f <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> f <span style='color:#0000ff; '>&lt;</span> nFiles<span style='color:#0000ff; '>;</span> f<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CContentDetailProfile <span style='color:#0000ff; '>*</span>cd <span style='color:#0000ff; '>=</span> pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetAt<span style='color:#0000ff; '>(</span>f<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>cd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>.</span>CompareNoCase<span style='color:#0000ff; '>(</span>szFileName<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> _ttol<span style='color:#0000ff; '>(</span>cd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CScheduler<span style='color:#0000ff; '>::</span>DeleteContents<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> szFilePath<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> sFileName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> sFilePath <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>WIN32_FIND_DATA</span> lpFindFileData<span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>HANDLE</span> hFind <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>FindFirstFile</span><span style='color:#0000ff; '>(</span>szFilePath <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>*.*</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>lpFindFileData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hFind <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>do</span>
+  <span style='color:#0000ff; '>{</span>
+    sFileName <span style='color:#0000ff; '>=</span> lpFindFileData<span style='color:#0000ff; '>.</span>cFileName<span style='color:#0000ff; '>;</span>
+    sFilePath <span style='color:#0000ff; '>=</span> szFilePath <span style='color:#0000ff; '>+</span> sFileName<span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sFileName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> sFileName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>..</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>(</span>lpFindFileData<span style='color:#0000ff; '>.</span>dwFileAttributes <span style='color:#0000ff; '>&amp;</span> FILE_ATTRIBUTE_DIRECTORY<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>  
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsFileExistInScheduleXml<span style='color:#0000ff; '>(</span>sFileName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Deleted File: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sFilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>DeleteFile</span><span style='color:#0000ff; '>(</span>sFilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FindNextFile</span><span style='color:#0000ff; '>(</span>hFind<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>lpFindFileData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CloseHandle</span><span style='color:#0000ff; '>(</span>hFind<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CString</span> CScheduler<span style='color:#0000ff; '>::</span>GetPlayablePattern<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szPlayPattern<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> szDownloadPath<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadSchedule<span style='color:#0000ff; '>(</span>m_DownloadPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nCount <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      CContentListProfile<span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SchedulerProfile<span style='color:#0000ff; '>.</span>GetContentAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+      <span style='color:#0000ff; font-weight:bold; '>int</span> nCont <span style='color:#0000ff; '>=</span> pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      
+      <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> nCont<span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        CContentDetailProfile<span style='color:#0000ff; '>*</span> pdp <span style='color:#0000ff; '>=</span> pp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetAt<span style='color:#0000ff; '>(</span>j<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        RESOURCETYPE type<span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_BIN<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+          type<span style='color:#0000ff; '>=</span>BINTYPE<span style='color:#0000ff; '>,</span> szDownloadPath<span style='color:#0000ff; '>=</span>m_VideosDownloadPath<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_VIDEO<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+          type<span style='color:#0000ff; '>=</span>VIDEOTYPE<span style='color:#0000ff; '>,</span> szDownloadPath<span style='color:#0000ff; '>=</span>m_VideosDownloadPath<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileType<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>TYPE_PICTURE<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+          type<span style='color:#0000ff; '>=</span>PICTURETYPE<span style='color:#0000ff; '>,</span> szDownloadPath<span style='color:#0000ff; '>=</span>m_PicturesDownloadPath<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+          szDownloadPath<span style='color:#0000ff; '>=</span>m_DownloadTempPath<span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsEqualFileSize<span style='color:#0000ff; '>(</span>szDownloadPath<span style='color:#0000ff; '>+</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileName<span style='color:#0000ff; '>,</span> _ttol<span style='color:#0000ff; '>(</span>pdp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_FileSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+          szPlayPattern<span style='color:#0000ff; '>.</span>Insert<span style='color:#0000ff; '>(</span>szPlayPattern<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>1</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+          szPlayPattern<span style='color:#0000ff; '>.</span>Insert<span style='color:#0000ff; '>(</span>szPlayPattern<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>0</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> szPlayPattern<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

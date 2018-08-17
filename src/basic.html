@@ -1,0 +1,195 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#c34e00; '>' BASIC PROGRAMMING                                     INSTRUCTOR: MR. JONES</span>
+<span style='color:#c34e00; '>' CIS 111 SEC 002                                       DUE DATE:07-13-98</span>
+<span style='color:#c34e00; '>'</span>
+<span style='color:#c34e00; '>' HSU, YEE                                              SSN: ???-??-????</span>
+<span style='color:#c34e00; '>' LAB ASSIGNMENT - 4, 6.14</span>
+<span style='color:#c34e00; '>'---------------------------------------------------------------------------</span>
+CLS
+<span style='color:#400000; font-weight:bold; '>GOSUB</span> InitializeVariables
+<span style='color:#400000; font-weight:bold; '>GOSUB</span> PrintHeadings
+<span style='color:#400000; font-weight:bold; '>GOSUB</span> ProcessDetail
+<span style='color:#400000; font-weight:bold; '>GOSUB</span> Printtotals
+<span style='color:#400000; font-weight:bold; '>END</span>
+
+<span style='color:#c34e00; '>'************************ Initialize Variables **************************</span>
+<span style='color:#e34adc; '>InitializeVariables</span><span style='color:#806030; '>:</span>
+        H1$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         CITY COLLEGE OF SAN FRANCISCO   PAGE NO. ###    "</span>
+        H2$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"\        \       GOOD HEALTH GYM                         "</span>
+        C1$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"MEMBER NAME      GENDER  AGE     WEIGHT  PHONE NO.       "</span>
+        C2$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"===========      ======  ===     ======  =========       "</span>
+        D1$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"\                \  \ \   ##        ###  \       \       "</span>
+        T1$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         FEMALE MEMBERS UNDER 25         ###             "</span>
+        T2$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         FEMALE MEMBERS 25 AND OVER      ###             "</span>
+        T3$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         MALE MEMBERS UNDER 25           ###             "</span>
+        T4$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         MALE MEMBERS 25 AND OVER        ###             "</span>
+        T5$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         TOTAL FEMALE MEMBERS            ###             "</span>
+        T6$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         TOTAL MALE MEMBERS              ###             "</span>
+        T7$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         TOTAL MEMBERS OF \      \ GYM   ####            "</span>
+        T8$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"         TOTAL MEMBERS                   ####            "</span>
+
+        <span style='color:#400000; font-weight:bold; '>LET</span> AGE<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> GENDER<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> GYM<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> RRT<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> PAGE<span style='color:#8c0000; '>.</span>NO <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> <span style='color:#400000; font-weight:bold; '>LINE</span><span style='color:#8c0000; '>.</span>COUNT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> MAX<span style='color:#8c0000; '>.</span>LINES <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>45</span>
+
+        <span style='color:#400000; font-weight:bold; '>GOSUB</span> ReadData
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#c34e00; '>'*********************** print Headings *********************************</span>
+<span style='color:#e34adc; '>PrintHeadings</span><span style='color:#806030; '>:</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> PAGE<span style='color:#8c0000; '>.</span>NO <span style='color:#806030; '>=</span> PAGE<span style='color:#8c0000; '>.</span>NO <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>1</span>
+        LPRINT <span style='color:#400000; font-weight:bold; '>CHR</span>$<span style='color:#806030; '>(</span><span style='color:#8c0000; '>12</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        LPRINT USING H1$<span style='color:#806030; '>;</span> PAGE<span style='color:#8c0000; '>.</span>NO
+
+        <span style='color:#400000; font-weight:bold; '>IF</span> GYM$ <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> <span style='color:#e60000; '>"EOF"</span> <span style='color:#400000; font-weight:bold; '>THEN</span>
+                LPRINT USING H2$<span style='color:#806030; '>;</span> GYM$
+                LPRINT
+                LPRINT C1$
+                LPRINT C2$
+                LPRINT
+                <span style='color:#400000; font-weight:bold; '>LET</span> <span style='color:#400000; font-weight:bold; '>LINE</span><span style='color:#8c0000; '>.</span>COUNT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#c34e00; '>'************************ Process Detail ********************************</span>
+<span style='color:#e34adc; '>ProcessDetail</span><span style='color:#806030; '>:</span>
+        <span style='color:#400000; font-weight:bold; '>DO</span> <span style='color:#400000; font-weight:bold; '>UNTIL</span> GYM$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"EOF"</span>
+                <span style='color:#400000; font-weight:bold; '>LET</span> GYM<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> GYM$
+                <span style='color:#400000; font-weight:bold; '>LET</span> AGE<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> AGE<span style='color:#8c0000; '>.</span>GROUP$
+                <span style='color:#400000; font-weight:bold; '>LET</span> GENDER<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> GENDER$
+                <span style='color:#400000; font-weight:bold; '>GOSUB</span> MemberTotal
+                <span style='color:#400000; font-weight:bold; '>GOSUB</span> PrintDetail
+                <span style='color:#400000; font-weight:bold; '>GOSUB</span> ReadData
+               
+                <span style='color:#400000; font-weight:bold; '>IF</span> GYM<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> GYM$ <span style='color:#400000; font-weight:bold; '>THEN</span>
+                        <span style='color:#400000; font-weight:bold; '>GOSUB</span> GYMBRK
+                <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                        <span style='color:#400000; font-weight:bold; '>IF</span> GENDER<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> GENDER$ <span style='color:#400000; font-weight:bold; '>THEN</span>
+                                <span style='color:#400000; font-weight:bold; '>GOSUB</span> GENDERBRK
+                        <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                                <span style='color:#400000; font-weight:bold; '>IF</span> AGE<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>></span> AGE<span style='color:#8c0000; '>.</span>GROUP$ <span style='color:#400000; font-weight:bold; '>THEN</span>
+                                        <span style='color:#400000; font-weight:bold; '>GOSUB</span> AGEBRK
+                                <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+                        <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+                <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+        <span style='color:#400000; font-weight:bold; '>LOOP</span>
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#c34e00; '>'************************ Read Data *************************************</span>
+<span style='color:#e34adc; '>ReadData</span><span style='color:#806030; '>:</span>
+        READ GYM$<span style='color:#806030; '>,</span> Member$<span style='color:#806030; '>,</span> GENDER$<span style='color:#806030; '>,</span> AGE<span style='color:#806030; '>,</span> WEIGHT<span style='color:#806030; '>,</span> PHONE$
+
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"MEI YEE CHEUNG"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>19</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>123</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"123-4287"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"JENNY SCOTT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>21</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>105</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"467-8221"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"ROSE JONES"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>23</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>110</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"867-4289"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"MOLLY MIST"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>18</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>125</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"966-4037"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"HOLLY HOWE"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>24</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>130</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"862-3090"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"LYNN LONG"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>25</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>121</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"334-0712"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"KIM SMITH"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>30</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>150</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"332-0021"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"DEBBIE DOE"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>50</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>143</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"167-0072"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"JOHN JONES"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>19</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>175</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"963-0421"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"SCOTT MILLER"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>21</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>200</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"331-0021"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"STEVEN BROWN"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>23</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>150</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"966-0404"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"LARRY SHOW"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>43</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>189</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"967-0000"</span>
+        DATA <span style='color:#e60000; '>"ERSATZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"JAMES RANDAL"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>67</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>178</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"339-0421"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"VIRA OSMOND"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>21</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>110</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"334-0202"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"SANDRA LONG"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>24</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>130</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"334-0212"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"GAYNEL SILLO"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>19</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>110</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"332-0264"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"JOELLE DERLAP"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>27</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>100</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"960-0215"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"JEANNIE JONES"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>30</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>137</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"960-1245"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"MIKE MOORE"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>23</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>170</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"962-0405"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"JERRY SANDOVAL"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>24</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>189</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"339-0211"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"TOM TONE"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>37</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>175</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"421-1234"</span>
+        DATA <span style='color:#e60000; '>"LICIT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"TIM SHORT"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>40</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>183</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"330-1001"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"CATHY NELSON"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>21</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>105</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"331-0219"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"SONIA SONG"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>19</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>142</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"967-0121"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"JACKIE SMITH"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>24</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>189</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"337-7123"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"TRICIA SCUDDER"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>18</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>120</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"960-1234"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"NORA NOMES"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"F"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>23</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>163</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"301-1243"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"RANDY RICH"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>24</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>152</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"961-1111"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"TONY HERNANDEZ"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>21</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>110</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"333-4444"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"TOMMY FOSS"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>18</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>125</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"900-0000"</span>
+        DATA <span style='color:#e60000; '>"FETID"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"DOUG DONLEY"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"M"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>85</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>129</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"312-3456"</span>
+        DATA <span style='color:#e60000; '>"EOF"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"NULL"</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"NULL"</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>0</span><span style='color:#806030; '>,</span> <span style='color:#8c0000; '>0</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>"NULL"</span>
+
+        <span style='color:#400000; font-weight:bold; '>IF</span> AGE <span style='color:#806030; '>&lt;</span> <span style='color:#8c0000; '>25</span> <span style='color:#400000; font-weight:bold; '>THEN</span>
+                <span style='color:#400000; font-weight:bold; '>LET</span> AGE<span style='color:#8c0000; '>.</span>GROUP$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"UNDER"</span>
+        <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                <span style='color:#400000; font-weight:bold; '>LET</span> AGE<span style='color:#8c0000; '>.</span>GROUP$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"OVER"</span>
+        <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#c34e00; '>'*********************** Calculate SubTotal *****************************</span>
+<span style='color:#e34adc; '>MemberTotal</span><span style='color:#806030; '>:</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> AGE<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> AGE<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>1</span>
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#c34e00; '>'********************* print Detail *************************************</span>
+<span style='color:#e34adc; '>PrintDetail</span><span style='color:#806030; '>:</span>
+        LPRINT USING D1$<span style='color:#806030; '>;</span> Member$<span style='color:#806030; '>;</span> GENDER$<span style='color:#806030; '>;</span> AGE<span style='color:#806030; '>;</span> WEIGHT<span style='color:#806030; '>;</span> PHONE$
+        <span style='color:#400000; font-weight:bold; '>LET</span> <span style='color:#400000; font-weight:bold; '>LINE</span><span style='color:#8c0000; '>.</span>COUNT <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>LINE</span><span style='color:#8c0000; '>.</span>COUNT <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>1</span>
+
+        <span style='color:#400000; font-weight:bold; '>IF</span> <span style='color:#400000; font-weight:bold; '>LINE</span><span style='color:#8c0000; '>.</span>COUNT <span style='color:#806030; '>></span><span style='color:#806030; '>=</span> MAX<span style='color:#8c0000; '>.</span>LINES <span style='color:#400000; font-weight:bold; '>THEN</span>
+                <span style='color:#400000; font-weight:bold; '>GOSUB</span> PrintHeadings
+        <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#e34adc; '>GYMBRK</span><span style='color:#806030; '>:</span>
+        <span style='color:#400000; font-weight:bold; '>GOSUB</span> GENDERBRK
+        LPRINT USING T7$<span style='color:#806030; '>;</span> GYM<span style='color:#8c0000; '>.</span>SAVE$<span style='color:#806030; '>;</span> GYM<span style='color:#8c0000; '>.</span>TOT
+
+        <span style='color:#400000; font-weight:bold; '>LET</span> RPT<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> RPT<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>+</span> GYM<span style='color:#8c0000; '>.</span>TOT
+        <span style='color:#400000; font-weight:bold; '>LET</span> GYM<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> GYM<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> GYM$
+
+        <span style='color:#400000; font-weight:bold; '>GOSUB</span> PrintHeadings
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#e34adc; '>GENDERBRK</span><span style='color:#806030; '>:</span>
+        <span style='color:#400000; font-weight:bold; '>GOSUB</span> AGEBRK
+        <span style='color:#400000; font-weight:bold; '>IF</span> GENDER<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"F"</span> <span style='color:#400000; font-weight:bold; '>THEN</span>
+                LPRINT USING T5$<span style='color:#806030; '>;</span> GENDER<span style='color:#8c0000; '>.</span>TOT
+        <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                LPRINT USING T6$<span style='color:#806030; '>;</span> GENDER<span style='color:#8c0000; '>.</span>TOT
+        <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+       
+        <span style='color:#400000; font-weight:bold; '>LET</span> GYM<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> GYM<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>+</span> GENDER<span style='color:#8c0000; '>.</span>TOT
+        <span style='color:#400000; font-weight:bold; '>LET</span> GENDER<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> GENDER<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> GENDER$
+        LPRINT
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#e34adc; '>AGEBRK</span><span style='color:#806030; '>:</span>
+        LPRINT
+        <span style='color:#400000; font-weight:bold; '>IF</span> AGE<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"UNDER"</span> <span style='color:#400000; font-weight:bold; '>THEN</span>
+                <span style='color:#400000; font-weight:bold; '>IF</span> GENDER<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"F"</span> <span style='color:#400000; font-weight:bold; '>THEN</span>
+                        LPRINT USING T1$<span style='color:#806030; '>;</span> AGE<span style='color:#8c0000; '>.</span>TOT
+                <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                        LPRINT USING T3$<span style='color:#806030; '>;</span> AGE<span style='color:#8c0000; '>.</span>TOT
+                <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+        <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                <span style='color:#400000; font-weight:bold; '>IF</span> GENDER<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> <span style='color:#e60000; '>"F"</span> <span style='color:#400000; font-weight:bold; '>THEN</span>
+                        LPRINT USING T2$<span style='color:#806030; '>;</span> AGE<span style='color:#8c0000; '>.</span>TOT
+                <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                        LPRINT USING T4$<span style='color:#806030; '>;</span> AGE<span style='color:#8c0000; '>.</span>TOT
+                <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+        <span style='color:#400000; font-weight:bold; '>END</span> <span style='color:#400000; font-weight:bold; '>IF</span>
+        LPRINT
+        <span style='color:#400000; font-weight:bold; '>LET</span> <span style='color:#400000; font-weight:bold; '>LINE</span><span style='color:#8c0000; '>.</span>COUNT <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>LINE</span><span style='color:#8c0000; '>.</span>COUNT <span style='color:#806030; '>+</span> <span style='color:#8c0000; '>2</span>
+       
+        <span style='color:#400000; font-weight:bold; '>LET</span> GENDER<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> GENDER<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>+</span> AGE<span style='color:#8c0000; '>.</span>TOT
+        <span style='color:#400000; font-weight:bold; '>LET</span> AGE<span style='color:#8c0000; '>.</span>TOT <span style='color:#806030; '>=</span> <span style='color:#8c0000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>LET</span> AGE<span style='color:#8c0000; '>.</span>SAVE$ <span style='color:#806030; '>=</span> AGE<span style='color:#8c0000; '>.</span>GROUP$
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+
+<span style='color:#c34e00; '>'********************* print Totals *************************************</span>
+<span style='color:#e34adc; '>Printtotals</span><span style='color:#806030; '>:</span>
+        LPRINT <span style='color:#e60000; '>"         GOOD HEALTH GYM MEMBER TOTAL                    "</span>
+        LPRINT
+        LPRINT USING T8$<span style='color:#806030; '>;</span> RPT<span style='color:#8c0000; '>.</span>TOT
+<span style='color:#400000; font-weight:bold; '>RETURN</span>
+<span style='color:#c34e00; '>'********************* End of Program ***********************************</span>
+</pre>

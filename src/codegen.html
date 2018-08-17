@@ -1,0 +1,540 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#3f7f59; '>// ==========================================================================</span>
+<span style='color:#3f7f59; '>// Author:  Yee Hsu</span>
+<span style='color:#3f7f59; '>// Date:    8/10/2003</span>
+<span style='color:#3f7f59; '>// File:    codegen.java</span>
+<span style='color:#3f7f59; '>//</span>
+<span style='color:#3f7f59; '>// Desc:    Code Generator</span>
+<span style='color:#3f7f59; '>// ==========================================================================</span>
+
+<span style='color:#7f0055; font-weight:bold; '>package</span><span style='color:#7f0055; '> codegen</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> constrain</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> visitor</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>util</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> ast</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  The Frame class is used for tracking the frame size as we generated </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  bytecodes</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> we need the frame size to determine offsets for variables</span>
+<span style='color:#3f5fbf; '>*/</span>
+<span style='color:#7f0055; font-weight:bold; '>class</span> Frame {
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>int</span> size = 0;     <span style='color:#3f7f59; '>// size of current frame</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>Stack</span> blockSizes = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>Stack</span>();
+       <span style='color:#3f7f59; '>// If we are embedded 3 blocks deep in the current frame</span>
+       <span style='color:#3f7f59; '>// then the blockSizes stack will have 3 items in it,</span>
+       <span style='color:#3f7f59; '>// each recording the size of the associated block</span>
+       <span style='color:#3f7f59; '>// e.g. consider the following source program segment</span>
+       <span style='color:#3f7f59; '>//     int f(int n,int p) {  &lt;- bottom block has formals</span>
+       <span style='color:#3f7f59; '>//        int i;             &lt;- next block has i </span>
+       <span style='color:#3f7f59; '>//        { int k; int l; int m &lt;- next block has k, l, and m</span>
+       <span style='color:#3f7f59; '>//         ...</span>
+       <span style='color:#3f7f59; '>//        the blockSizes stack has 2,1,3 with 3 at the top</span>
+       <span style='color:#3f7f59; '>//        the framesize is 6 - the sum of all the block sizes</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Frame</span>() {
+        openBlock();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>int</span> getSize() {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> size;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> openBlock() {
+        blockSizes.push(<span style='color:#7f0055; font-weight:bold; '>new</span> Block());
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>int</span> closeBlock() {
+        <span style='color:#7f0055; font-weight:bold; '>int</span> bsize = getBlockSize();
+        size -= bsize; <span style='color:#3f7f59; '>// all items in the current block are gone</span>
+                       <span style='color:#3f7f59; '>// so decrease the frame size</span>
+        blockSizes.pop();
+        <span style='color:#7f0055; font-weight:bold; '>return</span> bsize;
+    }
+
+
+    Block topBlock() {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> (Block)blockSizes.peek();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> change(<span style='color:#7f0055; font-weight:bold; '>int</span> n) {   <span style='color:#3f7f59; '>// change current block size; framesize</span>
+        size += n;
+        topBlock().change(n);
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>int</span> getBlockSize() {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> topBlock().getSize();
+    }
+}
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  The Block class is used to record the size of the current block</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Used in tandem with Frame</span>
+<span style='color:#3f5fbf; '>*/</span>
+<span style='color:#7f0055; font-weight:bold; '>class</span> Block {
+    <span style='color:#7f0055; font-weight:bold; '>int</span> size = 0;
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> change(<span style='color:#7f0055; font-weight:bold; '>int</span> n) {
+        size += n;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>int</span> getSize() {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> size;
+    }
+}
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  The Codegen class will walk the AST</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> determine and set variable</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  offsets and generate the bytecodes</span>
+<span style='color:#3f5fbf; '>*/</span>
+<span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>class</span> Codegen <span style='color:#7f0055; font-weight:bold; '>extends</span> ASTVisitor {
+
+    AST t;
+    <span style='color:#7f0055; font-weight:bold; '>Stack</span> frameSizes;   <span style='color:#3f7f59; '>// used for tracking the frame sizes;</span>
+                        <span style='color:#3f7f59; '>// when we start generating code for a</span>
+                        <span style='color:#3f7f59; '>// function we'll push a new entry on the</span>
+                        <span style='color:#3f7f59; '>// stack with init size zero</span>
+    Codes codeInit = <span style='color:#7f0055; font-weight:bold; '>new</span> Codes();
+    Program program;    <span style='color:#3f7f59; '>// program will contain the generated bytecodes</span>
+    <span style='color:#7f0055; font-weight:bold; '>int</span> labelNum;       <span style='color:#3f7f59; '>// used for creating new, unique labels</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>boolean</span> debugFlag;
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Create a new code generator based on the given AST</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> t is the AST that will be visited</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Codegen(AST t) {
+        <span style='color:#7f0055; font-weight:bold; '>this</span>.t = t;
+        program = <span style='color:#7f0055; font-weight:bold; '>new</span> Program();
+        frameSizes = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>Stack</span>();
+        labelNum = 0;
+        <span style='color:#7f0055; font-weight:bold; '>this</span>.debugFlag = compiler.<span style='color:#7f0055; font-weight:bold; '>Compiler</span>.getDebugFlag();
+    }
+
+<span style='color:#3f5fbf; '>/** visit all the nodes in the AST</span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '>gen bytecodes</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Program execute() {
+        t.accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);  <span style='color:#3f7f59; '>// </span>
+        <span style='color:#7f0055; font-weight:bold; '>return</span> program;
+    }
+        
+
+    <span style='color:#7f0055; font-weight:bold; '>Frame</span> topFrame() {
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (frameSizes.empty())
+        <span style='color:#7f0055; font-weight:bold; '>System</span>.out.println(<span style='color:#2a00ff; '>"frames empty"</span>);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> (<span style='color:#7f0055; font-weight:bold; '>Frame</span>)frameSizes.peek();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> openFrame() {  <span style='color:#3f7f59; '>// open a new frame - we're generating codes for</span>
+                        <span style='color:#3f7f59; '>// a function declaration</span>
+        frameSizes.push(<span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>Frame</span>());
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> openBlock() {  <span style='color:#3f7f59; '>// open a new block - store local variables</span>
+        topFrame().openBlock();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> closeBlock() {  <span style='color:#3f7f59; '>// close the current block (and pop the local</span>
+                         <span style='color:#3f7f59; '>// variables off the runtime stack</span>
+        topFrame().closeBlock();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> closeFrame() {
+        frameSizes.pop();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> changeFrame(<span style='color:#7f0055; font-weight:bold; '>int</span> n) { <span style='color:#3f7f59; '>// change the size of the current frame by the </span>
+                              <span style='color:#3f7f59; '>// given amount</span>
+        topFrame().change(n);
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>int</span> frameSize() {  <span style='color:#3f7f59; '>// return the current frame size</span>
+        <span style='color:#7f0055; font-weight:bold; '>return</span> topFrame().getSize();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>int</span> getBlockSize() {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> topFrame().getBlockSize();
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  we'll need to create new labels for the bytecode program</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g. the following is legal despite </span><span style='color:#3f5fbf; '>2</span><span style='color:#3f5fbf; '> functions with the same name</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>        int f(int n) {... {int f() {... x = f()} } ... y = f(</span><span style='color:#3f5fbf; '>5</span><span style='color:#3f5fbf; '>)}</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  we don't want to generate the label f for the start of both functions</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  instead</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> we'll generate</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g.</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> f&lt;</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;0></span><span style='color:#3f5fbf; '>> and f&lt;</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;1></span><span style='color:#3f5fbf; '>></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>String</span> newLabel(<span style='color:#7f0055; font-weight:bold; '>String</span> label) {  <span style='color:#3f7f59; '>// create a new label from label</span>
+        ++labelNum;
+        <span style='color:#7f0055; font-weight:bold; '>return</span> label + <span style='color:#2a00ff; '>"&lt;&lt;"</span> + labelNum + <span style='color:#2a00ff; '>">>"</span>;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> storeop(ICode code) {
+        <span style='color:#7f0055; font-weight:bold; '>Frame</span> top = topFrame();
+<span style='color:#3f7f59; '>/*        </span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;System.out.println("storeop: "+code.toString()+" fs:"+</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;top.getSize()+" bs: "+top.getBlockSize());</span>
+<span style='color:#3f7f59; '>*/</span>           
+        <span style='color:#7f0055; font-weight:bold; '>int</span> bytecode = code.getBytecode();
+        <span style='color:#7f0055; font-weight:bold; '>int</span> change = Codes.FrameChange[bytecode];
+        program.storeop(code);
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (change == Codes.UnknownChange) {  <span style='color:#3f7f59; '>// pop n; args n</span>
+            changeFrame( - ((NumOpcode)code).getNum());
+        } <span style='color:#7f0055; font-weight:bold; '>else</span> {
+            changeFrame(change);
+        }
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>void</span> genIntrinsicCodes() {
+        <span style='color:#3f7f59; '>// generate codes for read/write functions so they're treated</span>
+        <span style='color:#3f7f59; '>// as any other function</span>
+        <span style='color:#7f0055; font-weight:bold; '>String</span> readLabel = <span style='color:#2a00ff; '>"Read"</span>,
+               writeLabel = <span style='color:#2a00ff; '>"Write"</span>;
+        AST readTree = Constrainer.readTree,
+            writeTree = Constrainer.writeTree;
+        readTree.setLabel(readLabel);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,readLabel));
+        <span style='color:#3f7f59; '>// generate read header bytecodes for debugging</span>
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (debugFlag) {
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LINE,-1));
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> FunOpcode(Codes.FUNCTION,readLabel,-1,-1));
+        }
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> Code(Codes.READ));
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> Code(Codes.RETURN));
+
+        writeTree.setLabel(writeLabel);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,writeLabel));
+        <span style='color:#7f0055; font-weight:bold; '>String</span> formal = ((IdTree)(writeTree.getKid(3).getKid(1).getKid(2))).
+                                 getSymbol().toString();
+        <span style='color:#3f7f59; '>// generate write header bytecodes for debugging</span>
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (debugFlag) {
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LINE,-1));
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> FunOpcode(Codes.FUNCTION,writeLabel,-1,-1));
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> FormalOpcode(Codes.FORMAL,formal,0));
+        }
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> VarOpcode(Codes.LOAD,0,formal));
+        <span style='color:#3f7f59; '>// write has one actual arg - in frame offset 0</span>
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> Code(Codes.WRITE));
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> Code(Codes.RETURN));
+   }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  visit the given program AST</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  GOTO start   </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> branch around codes for the intrinsics</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the intrinsic trees (read</span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '>write)&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LABEL start</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the BLOCK tree&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  HALT</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> t the program tree to visit</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> null </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> we're a visitor so must return a value</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  but the code generator doesn't need any specific value</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitProgramTree(AST t) {
+        <span style='color:#7f0055; font-weight:bold; '>String</span> startLabel = newLabel(<span style='color:#2a00ff; '>"start"</span>);
+        openFrame();
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (debugFlag) {
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LINE,t.getStartLine()));
+        }
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.GOTO,startLabel));
+        <span style='color:#3f7f59; '>// branch over intrinsic bytecodes</span>
+        genIntrinsicCodes();
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,startLabel));
+        t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> Code(Codes.HALT));
+        closeFrame();
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the Block tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>codes for the decls and the statements in the block&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  POP n   </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> n is the number of local variables</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> pop them</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitBlockTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitBlockTree");</span>
+        openBlock();
+        visitKids(t);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.POP,getBlockSize()));
+        <span style='color:#3f7f59; '>// remove any local variables from runtime stack</span>
+        closeBlock();
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>; }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the function declaration</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> we'll also record</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  the frame offsets for the formal parameters</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  GOTO continue   </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> branch around codes for the function</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LABEL functionLabel</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the function body&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LIT </span><span style='color:#3f5fbf; '>0</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  RETURN function</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LABEL continue</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitFunctionDeclTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitFunctionDeclTree");</span>
+        AST name = t.getKid(2),
+            formals = t.getKid(3),
+            block = t.getKid(4);
+        <span style='color:#7f0055; font-weight:bold; '>String</span> funcName = ((IdTree)t.getKid(2)).getSymbol().toString();
+        <span style='color:#7f0055; font-weight:bold; '>String</span> funcLabel = newLabel(funcName);
+        t.setLabel(funcLabel);
+        <span style='color:#7f0055; font-weight:bold; '>String</span> continueLabel = newLabel(<span style='color:#2a00ff; '>"continue"</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.GOTO,continueLabel));
+        openFrame();  <span style='color:#3f7f59; '>// track Frame changes within function</span>
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,funcLabel));
+        <span style='color:#3f7f59; '>// function &amp; formal bytecode header for each function declaration</span>
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (debugFlag) {
+            <span style='color:#7f0055; font-weight:bold; '>String</span> fcname = ((IdTree)t.getKid(2)).getSymbol().toString();
+            <span style='color:#7f0055; font-weight:bold; '>String</span> formal = ((IdTree)t.getKid(3).getKid(1).getKid(2)).getSymbol().toString();
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LINE,t.getStartLine()));
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> FunOpcode(Codes.FUNCTION,fcname,t.getStartLine(),t.getEndLine()));
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> FormalOpcode(Codes.FORMAL,formal,0));
+        }
+        <span style='color:#3f7f59; '>// now record the frame offsets for the formals</span>
+        <span style='color:#7f0055; font-weight:bold; '>for</span> (<span style='color:#7f0055; font-weight:bold; '>Enumeration</span> decls = formals.getKids(); decls.hasMoreElements();) {
+            AST decl = (AST)decls.nextElement();
+            IdTree id = (IdTree)(decl.getKid(2));
+            id.setFrameOffset(frameSize());
+            decl.setLabel(id.getSymbol().toString());
+            changeFrame(1);  <span style='color:#3f7f59; '>// ensure frame size includes space for variables</span>
+        }
+        block.accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        <span style='color:#3f7f59; '>// emit gratis return in case user didn't provide one</span>
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> VarOpcode(Codes.LIT,0,<span style='color:#2a00ff; '>"   GRATIS-RETURN-VALUE"</span>));
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.RETURN,funcLabel));
+        closeFrame();
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,continueLabel));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the call tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>Codes to evaluate the arguments for the function&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  ARGS </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>n</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '>    where </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>n</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '> is the number of args</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  CALL functionName</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitCallTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitCallTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>String</span> funcName = ((IdTree)t.getKid(1)).getDecoration().getLabel();
+        <span style='color:#7f0055; font-weight:bold; '>int</span> numArgs = t.kidCount() - 1;
+        <span style='color:#7f0055; font-weight:bold; '>for</span> (<span style='color:#7f0055; font-weight:bold; '>int</span> kid = 2; kid &lt;= t.kidCount(); kid++) {
+            t.getKid(kid).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        }
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.ARGS,numArgs));
+        <span style='color:#3f7f59; '>//used to set up new frame</span>
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.CALL, funcName));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the Decl tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LIT </span><span style='color:#3f5fbf; '>0</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> </span><span style='color:#3f5fbf; '>0</span><span style='color:#3f5fbf; '> is the initial value for the variable</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  record the frame offset of this variable for future references</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitDeclTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitDeclTree");</span>
+        IdTree id = (IdTree)t.getKid(2);
+        <span style='color:#7f0055; font-weight:bold; '>String</span> idLabel = id.getSymbol().toString();
+        t.setLabel(idLabel);  <span style='color:#3f7f59; '>//set label in dcln node</span>
+        id.setFrameOffset(frameSize());
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> VarOpcode(Codes.LIT,0,idLabel));
+        <span style='color:#3f7f59; '>//reserve space in frame for new variable; init to 0</span>
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitIntTypeTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitIntTypeTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>; }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitBoolTypeTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitBoolTypeTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>; }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitFormalsTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitFormalsTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>; }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitActualArgsTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitActualArgsTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>; }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>If</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '> tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the conditional tree&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  FALSEBRANCH elseLabel</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>then</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '> tree </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> 2nd kid&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  GOTO continue</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LABEL elseLabel</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>else</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '> tree </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> 3rd kid&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LABEL continue</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitIfTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitIfTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>String</span> elseLabel = newLabel(<span style='color:#2a00ff; '>"else"</span>),
+               continueLabel = newLabel(<span style='color:#2a00ff; '>"continue"</span>),
+               nextLabel;
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (debugFlag) {
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LINE,t.getStartLine()));
+        }
+        t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>); <span style='color:#3f7f59; '>// gen code for conditional expr</span>
+        nextLabel = elseLabel;
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.FALSEBRANCH,nextLabel));
+        t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.GOTO,continueLabel));
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,elseLabel));
+        t.getKid(3).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,continueLabel));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>; }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the While tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LABEL while</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the conditional&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  FALSEBRANCH continue</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the body of the while&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  GOTO while</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LABEL continue</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitWhileTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitWhileTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>String</span> continueLabel = newLabel(<span style='color:#2a00ff; '>"continue"</span>),
+               whileLabel = newLabel(<span style='color:#2a00ff; '>"while"</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,whileLabel));
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (debugFlag) {
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LINE,t.getStartLine()));
+        }
+        t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.FALSEBRANCH,continueLabel));
+        t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.GOTO,whileLabel));
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.LABEL,continueLabel));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the return tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the expression that will be returned&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  RETURN &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>name</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>of</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>function&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitReturnTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitReturnTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (debugFlag) {
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LINE,t.getStartLine()));
+        }
+        t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        AST fct = t.getDecoration();
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.RETURN,fct.getLabel()));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the Assign tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for the right</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>hand</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>side expression&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  STORE </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>offset</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>of</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>variable name</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>of</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>variable</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitAssignTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitAssignTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (debugFlag) {
+            storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LINE,t.getStartLine()));
+        }
+        IdTree id = (IdTree)t.getKid(1);
+        <span style='color:#7f0055; font-weight:bold; '>String</span> vname = id.getSymbol().toString();
+        <span style='color:#7f0055; font-weight:bold; '>int</span> addr = ((IdTree)(id.getDecoration().getKid(2))).getFrameOffset();
+        t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> VarOpcode(Codes.STORE,addr,vname));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Load a literal value</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LIT </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>n</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '>  n is the value </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitIntTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitIntTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>int</span> num = <span style='color:#7f0055; font-weight:bold; '>Integer</span>.parseInt(
+                           ((IntTree)t).getSymbol().toString());
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> NumOpcode(Codes.LIT,num));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Load a variable</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  LOAD </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>offset</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> load variable using the offset recorded in the AST</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitIdTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitIdTree");</span>
+        AST decl = t.getDecoration();
+        <span style='color:#7f0055; font-weight:bold; '>int</span> addr = ((IdTree)(decl.getKid(2))).getFrameOffset();
+        <span style='color:#7f0055; font-weight:bold; '>String</span> vname = ((IdTree)t).getSymbol().toString();
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> VarOpcode(Codes.LOAD,addr,vname));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the relational op tree e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g. t1 == t2</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for t1&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for t2&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  BOP op    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> op is the indicated relational op</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitRelOpTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitRelOpTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>String</span> op = ((RelOpTree)t).getSymbol().toString();
+        t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.BOP,op));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the adding op tree e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g. t1 </span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '> t2</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for t1&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for t2&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  BOP op    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> op is the indicated adding op</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitAddOpTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitAddOpTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>String</span> op = ((AddOpTree)t).getSymbol().toString();
+        t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.BOP,op));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/** </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Generate codes for the multiplying op tree e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g. t1 </span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '> t2</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for t1&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  &amp;LT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '>generate codes for t2&amp;GT</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  BOP op    </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> op is the indicated multiplying op</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/pre></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitMultOpTree(AST t) {
+        <span style='color:#3f7f59; '>//System.out.println("visitMultOpTree");</span>
+        <span style='color:#7f0055; font-weight:bold; '>String</span> op = ((MultOpTree)t).getSymbol().toString();
+        t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        storeop(<span style='color:#7f0055; font-weight:bold; '>new</span> LabelOpcode(Codes.BOP,op));
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+}
+</pre>

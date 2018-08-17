@@ -1,0 +1,89 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>Azure<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>WindowsAzure<span style='color:#0000ff; '>.</span>Storage<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>WindowsAzure<span style='color:#0000ff; '>.</span>Storage<span style='color:#0000ff; '>.</span>Table<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Storage
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Customer <span style='color:#0000ff; '>:</span> TableEntity
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> name <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> email <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Customer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Customer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> name<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> email<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>name <span style='color:#0000ff; '>=</span> name<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>email <span style='color:#0000ff; '>=</span> email<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>PartitionKey <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>CUST</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>RowKey <span style='color:#0000ff; '>=</span> email<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Tables
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;static void Main(string[] args)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var storage = CloudStorageAccount.Parse(</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;CloudConfigurationManager.GetSetting("StorageConnection"));</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var tableClient = storage.CreateCloudTableClient();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var table = tableClient.GetTableReference("customers");</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;table.CreateIfNotExists();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// batch insert</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var batch = new TableBatchOperation();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var cust1 = new Customer("name7", "</span><span style='color:#7144c4; '>name7@localhost.local</span><span style='color:#008000; '>");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var cust2 = new Customer("name8", "</span><span style='color:#7144c4; '>name8@localhost.local</span><span style='color:#008000; '>");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var cust3 = new Customer("name9", "</span><span style='color:#7144c4; '>name9@localhost.local</span><span style='color:#008000; '>");</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;batch.InsertOrReplace(cust1);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;batch.InsertOrReplace(cust2);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;batch.InsertOrReplace(cust3);</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;table.ExecuteBatch(batch);</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// display all rows in table</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var query = new TableQuery&lt;Customer>()</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;.Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "CUST"));</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;foreach (var cust in table.ExecuteQuery(query))</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Console.WriteLine(cust.email);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Console.ReadKey();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> InsertCustomer<span style='color:#0000ff; '>(</span>CloudTable table<span style='color:#0000ff; '>,</span> Customer cust<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            table<span style='color:#0000ff; '>.</span>Execute<span style='color:#0000ff; '>(</span>TableOperation<span style='color:#0000ff; '>.</span>InsertOrReplace<span style='color:#0000ff; '>(</span>cust<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> GetCustomer<span style='color:#0000ff; '>(</span>CloudTable table<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> partkey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> rowkey<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> result <span style='color:#0000ff; '>=</span> table<span style='color:#0000ff; '>.</span>Execute<span style='color:#0000ff; '>(</span>TableOperation<span style='color:#0000ff; '>.</span>Retrieve<span style='color:#0000ff; '>&lt;</span>Customer<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>partkey<span style='color:#0000ff; '>,</span> rowkey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>Customer<span style='color:#0000ff; '>)</span>result<span style='color:#0000ff; '>.</span>Result<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>name<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> UpdateCustomer<span style='color:#0000ff; '>(</span>CloudTable table<span style='color:#0000ff; '>,</span> Customer cust<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            table<span style='color:#0000ff; '>.</span>Execute<span style='color:#0000ff; '>(</span>TableOperation<span style='color:#0000ff; '>.</span>Replace<span style='color:#0000ff; '>(</span>cust<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> DeleteCustomer<span style='color:#0000ff; '>(</span>CloudTable table<span style='color:#0000ff; '>,</span> Customer cust<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            table<span style='color:#0000ff; '>.</span>Execute<span style='color:#0000ff; '>(</span>TableOperation<span style='color:#0000ff; '>.</span>Delete<span style='color:#0000ff; '>(</span>cust<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

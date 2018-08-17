@@ -1,0 +1,148 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Author: Yee Hsu                                     #1-8748</span>
+<span style='color:#008000; '>// Instru: Dr. J. Wong</span>
+<span style='color:#008000; '>// Date:   May 2, 2001</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// File: Com.cc</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Implementation of the Com class. Com is the</span>
+<span style='color:#008000; '>// communications interface between the user and the Server.</span>
+<span style='color:#008000; '>// It provides a user interface to prompt the user for</span>
+<span style='color:#008000; '>// commands to be executed by the Server.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>iostream.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdlib.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>string.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Message.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Com.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  Com()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Com default constructor. All variables/arrays</span>
+<span style='color:#008000; '>//              are pre-defined and initialized.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+Com<span style='color:#0000ff; '>::</span>Com<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>command<span style='color:#0000ff; '>,</span>  <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> COM_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>execName<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> EXE_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m1<span style='color:#0000ff; '>.</span>option     <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_ARGMNT<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ~Com()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Com default destructor. All variables/arrays</span>
+<span style='color:#008000; '>//              are reset</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+Com<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Com<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>command<span style='color:#0000ff; '>,</span>  <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> COM_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>execName<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> EXE_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m1<span style='color:#0000ff; '>.</span>option     <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_ARGMNT<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  Execute(ComMsg&amp;)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   &amp;msg    -- Communication message (m1)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Resets the ComMsg msg.</span>
+<span style='color:#008000; '>//              Executes Com instructions.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Calls:       ComPrompt()     -- prompts user input</span>
+<span style='color:#008000; '>//              Tokenizer()     -- tokenize command input</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Com<span style='color:#0000ff; '>::</span>Execute<span style='color:#0000ff; '>(</span>ComMsg <span style='color:#0000ff; '>&amp;</span>msg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>.</span>command<span style='color:#0000ff; '>,</span>  <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> COM_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>.</span>execName<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> EXE_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    msg<span style='color:#0000ff; '>.</span>option     <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_ARGMNT<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>~</span>Com<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ComPrompt<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Tokenizer<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ComPrompt()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Prompts the user for input. Interface is</span>
+<span style='color:#008000; '>//              very similar to an OS console.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Com<span style='color:#0000ff; '>::</span>ComPrompt<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SMVS> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>cout</span><span style='color:#0000ff; '>.</span>flush<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>cin</span><span style='color:#0000ff; '>.</span>getline<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>command<span style='color:#0000ff; '>,</span> INP_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  Tokenizer(ComMsg&amp;)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   &amp;msg    -- Communication message (m1)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Tokenizer breaks down the input command</span>
+<span style='color:#008000; '>//              line into a series of tokens. These tokens</span>
+<span style='color:#008000; '>//              are stored into the ComMsg and later</span>
+<span style='color:#008000; '>//              transfered to the Server via a pipe.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Com<span style='color:#0000ff; '>::</span>Tokenizer<span style='color:#0000ff; '>(</span>ComMsg <span style='color:#0000ff; '>&amp;</span>msg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>tok <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>tok <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strtok</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>command<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>command<span style='color:#0000ff; '>,</span> tok<span style='color:#0000ff; '>,</span> COM_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>strcmp</span><span style='color:#0000ff; '>(</span>tok<span style='color:#0000ff; '>,</span> RUN<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            tok <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strtok</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>tok <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'-'</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m1<span style='color:#0000ff; '>.</span>option <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>tok<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>execName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>strtok</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> EXE_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>execName<span style='color:#0000ff; '>,</span> tok<span style='color:#0000ff; '>,</span> EXE_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>tok <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strtok</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_ARGMNT<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> tok<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>strcmp</span><span style='color:#0000ff; '>(</span>tok<span style='color:#0000ff; '>,</span> LS<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>tok <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strtok</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>?</span> m1<span style='color:#0000ff; '>.</span>option <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>tok<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>:</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>strcmp</span><span style='color:#0000ff; '>(</span>tok<span style='color:#0000ff; '>,</span> EXIT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>tok <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; font-weight:bold; '>cerr</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; '>*</span>tok<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span><span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>cerr</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Command not found</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    msg <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m1<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

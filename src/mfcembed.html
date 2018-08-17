@@ -1,0 +1,1114 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// MainFrm.cpp : implementation of the CMainFrame class</span>
+<span style='color:#008000; '>//</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Taxi4u.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>MainFrm.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>GPRMCData.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Location.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _DEBUG</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> new DEBUG_NEW</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>undef</span><span style='color:#004a43; '> THIS_FILE</span>
+<span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>char</span> THIS_FILE<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> __FILE__<span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> QA_RELEASE</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> WATCHDOG_TIMEOUT_VALUE    180</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>else</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> WATCHDOG_TIMEOUT_VALUE    30</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+CScheduler<span style='color:#0000ff; '>*</span>    g_pSchedule      <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+CButtonWnd<span style='color:#0000ff; '>*</span>    g_pButtonWnd    <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+CLocationList<span style='color:#0000ff; '>*</span>  g_pLocationList    <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>CString</span> g_sCurrentPlayingVideo    <span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hSystemListenThread    <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hDownloadThread      <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hNetworkThread      <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hLoadPlayListThread    <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hPrepareThread      <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hUploadLogFileThread    <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hAudioBrightCntrlThread  <span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hExitSystemListenHandle  <span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>CreateEvent</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hReadGPSDataHandle    <span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>CreateEvent</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>HANDLE</span>  g_hExitNetworkHandle    <span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>CreateEvent</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span>FALSE<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bSystemListenExit      <span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bNetworkThreadExit    <span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bDownloadThreadExit    <span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bLoadPlayListThreadExit  <span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bExitDownloadThread    <span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bPrepareThreadExit    <span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bCustomerOn        <span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bResetTriggerPlay      <span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span>  g_bUserChangedSetting    <span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+
+Layout  g_CurrentVideoLayout    <span style='color:#0000ff; '>=</span>LAYOUT_NUKNOW<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span> dwAdornmentFlags <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>// exit button</span>
+
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span> IsNetPresent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span> StartApp<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> CConfig g_Config<span style='color:#0000ff; '>;</span>      <span style='color:#008000; '>// The config file</span>
+<span style='color:#0000ff; font-weight:bold; '>extern</span> <span style='color:#0000ff; font-weight:bold; '>CString</span> g_CurrentPath<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CRITICAL_SECTION</span> gcs_ReloadPlaylist<span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CMainFrame</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>m_pMainFrame <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> SystemListenProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> NetworkProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> DownloadProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> LoadPlayListProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> PrepareProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> UploadLogFileProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> SetAudioBrightControlProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+IMPLEMENT_DYNAMIC<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CFrameWnd</span><span style='color:#0000ff; '>)</span>
+
+BEGIN_MESSAGE_MAP<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CFrameWnd</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#008000; '>//{{AFX_MSG_MAP(CMainFrame)</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;ON_WM_CREATE()</span>
+<span style='color:#008000; '>&#xa0;&#xa0;</span><span style='color:#008000; '>//}}AFX_MSG_MAP</span>
+END_MESSAGE_MAP<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CMainFrame construction/destruction</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#008000; '>//Auto run timer</span>
+
+  m_pRightAdWnd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  m_pAdBottomWnd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  m_pVideoWnd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  m_pButtonWnd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  m_pConsole <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//m_pForm1Wnd = 0;</span>
+  m_bSyncDateTime<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+  m_nGPSWaitingTime<span style='color:#0000ff; '>=</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>// 5000</span>
+  m_pABC<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>InitializeCriticalSection</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>gcs_ReloadPlaylist<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span><span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>DeleteCriticalSection</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>gcs_ReloadPlaylist<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  CloseSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Release Thread...</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//Exit network listening thread</span>
+  <span style='color:#0000ff; font-weight:bold; '>SetEvent</span><span style='color:#0000ff; '>(</span>g_hExitNetworkHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hNetworkThread<span style='color:#0000ff; '>,</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Exit download thread</span>
+  g_bExitDownloadThread<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hDownloadThread<span style='color:#0000ff; '>,</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>//Exit system listenhing thread</span>
+  <span style='color:#0000ff; font-weight:bold; '>SetEvent</span><span style='color:#0000ff; '>(</span>g_hExitSystemListenHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hSystemListenThread<span style='color:#0000ff; '>,</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Release Resource...</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_pRightAdWnd<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> m_pRightAdWnd<span style='color:#0000ff; '>;</span>
+    m_pRightAdWnd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_pAdBottomWnd<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> m_pAdBottomWnd<span style='color:#0000ff; '>;</span>
+    m_pAdBottomWnd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_pVideoWnd<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> m_pVideoWnd<span style='color:#0000ff; '>;</span>
+    m_pVideoWnd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_pConsole<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> m_pConsole<span style='color:#0000ff; '>;</span>
+    m_pConsole <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;if(m_pForm1Wnd)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;delete m_pForm1Wnd;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;m_pForm1Wnd = 0;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>&#xa0;&#xa0;*/</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_pButtonWnd<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> m_pButtonWnd<span style='color:#0000ff; '>;</span>
+    m_pButtonWnd <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_pSchedule<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> g_pSchedule<span style='color:#0000ff; '>;</span>
+    g_pSchedule<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_pLocationList<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    g_pLocationList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>RemoveRecorder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_pLocationList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> g_pLocationList<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  MYTRACE_CONSOLE<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  LOGDATA_DEINIT
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PreCreateWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CREATESTRUCT</span><span style='color:#0000ff; '>&amp;</span> cs<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>CFrameWnd</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PreCreateWindow</span><span style='color:#0000ff; '>(</span>cs<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+  cs<span style='color:#0000ff; '>.</span>lpszClass <span style='color:#0000ff; '>=</span> AfxRegisterWndClass<span style='color:#0000ff; '>(</span>CS_HREDRAW<span style='color:#0000ff; '>|</span>CS_VREDRAW<span style='color:#0000ff; '>|</span>CS_DBLCLKS<span style='color:#0000ff; '>,</span> 
+    <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>HBRUSH</span><span style='color:#0000ff; '>(</span>COLOR_BACKGROUND<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>OnCreate</span><span style='color:#0000ff; '>(</span>LPCREATESTRUCT lpCreateStruct<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CFrameWnd</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>OnCreate</span><span style='color:#0000ff; '>(</span>lpCreateStruct<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>// Create Right AD Window</span>
+  <span style='color:#0000ff; font-weight:bold; '>CRect</span> adRect<span style='color:#0000ff; '>(</span>VIDEOPART_WIDTH<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>SCREEN_WIDTH<span style='color:#0000ff; '>,</span>VIDEOPART_HEIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pRightAdWnd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> CRightAdWnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pRightAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Create<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>WS_CHILD</span><span style='color:#0000ff; '>|</span><span style='color:#808080; font-weight:bold; '>WS_VISIBLE</span><span style='color:#0000ff; '>,</span>adRect<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>11234</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#008000; '>//WS_VISIBLE</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Failed to create right AD window</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  
+  <span style='color:#008000; '>// Create Bottom AD window</span>
+  m_pAdBottomWnd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> CBottomAdWnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CRect</span> bottomAdRect<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>VIDEOPART_HEIGHT<span style='color:#0000ff; '>,</span>VIDEOPART_WIDTH<span style='color:#0000ff; '>,</span>SCREEN_HEIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Create<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>WS_CHILD</span><span style='color:#0000ff; '>|</span><span style='color:#808080; font-weight:bold; '>WS_VISIBLE</span><span style='color:#0000ff; '>,</span>bottomAdRect<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>11235</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Failed to create bottom AD window</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>  
+
+  <span style='color:#008000; '>// Create Video Window  </span>
+  m_pVideoWnd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> CVideoWnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span>m_pRightAdWnd<span style='color:#0000ff; '>,</span>m_pAdBottomWnd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>// Create Control Button window  </span>
+  g_pButtonWnd <span style='color:#0000ff; '>=</span> m_pButtonWnd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> CButtonWnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CRect</span> btnRect<span style='color:#0000ff; '>(</span>VIDEOPART_WIDTH<span style='color:#0000ff; '>,</span>VIDEOPART_HEIGHT<span style='color:#0000ff; '>,</span>SCREEN_WIDTH<span style='color:#0000ff; '>,</span>SCREEN_HEIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Create<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>WS_CHILD</span><span style='color:#0000ff; '>|</span><span style='color:#808080; font-weight:bold; '>WS_VISIBLE</span><span style='color:#0000ff; '>,</span>btnRect<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>11237</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Failed to create button window</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  
+  m_pMainFrame <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+    
+<span style='color:#004a43; '>&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> QA_RELEASE</span>
+  m_pConsole <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> CConsole<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pConsole<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Create<span style='color:#0000ff; '>(</span>IDD_DLGDEBUG<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+  <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;m_pForm1Wnd = new CDialog_Form1();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;m_pForm1Wnd->Create(IDD_DIALOG_F1,this);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;*/</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnInit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>    
+  <span style='color:#008000; '>//Initialize Serial Port</span>
+  m_nBaudrate<span style='color:#0000ff; '>=</span><span style='color:#800000; '>4800</span><span style='color:#0000ff; '>;</span>
+  m_nPortNum<span style='color:#0000ff; '>=</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+  InitSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Open Serial Port to Get GPS Data  </span>
+  OpenSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>//Create schedule</span>
+  g_pSchedule<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>new</span> CScheduler<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Update playlist</span>
+  <span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>WM_PLAYLIST_CHANGED<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>UpdateWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Initialize WIFI Profile</span>
+  OnCreateWiFiProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Start Player</span>
+  m_pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>StartPlayer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Start System Listening</span>
+  <span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>WM_CREATE_SYSTEMLISTEN<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Upload Log Files and Delete</span>
+  <span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>WM_UPLOAD_LOGFILES<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CMainFrame diagnostics</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _DEBUG</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>AssertValid</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CFrameWnd</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>AssertValid</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>Dump</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CDumpContext</span><span style='color:#0000ff; '>&amp;</span> dc<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CFrameWnd</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>Dump</span><span style='color:#0000ff; '>(</span>dc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span><span style='color:#004a43; '> </span><span style='color:#008000; '>//_DEBUG</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnCreateWiFiProfile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>  
+  <span style='color:#0000ff; font-weight:bold; '>for</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>i<span style='color:#0000ff; '>&lt;</span>g_Config<span style='color:#0000ff; '>.</span>m_WiFi<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    CProfile<span style='color:#0000ff; '>*</span> profile <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_WiFi<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SSID<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> SSID_LEN<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>The SSID is not valid </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SSID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Key<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> MAX_WPA_PSK_KEY_LENGTH<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>The Key is not valid </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    WiFiAuthCmdRequest wifi<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>wifi<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0x00</span><span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>sizeof</span> <span style='color:#0000ff; '>(</span>WiFiAuthCmdRequest<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>wcscpy</span><span style='color:#0000ff; '>(</span>wifi<span style='color:#0000ff; '>.</span>m_SSID<span style='color:#0000ff; '>,</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SSID<span style='color:#0000ff; '>.</span>GetBuffer<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    wifi<span style='color:#0000ff; '>.</span>m_NetworkType <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>WirelessNetworkType<span style='color:#0000ff; '>)</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>NetworkType<span style='color:#0000ff; '>;</span>
+    wifi<span style='color:#0000ff; '>.</span>m_SecurityType <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>SecurityType<span style='color:#0000ff; '>)</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SecurityType<span style='color:#0000ff; '>;</span>
+    wifi<span style='color:#0000ff; '>.</span>m_EncType <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>EncryptionType<span style='color:#0000ff; '>)</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>EncType<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>WideCharToMultiByte</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>CP_ACP</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPCWSTR</span><span style='color:#0000ff; '>)</span> profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Key<span style='color:#0000ff; '>.</span>GetBuffer<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> wifi<span style='color:#0000ff; '>.</span>szKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>wifi<span style='color:#0000ff; '>.</span>szKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    wifi<span style='color:#0000ff; '>.</span>m_isHidden <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+    wifi<span style='color:#0000ff; '>.</span>m_isLock <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+    wifi<span style='color:#0000ff; '>.</span>ulWEPKeyIndex <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>WiFiNetworkProfileCreate<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>wifi<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Create WIFI profile :</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SSID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+      MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Failed to create wifi profile :</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>profile<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_SSID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>ShowLayout<span style='color:#0000ff; '>(</span>Layout layout<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;//Just adjust the layout, no need to control the playback</span>
+<span style='color:#008000; '>&#xa0;&#xa0;if(g_CurrentVideoLayout==layout)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;return;  </span>
+<span style='color:#008000; '>&#xa0;&#xa0;*/</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_CurrentVideoLayout<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>LAYOUT_FULLSCREEN<span style='color:#0000ff; '>)</span>
+    MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_ORGSCREEN<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  g_CurrentVideoLayout<span style='color:#0000ff; '>=</span>layout<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>switch</span><span style='color:#0000ff; '>(</span>layout<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>LAYOUT_FULLSCREEN</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Adjust Layout... Set to CMD_FULLSCREEN</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_FULLSCREEN<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pRightAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_HIDE</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_HIDE</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_HIDE</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>UpdateWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>LAYOUT_640_384</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Adjust Layout... Set to LAYOUT_640_384</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// 16:9</span>
+      MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_SET640X384<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pRightAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_SHOW</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_SHOW</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_SHOW</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetActiveWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>  
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>LAYOUT_640_480</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Adjust Layout... Set to LAYOUT_640_480</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// 4:3</span>
+      MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_SET640X480<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pRightAdWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_SHOW</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_SHOW</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pAdBottomWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>ShowWindow</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>SW_HIDE</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetActiveWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> bTurn <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>LRESULT</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>WindowProc</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>UINT</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>WPARAM</span> wParam<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LPARAM</span> lParam<span style='color:#0000ff; '>)</span> 
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>switch</span><span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_CLOSE</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_DESTROY</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_QUIT</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_INIT</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnInit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_SYSTEMDATE_CHANGED</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnSystemDateChange<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_CREATE_SYSTEMLISTEN</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnCreateSystemListen<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_CUSTOMER_CHANGED</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnCustomerChanged<span style='color:#0000ff; '>(</span>wParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_SHOW_FORM</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnShowForm<span style='color:#0000ff; '>(</span>wParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_NETWORK_CHANGED</span><span style='color:#e34adc; font-weight:bold; '>:</span>    
+      OnNetworkChanged<span style='color:#0000ff; '>(</span>wParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_ACCPING_CHANGED</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnAccPingChanged<span style='color:#0000ff; '>(</span>wParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_POWER_OFF</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnPowerOff<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_DOWNLOAD_FINISHED</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnDownloadFinished<span style='color:#0000ff; '>(</span>wParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_GSML_PLAY_FINISHED</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnPlayVideoFinished<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_VIDEO_PLAYNEXT</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnPlayNextVideo<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>CVideoItem<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span>wParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_WACTHDOG_REST</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      DeviceControl<span style='color:#0000ff; '>(</span>CMD_WATCHDOG_TIMER_RESET<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_PLAYLIST_CHANGED</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnPlayListChanged<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_PLAYLIST_LOADED</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnPlayListLoaded<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_UPLOAD_LOGFILES</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnUploadLogFiles<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_CONTINUE_PLAYING</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnContinuePlaying<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_STARTPLAYING</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnStartPlaying<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_GSML_PLAYER_PENUP</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      OnAudioBrightnessControl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WM_GSML_PLAYER_PENDOWN</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pABC <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> g_bCustomerOn <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> g_CurrentVideoLayout<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>LAYOUT_FULLSCREEN<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_PAUSE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; '>}</span>  
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>CWnd</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>WindowProc</span><span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> wParam<span style='color:#0000ff; '>,</span> lParam<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnCreateSystemListen<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bSystemListenExit<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>      
+    <span style='color:#0000ff; font-weight:bold; '>ResetEvent</span><span style='color:#0000ff; '>(</span>g_hExitSystemListenHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_hSystemListenThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>SystemListenProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>//SetThreadPriority(g_hSystemListenThread,THREAD_PRIORITY_BELOW_NORMAL);    </span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnAccPingChanged<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> bValue<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bValue<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>ACC On</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_ACC_<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>ON</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>ACC Off</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_ACC_<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>OFF</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> QA_RELEASE</span>
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>MMS Shutdown.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>//::DestroyWindow(this->m_hWnd);</span>
+    <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnPowerOff<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Power Off</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>SendMessage</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>WM_CLOSE</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  DeviceControl<span style='color:#0000ff; '>(</span>CMD_DEVICE_POWER_OFF<span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnCustomerChanged<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> bCustomer<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>const</span>  <span style='color:#0000ff; font-weight:bold; '>int</span> nRebootNum <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>50</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nRebootTry <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>bCustomer<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Customer On!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_FLAG<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>DOWN</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_bCustomerOn<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+    g_sCurrentPlayingVideo<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    nRebootTry<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//Puts input focus back to main window</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>EnableWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>//Starts play video</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bPrepareThreadExit<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      g_hPrepareThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>PrepareProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    
+    <span style='color:#008000; '>//Turn off Console output on debug</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> QA_RELEASE    </span>
+    m_pConsole<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Show<span style='color:#0000ff; '>(</span>FALSE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+    MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_LAUNCHPLAYER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>else</span>
+    DeviceControl<span style='color:#0000ff; '>(</span>CMD_LCD_ON<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+    
+    <span style='color:#008000; '>//OLD</span>
+    <span style='color:#008000; '>//Check time and apply business rule</span>
+    <span style='color:#008000; '>//From 7pm to 6am (night time), the brightness of LCD would be set to 2/5 automatically. </span>
+    <span style='color:#008000; '>//From 6am to 7pm (daytime), it's set to 4/5.</span>
+    <span style='color:#0000ff; font-weight:bold; '>COleDateTime</span> dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>COleDateTime</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>GetCurrentTime</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> hour <span style='color:#0000ff; '>=</span> dt<span style='color:#0000ff; '>.</span>GetHour<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>=</span> dt<span style='color:#0000ff; '>.</span>GetMinute<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>//determine default sound/brightness level</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nSetSoundLevel<span style='color:#0000ff; '>,</span> nSetBrightnessLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>6</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> hour <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>DimHour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>&lt;</span> g_Config<span style='color:#0000ff; '>.</span>DimMinute<span style='color:#0000ff; '>)</span>  <span style='color:#008000; '>//Day time</span>
+    <span style='color:#0000ff; '>{</span>
+      nSetSoundLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_SoundLevel<span style='color:#0000ff; '>.</span>DefaultDayLevel<span style='color:#0000ff; '>;</span>
+      nSetBrightnessLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessLevel<span style='color:#0000ff; '>.</span>DefaultDayLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+      nSetSoundLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_SoundLevel<span style='color:#0000ff; '>.</span>DefaultNightLevel<span style='color:#0000ff; '>;</span>
+      nSetBrightnessLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessLevel<span style='color:#0000ff; '>.</span>DefaultNightLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>//determine brightness by time slot level</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Minute<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      nSetBrightnessLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_DefaultBrightnessLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Minute<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      nSetBrightnessLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_DefaultBrightnessLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Minute<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      nSetBrightnessLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_DefaultBrightnessLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Minute<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      nSetBrightnessLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_BrightnessSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_DefaultBrightnessLevel<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//determine audio by time slot level</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Minute<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      nSetSoundLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_DefaultAudioLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Minute<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      nSetSoundLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_DefaultAudioLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Minute<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      nSetSoundLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_DefaultAudioLevel<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>hour <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Hour <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>min</span> <span style='color:#0000ff; '>></span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_Minute<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      nSetSoundLevel <span style='color:#0000ff; '>=</span> g_Config<span style='color:#0000ff; '>.</span>m_AudioSlotLevel<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>m_DefaultAudioLevel<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//Set sound/brightness level    </span>
+    m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ResetLevel<span style='color:#0000ff; '>(</span>nSetSoundLevel<span style='color:#0000ff; '>,</span>nSetBrightnessLevel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//Open Serial Port</span>
+    OpenSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>    
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Customer Off!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_FLAG<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>UP</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_bCustomerOn<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+    g_bUserChangedSetting<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;//Clear Old Zone Recorder</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;g_pLocationList->RemoveRecorder();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;//Close Serial Port</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;CloseSerialPort();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#008000; '>//Stop Video</span>
+    m_pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//Force close audio/bright setting control dialog</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pABC<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      m_pABC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>EndDialog</span><span style='color:#0000ff; '>(</span>IDCANCEL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      m_pABC<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>//Turn on Console output on Debug</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> QA_RELEASE    </span>
+    MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_CLOSEPLAYER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>//g_CurrentVideoLayout=LAYOUT_640_384;</span>
+    m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ResetLevel<span style='color:#0000ff; '>(</span>g_Config<span style='color:#0000ff; '>.</span>m_SoundLevel<span style='color:#0000ff; '>.</span>DefaultDayLevel<span style='color:#0000ff; '>,</span>g_Config<span style='color:#0000ff; '>.</span>m_BrightnessLevel<span style='color:#0000ff; '>.</span>DefaultDayLevel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m_pConsole<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Show<span style='color:#0000ff; '>(</span>TRUE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    CONSOLE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Log for QA version</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>else</span>
+    DeviceControl<span style='color:#0000ff; '>(</span>CMD_LCD_OFF<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetForegroundWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;//Reboot the MMS after X number of passengers, to clear memory</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;if (nRebootTry >= nRebootNum)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;MYTRACE(L"Reboot Num reached, rebooting MMS.");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::PostMessage(this->m_hWnd, WM_POWER_OFF,0,0);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;return;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#008000; '>// reload play list every flag up and only when a triggered play has been set</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>g_bResetTriggerPlay<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      g_bResetTriggerPlay<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span>WM_PLAYLIST_CHANGED<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>//Create Network listening thread</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bNetworkThreadExit<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>      
+      <span style='color:#0000ff; font-weight:bold; '>ResetEvent</span><span style='color:#0000ff; '>(</span>g_hExitNetworkHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      g_hNetworkThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>NetworkProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnShowForm<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> bForm<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#008000; '>//Stop Video</span>
+  m_pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_CLOSEPLAYER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>//m_pForm1Wnd->DoModal();</span>
+  <span style='color:#008000; '>//m_pForm1Wnd->EndDialog(IDCANCEL);</span>
+
+  <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;//Puts input focus back to main window</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->EnableWindow();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->UpdateWindow();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->ShowWindow(SW_SHOW);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->SetActiveWindow();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->SetFocus();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->BringToTop(SW_SHOW);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->BringWindowToTop();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->SetRedraw();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->UpdateData();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->RedrawWindow();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->ActivateFrame();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->SetWindowPos(&amp;this->wndTopMost, 0,0,SCREEN_WIDTH, SCREEN_HEIGHT, NULL);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;this->SetWindowPos(&amp;this->wndTopMost, 0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;*/</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetForegroundWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Starts play video</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bCustomerOn<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span>WM_STARTPLAYING<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>//::PostMessage(this->m_hWnd,WM_CONTINUE_PLAYING,0,0);</span>
+  <span style='color:#0000ff; '>}</span>  
+  MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_LAUNCHPLAYER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnNetworkChanged<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> bNetwork<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bNetwork<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bDownloadThreadExit<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>        
+      g_bExitDownloadThread<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+      g_hDownloadThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>DownloadProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_WIFI<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>SUCC</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    g_bExitDownloadThread<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+    LOGDATA<span style='color:#0000ff; '>(</span>LOG_TYPE_WIFI<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>FAIL</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnAudioBrightnessControl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pABC <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> g_bCustomerOn <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> g_CurrentVideoLayout<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>LAYOUT_FULLSCREEN<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>500</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_hAudioBrightCntrlThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>SetAudioBrightControlProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnDownloadFinished<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> bSuccess<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>  
+  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnPlayListLoaded<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnPlayVideoFinished<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#008000; '>//MYTRACE(L"Video Play Finished");</span>
+  m_pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_bTriggeredPlay<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+  m_pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayNext<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnPlayNextVideo<span style='color:#0000ff; '>(</span>CVideoItem <span style='color:#0000ff; '>*</span>pVideo<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>  
+  ShowLayout<span style='color:#0000ff; '>(</span>pVideo<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_Layout<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnPlayListChanged<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bLoadPlayListThreadExit<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    g_hLoadPlayListThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>LoadPlayListProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnUploadLogFiles<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_hUploadLogFileThread<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    g_hUploadLogFileThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>UploadLogFileProc<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnStartPlaying<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#008000; '>//Load PlayList</span>
+  g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_PlayList<span style='color:#0000ff; '>.</span>m_SpecialVideoList<span style='color:#0000ff; '>.</span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//g_pSchedule->m_PlayList.m_TriggerVideoList.Reset();    // CAN THIS </span><span style='color:#ffffff; background:#808000; '>FIX OLD BUG?????</span>
+  <span style='color:#008000; '>//g_pSchedule->m_PlayList.m_TriggerAdVideoList.Reset();</span>
+  m_pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayNext<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnContinuePlaying<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_pVideoWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PlayNext<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>InitSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_SerialPort<span style='color:#0000ff; '>.</span>m_nBaudRate<span style='color:#0000ff; '>=</span><span style='color:#800000; '>4800</span><span style='color:#0000ff; '>;</span>
+  m_SerialPort<span style='color:#0000ff; '>.</span>set_data_callback<span style='color:#0000ff; '>(</span>OnDataFromPort<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OpenSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_SerialPort<span style='color:#0000ff; '>.</span>IsOpen<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>    
+    m_SerialPort<span style='color:#0000ff; '>.</span>OpenPort<span style='color:#0000ff; '>(</span>m_nPortNum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>CloseSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_SerialPort<span style='color:#0000ff; '>.</span>IsOpen<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>SetEvent</span><span style='color:#0000ff; '>(</span>g_hReadGPSDataHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m_SerialPort<span style='color:#0000ff; '>.</span>ClosePort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnDataFromPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; '>*</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>DWORD</span> nDataCount<span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; '>*</span> context<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span> <span style='color:#0000ff; '>*</span>pFrm<span style='color:#0000ff; '>;</span>
+  pFrm<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CMainFrame</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span>context<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>buf<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//char tt[5];</span>
+  buf<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span>data<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Check GPS Data Begin With "$"</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#000080; '>'$'</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#000080; '>'$'</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>=</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>wchar_t</span> <span style='color:#0000ff; '>*</span> wText<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>wchar_t</span><span style='color:#0000ff; '>[</span>nDataCount<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>MultiByteToWideChar</span> <span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>CP_ACP</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> buf<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> wText<span style='color:#0000ff; '>,</span> nDataCount<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>   
+  pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span>wText<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>delete</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> wText<span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>//Filter for GPGGA Data</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>6</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>$GPRMC</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>=</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#008000; '>//Check GPS Data End With "\n"</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#000080; '>'\n'</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> gpsData<span style='color:#0000ff; '>=</span>pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_GPSData<span style='color:#0000ff; '>=</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#008000; '>//MYTRACE(L"Get GPS Data: %s",gpsData);</span>
+  <span style='color:#008000; '>//Parse GPRMC data</span>
+  CGPRMCData rmcData<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>rmcData<span style='color:#0000ff; '>.</span>CheckSum<span style='color:#0000ff; '>(</span>gpsData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>rmcData<span style='color:#0000ff; '>.</span>ParseData<span style='color:#0000ff; '>(</span>gpsData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//MYTRACE(L"GPS Data: %s",gpsData);</span>
+  <span style='color:#008000; '>//Sync System DateTime</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_bSyncDateTime<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bDateChanged<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>SYSTEMTIME</span> sysTime<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>GetSystemTime</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>sysTime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>sysTime<span style='color:#0000ff; '>.</span>wDay<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span>rmcData<span style='color:#0000ff; '>.</span>m_UTCDataTime<span style='color:#0000ff; '>.</span>wDay <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> sysTime<span style='color:#0000ff; '>.</span>wMonth<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span>rmcData<span style='color:#0000ff; '>.</span>m_UTCDataTime<span style='color:#0000ff; '>.</span>wMonth 
+      <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> sysTime<span style='color:#0000ff; '>.</span>wYear<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span>rmcData<span style='color:#0000ff; '>.</span>m_UTCDataTime<span style='color:#0000ff; '>.</span>wYear<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      bDateChanged<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>SetSystemTime</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>rmcData<span style='color:#0000ff; '>.</span>m_UTCDataTime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>GetLocalTime</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>sysTime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_bSyncDateTime<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+    MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Sync System Time(ddmmyyyy hhmmss): </span><span style='color:#007997; '>%02d</span><span style='color:#007997; '>%02d</span><span style='color:#007997; '>%04d</span><span style='color:#0000e6; '> </span><span style='color:#007997; '>%02d</span><span style='color:#007997; '>%02d</span><span style='color:#007997; '>%02d</span><span style='color:#0000e6; '>"</span>
+      <span style='color:#0000ff; '>,</span>sysTime<span style='color:#0000ff; '>.</span>wDay<span style='color:#0000ff; '>,</span>sysTime<span style='color:#0000ff; '>.</span>wMonth<span style='color:#0000ff; '>,</span>sysTime<span style='color:#0000ff; '>.</span>wYear
+      <span style='color:#0000ff; '>,</span>sysTime<span style='color:#0000ff; '>.</span>wHour<span style='color:#0000ff; '>,</span>sysTime<span style='color:#0000ff; '>.</span>wMinute<span style='color:#0000ff; '>,</span>sysTime<span style='color:#0000ff; '>.</span>wSecond<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bDateChanged<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span>WM_SYSTEMDATE_CHANGED<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bCustomerOn<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#008000; '>//pFrm->CloseSerialPort();</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>  
+  <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hReadGPSDataHandle<span style='color:#0000ff; '>,</span>pFrm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_nGPSWaitingTime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>ResetEvent</span><span style='color:#0000ff; '>(</span>g_hReadGPSDataHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>::</span>OnSystemDateChange<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>System Date Changed.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_pLockWnd<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    m_pLockWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>EndDialog</span><span style='color:#0000ff; '>(</span>IDOK<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>SendMessage</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>WM_QUIT</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  DeviceControl<span style='color:#0000ff; '>(</span>CMD_WATCHDOG_SET_TIMEOUT<span style='color:#0000ff; '>,</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  DeviceControl<span style='color:#0000ff; '>(</span>CMD_WATCHDOG_ENABLE<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> SystemListenProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>  
+<span style='color:#0000ff; '>{</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Create System Listening Thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  g_bSystemListenExit<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HWND</span> hwd<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HWND</span><span style='color:#0000ff; '>)</span>pArg<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>int</span> powerOffDelayTimer<span style='color:#0000ff; '>=</span>g_Config<span style='color:#0000ff; '>.</span>PowerTimer<span style='color:#0000ff; '>*</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>60</span><span style='color:#0000ff; '>;</span><span style='color:#008000; '>//1000*6;</span>
+  <span style='color:#0000ff; font-weight:bold; '>int</span> waitingMs<span style='color:#0000ff; '>=</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>int</span> nAccValue<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>int</span> nHirePinValue<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifndef</span><span style='color:#004a43; '> QA_RELEASE</span>
+  DeviceControl<span style='color:#0000ff; '>(</span>CMD_LCD_OFF<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;</span><span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+  
+  DeviceControl<span style='color:#0000ff; '>(</span>CMD_WATCHDOG_SET_TIMEOUT<span style='color:#0000ff; '>,</span>WATCHDOG_TIMEOUT_VALUE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  DeviceControl<span style='color:#0000ff; '>(</span>CMD_WATCHDOG_ENABLE<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>while</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>//Rest Watch Dog    </span>
+    <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_WACTHDOG_REST<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//ACC checking</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nNewAccValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>DeviceGetState<span style='color:#0000ff; '>(</span>CMD_12VINPUT_GET_ACC<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>nNewAccValue<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span> <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      nNewAccValue<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bAccOn<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>nNewAccValue<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>nAccValue<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span>nNewAccValue<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_ACCPING_CHANGED<span style='color:#0000ff; '>,</span>bAccOn<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      nAccValue<span style='color:#0000ff; '>=</span>nNewAccValue<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bAccOn<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        powerOffDelayTimer<span style='color:#0000ff; '>=</span>g_Config<span style='color:#0000ff; '>.</span>PowerTimer<span style='color:#0000ff; '>*</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>60</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>bAccOn<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      powerOffDelayTimer<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>=</span>waitingMs<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>powerOffDelayTimer<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_POWER_OFF<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>//Customer checking</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nNewHirePinValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bAccOn<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>DeviceGetState<span style='color:#0000ff; '>(</span>CMD_12VINPUT_GET_HIRED<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>nNewHirePinValue<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span> <span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        nNewHirePinValue<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+      nNewHirePinValue<span style='color:#0000ff; '>=</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>nHirePinValue<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span>nNewHirePinValue<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bCustomerOn<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>nNewHirePinValue<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>      
+      <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_CUSTOMER_CHANGED<span style='color:#0000ff; '>,</span>bCustomerOn<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      nHirePinValue<span style='color:#0000ff; '>=</span>nNewHirePinValue<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hSystemListenThread<span style='color:#0000ff; '>,</span>waitingMs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>WAIT_OBJECT_0<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>    
+  <span style='color:#0000ff; '>}</span>
+  g_bSystemListenExit<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Exit System Listening Thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> NetworkProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>  
+<span style='color:#0000ff; '>{</span>  
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Create Network listening thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  g_bNetworkThreadExit<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HWND</span> hwd<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HWND</span><span style='color:#0000ff; '>)</span>pArg<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bConnected <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>while</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>IsNetPresent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bConnected<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>        
+        bConnected <span style='color:#0000ff; '>=</span> TRUE<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_NETWORK_CHANGED<span style='color:#0000ff; '>,</span>bConnected<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bConnected<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        bConnected <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_NETWORK_CHANGED<span style='color:#0000ff; '>,</span>bConnected<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hExitNetworkHandle<span style='color:#0000ff; '>,</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>WAIT_OBJECT_0<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  g_bNetworkThreadExit<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Exit Network Listening Thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> DownloadProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Create Download Thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  g_bDownloadThreadExit<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>HWND</span> hwd<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HWND</span><span style='color:#0000ff; '>)</span>pArg<span style='color:#0000ff; '>;</span>
+  g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_DOWNLOAD_FINISHED<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  g_bDownloadThreadExit<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//ResetEvent(g_hDownloadThread);</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Exit Download Thread</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> LoadPlayListProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  g_bLoadPlayListThreadExit<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//MYTRACE(L"Create Load Play List Thread");</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>HWND</span> hwd<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HWND</span><span style='color:#0000ff; '>)</span>pArg<span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//Wait for download thread exit</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_hDownloadThread<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hDownloadThread<span style='color:#0000ff; '>,</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>30</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>WAIT_TIMEOUT<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_POWER_OFF<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#008000; '>// only allow one thread to reload the playlist everytime</span>
+  <span style='color:#0000ff; font-weight:bold; '>EnterCriticalSection</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>gcs_ReloadPlaylist<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  g_pSchedule<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadPlayList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>LeaveCriticalSection</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>gcs_ReloadPlaylist<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//g_pSchedule->m_PlayList.m_NormalVideoList.Reset();  //</span><span style='color:#ffffff; background:#808000; '>TODO</span>
+  g_bLoadPlayListThreadExit<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+  <span style='color:#008000; '>//ResetEvent(g_hLoadPlayListThread);</span>
+  <span style='color:#008000; '>//MYTRACE(L"Exit Load Play List Thread");</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> PrepareProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#008000; '>//MYTRACE(L"Create Prepare to Strat playing Thread");</span>
+  <span style='color:#0000ff; font-weight:bold; '>HWND</span> hwd<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HWND</span><span style='color:#0000ff; '>)</span>pArg<span style='color:#0000ff; '>;</span>
+  g_bPrepareThreadExit<span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//Exit Network listen thread</span>
+  <span style='color:#0000ff; font-weight:bold; '>SetEvent</span><span style='color:#0000ff; '>(</span>g_hExitNetworkHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bNetworkThreadExit <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hNetworkThread<span style='color:#0000ff; '>,</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>WAIT_TIMEOUT<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Waiting Exit Network Thread Time Out</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_bPrepareThreadExit<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_POWER_OFF<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  
+  <span style='color:#008000; '>//Exit Download thread</span>
+  g_bExitDownloadThread<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bDownloadThreadExit <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hDownloadThread<span style='color:#0000ff; '>,</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>25</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>WAIT_TIMEOUT<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Waiting Exit Download Thread Time Out</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_bPrepareThreadExit<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_POWER_OFF<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  
+  <span style='color:#008000; '>//Wait for loading play list completely</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>g_bLoadPlayListThreadExit <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>WaitForSingleObject</span><span style='color:#0000ff; '>(</span>g_hLoadPlayListThread<span style='color:#0000ff; '>,</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>60</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>WAIT_TIMEOUT<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    MYTRACE<span style='color:#0000ff; '>(</span>MT<span style='color:#0000ff; '>::</span>LEVEL_ERROR<span style='color:#0000ff; '>,</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Waiting Exit Load Play List Thread Time Out</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    g_bPrepareThreadExit<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_POWER_OFF<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>  
+  g_bPrepareThreadExit<span style='color:#0000ff; '>=</span>TRUE<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>//start playing</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>g_bCustomerOn<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>PostMessage</span><span style='color:#0000ff; '>(</span>hwd<span style='color:#0000ff; '>,</span>WM_STARTPLAYING<span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> UploadLogFileProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> sToday <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> sFileName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> sFilePath <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>WIN32_FIND_DATA</span> lpFindFileData<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>COleDateTime</span> dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>COleDateTime</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>GetCurrentTime</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  sToday<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#007997; '>%d</span><span style='color:#007997; '>%02d</span><span style='color:#007997; '>%02d</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> dt<span style='color:#0000ff; '>.</span>GetYear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>dt<span style='color:#0000ff; '>.</span>GetMonth<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>dt<span style='color:#0000ff; '>.</span>GetDay<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>HANDLE</span> hFind <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>FindFirstFile</span><span style='color:#0000ff; '>(</span>g_CurrentPath <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>*.log</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>lpFindFileData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hFind <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+  FTPInfo ftpinfo<span style='color:#0000ff; '>;</span>
+  FTP ftp<span style='color:#0000ff; '>;</span>
+  
+  ftpinfo<span style='color:#0000ff; '>.</span>lpszServerName  <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>cds.motionpower.com.hk</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  ftpinfo<span style='color:#0000ff; '>.</span>lpszUserName  <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>cds</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  ftpinfo<span style='color:#0000ff; '>.</span>lpszPassword  <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>spaceinet</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  ftpinfo<span style='color:#0000ff; '>.</span>lpszDirectory  <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>*** Begin Upload ***</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+  <span style='color:#0000ff; font-weight:bold; '>do</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsNetPresent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+    sFileName <span style='color:#0000ff; '>=</span> lpFindFileData<span style='color:#0000ff; '>.</span>cFileName<span style='color:#0000ff; '>;</span>
+    sFilePath <span style='color:#0000ff; '>=</span> g_CurrentPath <span style='color:#0000ff; '>+</span> sFileName<span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sFileName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> sFileName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>..</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> sFileName<span style='color:#0000ff; '>.</span>Find<span style='color:#0000ff; '>(</span>sToday<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+        
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>(</span>lpFindFileData<span style='color:#0000ff; '>.</span>dwFileAttributes <span style='color:#0000ff; '>&amp;</span> FILE_ATTRIBUTE_READONLY<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>      
+      ftpinfo<span style='color:#0000ff; '>.</span>lpszLocalFile <span style='color:#0000ff; '>=</span> sFilePath<span style='color:#0000ff; '>;</span>
+      ftpinfo<span style='color:#0000ff; '>.</span>lpszRemoteFile <span style='color:#0000ff; '>=</span> sFileName<span style='color:#0000ff; '>;</span>
+      
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ftp<span style='color:#0000ff; '>.</span>UploadFile<span style='color:#0000ff; '>(</span>ftpinfo<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>Uploaded Log File: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sFilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>DeleteFile</span><span style='color:#0000ff; '>(</span>sFilePath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FindNextFile</span><span style='color:#0000ff; '>(</span>hFind<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>lpFindFileData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CloseHandle</span><span style='color:#0000ff; '>(</span>hFind<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  MYTRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>*** End Upload ***</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> SetAudioBrightControlProc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PVOID</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>*</span> pMain <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CMainFrame</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> pArg<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pMain <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> pMain<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pButtonWnd<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    CABControl abc<span style='color:#0000ff; '>(</span>CButtonWnd<span style='color:#0000ff; '>::</span>c_iCurrAudiLevel<span style='color:#0000ff; '>,</span> CButtonWnd<span style='color:#0000ff; '>::</span>c_iCurrBrtnLevel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+    pMain<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pABC<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>&amp;</span>abc<span style='color:#0000ff; '>;</span>
+    pMain<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ResetLevel<span style='color:#0000ff; '>(</span>g_Config<span style='color:#0000ff; '>.</span>m_SoundLevel<span style='color:#0000ff; '>.</span>DefaultDayLevel<span style='color:#0000ff; '>,</span>g_Config<span style='color:#0000ff; '>.</span>m_BrightnessLevel<span style='color:#0000ff; '>.</span>DefaultDayLevel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>abc<span style='color:#0000ff; '>.</span>DoModal<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> IDOK <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> g_bCustomerOn<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      pMain<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pButtonWnd<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ResetLevel<span style='color:#0000ff; '>(</span>abc<span style='color:#0000ff; '>.</span>GetAudioLevel<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>abc<span style='color:#0000ff; '>.</span>GetBrightLevel<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_PLAY<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>400</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      MediaPlayerControl<span style='color:#0000ff; '>(</span>CMD_FULLSCREEN<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    pMain<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pABC<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

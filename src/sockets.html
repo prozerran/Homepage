@@ -1,0 +1,212 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/4/2005</span>
+<span style='color:#008000; '>// File:    Server.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    This is a TCP and UDP multi-server. Server is able to open and</span>
+<span style='color:#008000; '>//          listen to open connections and allow either TCP or UDP connections.</span>
+<span style='color:#008000; '>//          Server opens a communication port and allows incomming connections</span>
+<span style='color:#008000; '>//          to be established with the server. Server performs request</span>
+<span style='color:#008000; '>//          by taking in request and replying with messages back to the client.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//          Server accepts connection from either Windows/Linux and can run as</span>
+<span style='color:#008000; '>//          a Windows service or Linux daemon. Code is written in portable</span>
+<span style='color:#008000; '>//          format to compile in both Windows/Linux.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#008000; '>/* Global include files for Windows &amp; Unix */</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>sys/types.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdio.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>ctype.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>string.h</span><span style='color:#0000e6; '>></span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _WIN32</span>
+
+<span style='color:#008000; '>/* Socket include file for Windows */</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>winsock.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; font-weight:bold; '>pragma</span><span style='color:#000088; font-weight:bold; '> comment(lib, </span><span style='color:#0000e6; font-weight:bold; '>"wsock32.lib"</span><span style='color:#000088; font-weight:bold; '>)</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> close</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>sd</span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '> closesocket</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>sd</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>else</span>
+
+<span style='color:#008000; '>/* Socket include files for Unix */</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>sys/socket.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>netinet/in.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>arpa/inet.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>netdb.h</span><span style='color:#0000e6; '>></span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#008000; '>/* Global define constants */</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> PORT_NUM    0</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAXCLIENT   5</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAXBUFFER   256</span>
+
+<span style='color:#008000; '>// macro to return the max of two integers</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAX</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>x</span><span style='color:#0000ff; '>,</span><span style='color:#004a43; '>y</span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '>    </span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>x</span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>></span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>y</span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>?</span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>x</span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>:</span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>y</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  main()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: main routine. Here is where the program starts.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; font-weight:bold; '>main</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> argc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// initialize some variables</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> usd<span style='color:#0000ff; '>,</span> tsd<span style='color:#0000ff; '>,</span> alen<span style='color:#0000ff; '>,</span> nfds<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>struct</span> sockaddr_in <span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>,</span> tsin<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>fd_set</span> rdfs<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> msg<span style='color:#0000ff; '>[</span>MAXBUFFER<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _WIN32</span>
+
+    <span style='color:#008000; '>// initialize Winsock DLL files</span>
+    <span style='color:#0000ff; font-weight:bold; '>WORD</span> wVersionRequested<span style='color:#0000ff; '>;</span>
+    WSADATA wsaData<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> err <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    wVersionRequested <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>MAKEWORD</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    err <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>WSAStartup</span><span style='color:#0000ff; '>(</span>wVersionRequested<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>wsaData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: unable to initialize WinSock DLL</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+    <span style='color:#008000; '>// lets open a port to take incomming connections</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    sin<span style='color:#0000ff; '>.</span>sin_family <span style='color:#0000ff; '>=</span> AF_INET<span style='color:#0000ff; '>;</span>
+    sin<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>.</span>s_addr <span style='color:#0000ff; '>=</span> INADDR_ANY<span style='color:#0000ff; '>;</span>
+    sin<span style='color:#0000ff; '>.</span>sin_port <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>htons</span><span style='color:#0000ff; '>(</span>PORT_NUM<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// create a UDP socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>usd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>socket</span><span style='color:#0000ff; '>(</span>PF_INET<span style='color:#0000ff; '>,</span> SOCK_DGRAM<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: UDP socket()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// bind to the socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>bind</span><span style='color:#0000ff; '>(</span>usd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: UDP bind()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    alen <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>tsin<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// get the socket name</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>getsockname</span><span style='color:#0000ff; '>(</span>usd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>tsin<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>alen<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: getsocketname()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    sin<span style='color:#0000ff; '>.</span>sin_port <span style='color:#0000ff; '>=</span> tsin<span style='color:#0000ff; '>.</span>sin_port<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// create a TCP socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>tsd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>socket</span><span style='color:#0000ff; '>(</span>PF_INET<span style='color:#0000ff; '>,</span> SOCK_STREAM<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: TCP socket()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// bind to the socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>bind</span><span style='color:#0000ff; '>(</span>tsd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: TCP bind()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// listen for incomming connections to your port</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>listen</span><span style='color:#0000ff; '>(</span>tsd<span style='color:#0000ff; '>,</span> MAXCLIENT<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: listen()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>UDP and TCP multiserver online: </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ntohs</span><span style='color:#0000ff; '>(</span>tsin<span style='color:#0000ff; '>.</span>sin_port<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>FD_ZERO</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>rdfs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    nfds <span style='color:#0000ff; '>=</span> MAX<span style='color:#0000ff; '>(</span>usd<span style='color:#0000ff; '>,</span>tsd<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// infinite loop, this is where the server runs indefinitely to serve the client</span>
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// connect and server either TCP or UDP connections</span>
+        <span style='color:#0000ff; font-weight:bold; '>FD_SET</span><span style='color:#0000ff; '>(</span>tsd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>rdfs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>FD_SET</span><span style='color:#0000ff; '>(</span>usd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>rdfs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// select which channel to support</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>select</span><span style='color:#0000ff; '>(</span>nfds<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>rdfs<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>fd_set</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>fd_set</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>timeval</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: select()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// serve the TCP connection</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FD_ISSET</span><span style='color:#0000ff; '>(</span>tsd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>rdfs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> sd<span style='color:#0000ff; '>;</span>
+            alen <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>sd <span style='color:#0000ff; '>=</span> accept<span style='color:#0000ff; '>(</span>tsd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>alen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: TCP accept()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>recv</span><span style='color:#0000ff; '>(</span>sd<span style='color:#0000ff; '>,</span> msg<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: TCP recv()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>//////////////////////////////////////</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>TCP: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>strcpy</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GOT IT!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#008000; '>//////////////////////////////////////</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>send</span><span style='color:#0000ff; '>(</span>sd<span style='color:#0000ff; '>,</span> msg<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>strlen</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: TCP send()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            close<span style='color:#0000ff; '>(</span>sd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// server the UDP connection</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FD_ISSET</span><span style='color:#0000ff; '>(</span>usd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>rdfs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            alen <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>recvfrom</span><span style='color:#0000ff; '>(</span>usd<span style='color:#0000ff; '>,</span> msg<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>alen<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: UDP recvfrom()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>//////////////////////////////////////</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>UDP: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>strcpy</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GOT IT!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#008000; '>//////////////////////////////////////</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>sendto</span><span style='color:#0000ff; '>(</span>usd<span style='color:#0000ff; '>,</span> msg<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>sin</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: UDP sendto()</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _WIN32</span>
+    <span style='color:#008000; '>// perform all cleanups when connections close</span>
+    <span style='color:#0000ff; font-weight:bold; '>WSACleanup</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span><span style='color:#004a43; '> </span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

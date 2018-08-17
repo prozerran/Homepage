@@ -1,0 +1,353 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    8/5/2005</span>
+<span style='color:#008000; '>// File:    String.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    My own attempt to write a string class. String class is an</span>
+<span style='color:#008000; '>//          object of char* arrays and performs similarities to the "string"</span>
+<span style='color:#008000; '>//          type. Class overloads several operators to perfrom things such</span>
+<span style='color:#008000; '>//          as concatenations, copies, and comparisons.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>iostream.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>String.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Description:</span>
+<span style='color:#008000; '>//      Implementation of class Node. Here is the file that</span>
+<span style='color:#008000; '>//      implements all the constructors, destructor, ADT member</span>
+<span style='color:#008000; '>//      functions, friend functions, overloaded functions, etc.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Node()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Node Constructor</span>
+<span style='color:#008000; '>//              Initialize default fields</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+Node<span style='color:#0000ff; '>::</span>Node<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Default copy constructor</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Node<span style='color:#0000ff; '>::</span>Node<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Node <span style='color:#0000ff; '>&amp;</span>n<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> n<span style='color:#0000ff; '>.</span>ch<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> n<span style='color:#0000ff; '>.</span>next<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Default destructor</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Node<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Node<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Description:</span>
+<span style='color:#008000; '>//      Implementation of class String. Here is the file that</span>
+<span style='color:#008000; '>//      implements all the constructors, destructor, ADT member</span>
+<span style='color:#008000; '>//      functions, friend functions, overloaded functions, etc.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Default constructor</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>:</span> head<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded constructor</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>str<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>str <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>)</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// copy the head node</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+        head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span>str<span style='color:#0000ff; '>;</span>
+        str<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// copy the rest of the list</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>str <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Insert<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            str<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Default copy constructor</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>s<span style='color:#0000ff; '>.</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// copy the head node</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+        head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>;</span>
+
+        pNode newptr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+        pNode oldptr <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// copy the rest of the list</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>oldptr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+            newptr <span style='color:#0000ff; '>=</span> newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>;</span>
+            oldptr <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Default destructor</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode curr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        head <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> curr<span style='color:#0000ff; '>;</span>
+        curr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded assignment = operator for character array</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>str<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>~</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>str <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>)</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// copy the head node</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+        head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span>str<span style='color:#0000ff; '>;</span>
+        str<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// copy the rest of the list</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>str <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Insert<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            str<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded assignment = operator</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>~</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>s<span style='color:#0000ff; '>.</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// copy the head node</span>
+            head <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+            head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>;</span>
+
+            pNode newptr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+            pNode oldptr <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// copy the rest of the list</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>oldptr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+                newptr <span style='color:#0000ff; '>=</span> newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>;</span>
+                oldptr <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded operation + operator</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>String</span> ss <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+        pNode curr <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        ss<span style='color:#0000ff; '>.</span>Insert<span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> ss<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded operation += operator</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>+</span> s<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded relational == operator</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> bSame <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    pNode curr1 <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+    pNode curr2 <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>Length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> Length<span style='color:#0000ff; '>(</span>s<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr1 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            bSame <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> curr2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                bSame <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                curr1 <span style='color:#0000ff; '>=</span> curr1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                curr2 <span style='color:#0000ff; '>=</span> curr2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bSame<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded relational != operator</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Insert()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Inserts the character into the String object</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span>Insert<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> ch<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode temp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+    temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch <span style='color:#0000ff; '>=</span> ch<span style='color:#0000ff; '>;</span>
+    temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        head <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        pNode curr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+        curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Length()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets the length of the String object</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> Length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; font-weight:bold; '>count</span> <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    pNode curr <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>count</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+        curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>count</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded operation ordinary + operator</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>str<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>String</span> ss <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> ss <span style='color:#0000ff; '>+</span> s<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded friend stream >> operator</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>istream</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>istream</span> <span style='color:#0000ff; '>&amp;</span>in<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> ch<span style='color:#0000ff; '>;</span>
+
+    s<span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>~</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>in<span style='color:#0000ff; '>.</span>peek<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\n'</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        ch <span style='color:#0000ff; '>=</span> in<span style='color:#0000ff; '>.</span>get<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        s<span style='color:#0000ff; '>.</span>Insert<span style='color:#0000ff; '>(</span>ch<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> in<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded friend stream &lt;&lt; operator</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>ostream</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ostream</span> <span style='color:#0000ff; '>&amp;</span>out<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode curr <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>;</span>
+        curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> out<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

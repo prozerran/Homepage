@@ -1,0 +1,420 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/7/2010</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Simple Mass Connection Server.</span>
+<span style='color:#008000; '>//          Allows muliple simulataneous connection oriented logins.</span>
+<span style='color:#008000; '>//          Server can serve muliple instances of users by creating a</span>
+<span style='color:#008000; '>//          thread per user and servicing them.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#008000; '>// ----- includes -----</span>
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>sys/syscall.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>sys/socket.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>netinet/in.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>arpa/inet.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>sys/types.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>pthread.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>unistd.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>string.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdlib.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>signal.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>fcntl.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>netdb.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>mysql.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>errno.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdio.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>time.h</span><span style='color:#0000e6; '>></span>
+
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#008000; '>// ----- log level -----</span>
+<span style='color:#008000; '>// higher the log level, the more log output to file</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// LEVEL 0      No Logging</span>
+<span style='color:#008000; '>// LEVEL 1      + data received loggings</span>
+<span style='color:#008000; '>// LEVEL 2      + more log + error logs</span>
+<span style='color:#008000; '>// LEVEL 3      + more log + signal logs</span>
+<span style='color:#008000; '>// LEVEL 4      + more log + additional error logs</span>
+<span style='color:#008000; '>// LEVEL 5      + maximum detail logs</span>
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> LOG_LEVEL             5</span>
+
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#008000; '>// ----- constants -----</span>
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MYSQLLOCAL_HOST       </span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MYSQLLOCAL_USER       </span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>root</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MYSQLLOCAL_PASSWORD   </span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>password</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MYSQLLOCAL_DATABASE   </span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>dbtable</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> REC_STATUS_ACTIVE     </span><span style='color:#000080; '>'A'</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAX_SOCKET            8192</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAX_BUFFER            8192</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAX_QUEUE             8192</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> NUM_PORT              9999        </span><span style='color:#008000; '>// your server port number</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAX_EXPECTED_TOKENS   14</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> HB_RESP               </span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>>ALIVE</span><span style='color:#0000e6; '>\r</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#008000; '>// ----- global variables -----</span>
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+MYSQL <span style='color:#0000ff; '>*</span>_oMySQL<span style='color:#0000ff; '>;</span>          <span style='color:#008000; '>// mysql handler </span>
+<span style='color:#0000ff; font-weight:bold; '>int</span>   _nSocketID<span style='color:#0000ff; '>;</span>        <span style='color:#008000; '>// socket descriptor   </span>
+
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#008000; '>// ----- interfaces -----</span>
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> CleanUp<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> ExitSignal<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> KillThread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> ReplaceSocket<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>long</span> IsThreadValid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span> ServeClientThread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>struct</span> stDeviceSocket
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> deviceid<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> socketid<span style='color:#0000ff; '>;</span>
+    
+    pid_t     threadpd<span style='color:#0000ff; '>;</span>    
+    pthread_t threadid<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+<span style='color:#008000; '>// ----- functions -----</span>
+<span style='color:#008000; '>// ----------------------------------------------------------------------------------------------------</span>
+
+<span style='color:#008000; '>/* On exit procedure. */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> CleanUp<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    mysql_close<span style='color:#0000ff; '>(</span>_oMySQL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    close<span style='color:#0000ff; '>(</span>_nSocketID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/* On exit by signals */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> ExitSignal<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> sig<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Log<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>3</span><span style='color:#0000ff; '>,</span> NUM_PORT<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>FlexTrac Device Server Stopped.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    CleanUp<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/* On exit procedure. */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> szMsg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> strbuf<span style='color:#0000ff; '>[</span>MAX_BUFFER<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>strbuf<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '> - </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> - </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> szMsg<span style='color:#0000ff; '>,</span> errno<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>strerror</span><span style='color:#0000ff; '>(</span>errno<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    Log<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span> NUM_PORT<span style='color:#0000ff; '>,</span> strbuf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+    CleanUp<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> KillThread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> sig<span style='color:#0000ff; '>)</span> 
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// do nothing, </span>
+    <span style='color:#008000; '>// so when function returns, recv() becomes nonblock and exists</span>
+    <span style='color:#008000; '>// pthread_exit(NULL);</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>long</span> IsThreadValid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> ntpid<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> spath<span style='color:#0000ff; '>[</span>MAX_BUFFER<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          
+    <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/proc/</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>/task/</span><span style='color:#007997; '>%ld</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> ntpid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     
+    <span style='color:#0000ff; font-weight:bold; '>return</span> access<span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>,</span> F_OK<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/* Write raw data to log file */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> szIpAddr<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nLevel<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nSocket<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> szData<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>LOG_LEVEL <span style='color:#0000ff; '>&lt;</span> nLevel<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>char</span> buffer<span style='color:#0000ff; '>[</span>MAX_BUFFER<span style='color:#0000ff; '>+</span><span style='color:#800000; '>64</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>time_t</span> curtime<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>tm</span> <span style='color:#0000ff; '>*</span>loctime<span style='color:#0000ff; '>;</span>
+
+    curtime <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>time</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    loctime <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>localtime</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>curtime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>strftime</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/var/log/s6138_%Y%m</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>.log</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> loctime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>FILE</span><span style='color:#0000ff; '>*</span> fp <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>fp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>fopen</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>a</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>strftime</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>%F %T</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> loctime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\t</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\t</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\t</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> buffer<span style='color:#0000ff; '>,</span> szIpAddr<span style='color:#0000ff; '>,</span> nSocket<span style='color:#0000ff; '>,</span> szData<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>fprintf</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> buffer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>fclose</span><span style='color:#0000ff; '>(</span>fp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/* Replace and close existing socket descriptor with new descriptor if it had already exist */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> ReplaceSocket<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nSocket<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> szData<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>    
+    <span style='color:#0000ff; font-weight:bold; '>static</span> pthread_mutex_t id_mutex <span style='color:#0000ff; '>=</span> PTHREAD_MUTEX_INITIALIZER<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>struct</span> stDeviceSocket stdev<span style='color:#0000ff; '>[</span>MAX_SOCKET<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span> 
+ 
+    <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nSocket <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> MAX_SOCKET<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>strlen</span><span style='color:#0000ff; '>(</span>szData<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> MAX_EXPECTED_TOKENS<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+        
+    <span style='color:#0000ff; font-weight:bold; '>char</span> szDevice<span style='color:#0000ff; '>[</span><span style='color:#800000; '>8</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>szDevice<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>szDevice<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>strncpy</span><span style='color:#0000ff; '>(</span>szDevice<span style='color:#0000ff; '>,</span> szData<span style='color:#0000ff; '>+</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>6</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nDevice <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>szDevice<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>// entire function here is a critical section</span>
+    pthread_mutex_lock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>id_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+    
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_SOCKET<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>deviceid <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// new socket, add device</span>
+            stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>deviceid <span style='color:#0000ff; '>=</span> nDevice<span style='color:#0000ff; '>;</span>
+            stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>socketid <span style='color:#0000ff; '>=</span> nSocket<span style='color:#0000ff; '>;</span>
+            stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>threadid <span style='color:#0000ff; '>=</span> pthread_self<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>threadpd <span style='color:#0000ff; '>=</span> syscall<span style='color:#0000ff; '>(</span>SYS_gettid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                  <span style='color:#008000; '>// get thread task process id</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>        
+        <span style='color:#0000ff; '>}</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>deviceid <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> nDevice<span style='color:#0000ff; '>)</span>        
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>socketid <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> nSocket<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>                      
+                <span style='color:#008000; '>// old socket exist, replace it</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsThreadValid<span style='color:#0000ff; '>(</span>stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>threadpd<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>            <span style='color:#008000; '>// test if thread is alive</span>
+                <span style='color:#0000ff; '>{</span>                                                              
+                    fcntl<span style='color:#0000ff; '>(</span>stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>socketid<span style='color:#0000ff; '>,</span> F_SETFL<span style='color:#0000ff; '>,</span> O_NONBLOCK<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// make client thread recv() nonblock              </span>
+                    pthread_kill<span style='color:#0000ff; '>(</span>stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>threadid<span style='color:#0000ff; '>,</span> SIGALRM<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>         <span style='color:#008000; '>// send a signal to thread</span>
+                    <span style='color:#008000; '>//pthread_cancel(stdev[i].threadid);                </span>
+                <span style='color:#0000ff; '>}</span>                                 
+                Log<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>5</span><span style='color:#0000ff; '>,</span> nSocket<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Socket Replaced</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                                
+                stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>socketid <span style='color:#0000ff; '>=</span> nSocket<span style='color:#0000ff; '>;</span>                        
+            <span style='color:#0000ff; '>}</span>               
+            stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>threadid <span style='color:#0000ff; '>=</span> pthread_self<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                       <span style='color:#008000; '>// reset thread id in case client close itself and establish using same socket</span>
+            stdev<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>threadpd <span style='color:#0000ff; '>=</span> syscall<span style='color:#0000ff; '>(</span>SYS_gettid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                  <span style='color:#008000; '>// get thread task process id               </span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>                                    
+        <span style='color:#0000ff; '>}</span>        
+    <span style='color:#0000ff; '>}</span>
+    pthread_mutex_unlock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>id_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Client Thread. Each client is executed on its own thread.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Continueously read and serve client until it closes the connection.</span>
+<span style='color:#008000; '>*/</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span> ServeClientThread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span> pArg<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pthread_detach<span style='color:#0000ff; '>(</span>pthread_self<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+
+    <span style='color:#0000ff; font-weight:bold; '>static</span> pthread_mutex_t cs_mutex <span style='color:#0000ff; '>=</span> PTHREAD_MUTEX_INITIALIZER<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>struct</span> sockaddr_in clientsock<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>timeval</span> tv<span style='color:#0000ff; '>;</span>
+        
+    <span style='color:#0000ff; font-weight:bold; '>int</span> clientsd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>pArg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>        
+    socklen_t paddrlen <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>socklen_t<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>       
+    <span style='color:#0000ff; font-weight:bold; '>long</span> readsize <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> ret<span style='color:#0000ff; '>;</span>    
+
+    <span style='color:#0000ff; font-weight:bold; '>char</span> szClientDataBuff<span style='color:#0000ff; '>[</span>MAX_BUFFER<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> szSqlStatement<span style='color:#0000ff; '>[</span>MAX_BUFFER<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>// for connection timeouts, set and clear file des, set timeout      </span>
+    <span style='color:#0000ff; font-weight:bold; '>fd_set</span> rfds<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>FD_ZERO</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>rfds<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>FD_SET</span><span style='color:#0000ff; '>(</span>clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>rfds<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    tv<span style='color:#0000ff; '>.</span>tv_sec <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>300</span><span style='color:#0000ff; '>;</span>     
+    tv<span style='color:#0000ff; '>.</span>tv_usec <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>                         
+
+    <span style='color:#008000; '>// get client info</span>
+    <span style='color:#0000ff; font-weight:bold; '>getpeername</span><span style='color:#0000ff; '>(</span>clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>clientsock<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>paddrlen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Client Connected.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>// handle certain signals    </span>
+    <span style='color:#0000ff; font-weight:bold; '>signal</span><span style='color:#0000ff; '>(</span>SIGALRM<span style='color:#0000ff; '>,</span> KillThread<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// uses an interrupt to exit curent thread</span>
+          
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>                  
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>szClientDataBuff<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>szClientDataBuff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>szSqlStatement<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>szSqlStatement<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#008000; '>// wait until socket stream has data to read                       </span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>ret <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>select</span><span style='color:#0000ff; '>(</span>clientsd<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>rfds<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>tv<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ret <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>select(0) break, timed out.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                      
+            <span style='color:#0000ff; '>}</span>          
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ret <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>select(-1) break, socket replaced. closing.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                             
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>select(?) break, error unknown.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                
+            <span style='color:#0000ff; '>}</span>         
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>           
+
+        <span style='color:#008000; '>// read packet from client, get flextrac string</span>
+        <span style='color:#008000; '>// blocking call, will eventually catch a signal to wake up and kill thread        </span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>readsize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>recv</span><span style='color:#0000ff; '>(</span>clientsd<span style='color:#0000ff; '>,</span> szClientDataBuff<span style='color:#0000ff; '>,</span> MAX_BUFFER<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>readsize <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>recv(0) break, client closed connection.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                                                 
+            <span style='color:#0000ff; '>}</span>          
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>readsize <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>recv(-1) break, socket replaced. closing.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                                
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>recv(?) break, error unknown.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>             
+        <span style='color:#0000ff; '>}</span>             
+
+        <span style='color:#008000; '>// log any and all data sent to server</span>
+        Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> szClientDataBuff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        tv<span style='color:#0000ff; '>.</span>tv_sec <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>86400</span><span style='color:#0000ff; '>;</span>     
+                    
+        <span style='color:#008000; '>// respond to incoming heartbeat request                    </span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>strncmp</span><span style='color:#0000ff; '>(</span>szClientDataBuff<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>>H</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>        
+            <span style='color:#008000; '>// awkknowledges heartbeat</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>send</span><span style='color:#0000ff; '>(</span>clientsd<span style='color:#0000ff; '>,</span> HB_RESP<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>8</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>send(HB) error.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            
+            <span style='color:#008000; '>// check for previous connection, if so, close it</span>
+            ReplaceSocket<span style='color:#0000ff; '>(</span>clientsd<span style='color:#0000ff; '>,</span> szClientDataBuff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>            
+                
+            <span style='color:#008000; '>// log heartbeat request and response</span>
+            Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> HB_RESP<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                                                         
+        <span style='color:#0000ff; '>}</span>                                     
+                                        
+        <span style='color:#008000; '>// respond to incoming new Flextrac string</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>strncmp</span><span style='color:#0000ff; '>(</span>szClientDataBuff<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>>C</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; font-weight:bold; '>strncmp</span><span style='color:#0000ff; '>(</span>szClientDataBuff<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>>B</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>        
+            <span style='color:#008000; '>// check for previous connection, if so, close it</span>
+            ReplaceSocket<span style='color:#0000ff; '>(</span>clientsd<span style='color:#0000ff; '>,</span> szClientDataBuff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            
+            <span style='color:#008000; '>// truncate any data beyond newline</span>
+            <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> pp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strchr</span><span style='color:#0000ff; '>(</span>szClientDataBuff<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\n'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            pp <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>?</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>pp<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>:</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>         
+    
+            <span style='color:#008000; '>// critical section, write to database</span>
+            pthread_mutex_lock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>cs_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            mysql_query<span style='color:#0000ff; '>(</span>_oMySQL<span style='color:#0000ff; '>,</span> szSqlStatement<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            pthread_mutex_unlock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>cs_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>            
+        <span style='color:#0000ff; '>}</span>                                                       
+    <span style='color:#0000ff; '>}</span>
+    Log<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>inet_ntoa</span><span style='color:#0000ff; '>(</span>clientsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Client Closed.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    close<span style='color:#0000ff; '>(</span>clientsd<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    pthread_exit<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Main Driver Routine</span>
+<span style='color:#008000; '>*/</span>
+<span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; font-weight:bold; '>main</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> argc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> reuse <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    pthread_t tid<span style='color:#0000ff; '>;</span>
+    pthread_attr_t attr<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>int</span> err<span style='color:#0000ff; '>,</span> clientsd<span style='color:#0000ff; '>;</span>        
+    <span style='color:#0000ff; font-weight:bold; '>struct</span> sockaddr_in localsock<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>struct</span> sockaddr_in remotesock<span style='color:#0000ff; '>;</span>      
+
+    <span style='color:#008000; '>// handle certain signals</span>
+    <span style='color:#0000ff; font-weight:bold; '>signal</span><span style='color:#0000ff; '>(</span>SIGPIPE<span style='color:#0000ff; '>,</span> SIG_IGN<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     <span style='color:#008000; '>// ignore client self term</span>
+    <span style='color:#0000ff; font-weight:bold; '>signal</span><span style='color:#0000ff; '>(</span>SIGINT<span style='color:#0000ff; '>,</span>  ExitSignal<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     <span style='color:#008000; '>// close on interrupts</span>
+    <span style='color:#0000ff; font-weight:bold; '>signal</span><span style='color:#0000ff; '>(</span>SIGTERM<span style='color:#0000ff; '>,</span> ExitSignal<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     <span style='color:#008000; '>// close on terminates</span>
+
+    <span style='color:#008000; '>// init mysql</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>_oMySQL <span style='color:#0000ff; '>=</span> mysql_init<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: mysql_init()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>              
+
+    <span style='color:#008000; '>// select db to connect</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>mysql_real_connect<span style='color:#0000ff; '>(</span>_oMySQL<span style='color:#0000ff; '>,</span> MYSQLLOCAL_HOST<span style='color:#0000ff; '>,</span> MYSQLLOCAL_USER<span style='color:#0000ff; '>,</span> MYSQLLOCAL_PASSWORD<span style='color:#0000ff; '>,</span> MYSQLLOCAL_DATABASE<span style='color:#0000ff; '>,</span> MYSQL_PORT<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: mysql_real_connect()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    _oMySQL<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>reconnect <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// setup local socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>localsock<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>localsock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    localsock<span style='color:#0000ff; '>.</span>sin_family <span style='color:#0000ff; '>=</span> AF_INET<span style='color:#0000ff; '>;</span>
+    localsock<span style='color:#0000ff; '>.</span>sin_addr<span style='color:#0000ff; '>.</span>s_addr <span style='color:#0000ff; '>=</span> INADDR_ANY<span style='color:#0000ff; '>;</span>
+    localsock<span style='color:#0000ff; '>.</span>sin_port <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>htons</span><span style='color:#0000ff; '>(</span>NUM_PORT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// create a socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>_nSocketID <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>socket</span><span style='color:#0000ff; '>(</span>PF_INET<span style='color:#0000ff; '>,</span> SOCK_STREAM<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: socket()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// make socket reuseable</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>setsockopt</span><span style='color:#0000ff; '>(</span>_nSocketID<span style='color:#0000ff; '>,</span> SOL_SOCKET<span style='color:#0000ff; '>,</span> SO_REUSEADDR<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>reuse<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>reuse<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: setsockopt()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// bind to socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>bind</span><span style='color:#0000ff; '>(</span>_nSocketID<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>localsock<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>localsock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: bind()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>int</span> paddrlen <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>remotesock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// get socket name</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>getsockname</span><span style='color:#0000ff; '>(</span>_nSocketID<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>remotesock<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>paddrlen<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: getsockname()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// listen on socket</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>listen</span><span style='color:#0000ff; '>(</span>_nSocketID<span style='color:#0000ff; '>,</span> MAX_QUEUE<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: listen()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>// initialize the thread attribute</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pthread_attr_init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>attr<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: pthread_attr_init()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>// Set the stack size of the thread, the smaller this is, the larger the max threads can be created</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pthread_attr_setstacksize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>attr<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>120</span><span style='color:#0000ff; '>*</span><span style='color:#800000; '>1024</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: pthread_attr_setstacksize()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#008000; '>// Set thread to detached state. No need for pthread_join</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pthread_attr_setdetachstate<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>attr<span style='color:#0000ff; '>,</span> PTHREAD_CREATE_DETACHED<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: pthread_attr_setdetachstate()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    Log<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>3</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ntohs</span><span style='color:#0000ff; '>(</span>remotesock<span style='color:#0000ff; '>.</span>sin_port<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Server Started.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// acccept incomming client connection</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>clientsd <span style='color:#0000ff; '>=</span> accept<span style='color:#0000ff; '>(</span>_nSocketID<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>sockaddr</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>remotesock<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>paddrlen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: accept()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// serve each client with its own thread</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pthread_create<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>tid<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>attr<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> ServeClientThread<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>clientsd<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            ExitError<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: pthread_create()</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#008000; '>// pthread_join(tid, NULL);</span>
+        <span style='color:#008000; '>// close(clientsd);</span>
+    <span style='color:#0000ff; '>}</span>
+    CleanUp<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

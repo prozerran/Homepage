@@ -1,0 +1,232 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdio.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdlib.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>unistd.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Syscalls.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> TRACE 0</span>
+
+<span style='color:#008000; '>/************************************************************************/</span>
+<span style='color:#008000; '>/*                                                                      */</span> 
+<span style='color:#008000; '>/* This is the test program for CSC415, PJ2, Spring 2001.  It generates */</span>
+<span style='color:#008000; '>/* semaphore activities.  Initially, it creates N semaphores :          */</span>
+<span style='color:#008000; '>/* key, key+1, ..., key+N-1, then it repeatedly does waitSem() or       */</span>
+<span style='color:#008000; '>/* signalSem() on each of the N semaphores.                             */</span>
+<span style='color:#008000; '>/*                                                                      */</span> 
+<span style='color:#008000; '>/* This program can be executed many times to create multiple clients.  */</span>
+<span style='color:#008000; '>/* There are exactly six input arguments :                              */</span>
+<span style='color:#008000; '>/*                                                                      */</span> 
+<span style='color:#008000; '>/*      argv[0] = program name                                          */</span>
+<span style='color:#008000; '>/*      argv[1] = first key value                                       */</span>
+<span style='color:#008000; '>/*      argv[2] = number of semaphores, between 1 to 5                  */</span>
+<span style='color:#008000; '>/*      argv[3] = init value. Set this value for all semaphores         */</span>
+<span style='color:#008000; '>/*      argv[4] = # of loops for semWait() or semSignal()               */</span>
+<span style='color:#008000; '>/*      argv[5] = 1 do semWait(), 0 do semSignal()                      */</span> 
+<span style='color:#008000; '>/*                                                                      */</span> 
+<span style='color:#008000; '>/*  Example : a.out 777 2 0 10 1                                        */</span> 
+<span style='color:#008000; '>/*            This create two semaphores with key = 777 &amp; 778           */</span>
+<span style='color:#008000; '>/*            Initial value of each semaphore is set to 0               */</span>
+<span style='color:#008000; '>/*            Repeat semWait() on each semaphore 10 times               */</span>
+<span style='color:#008000; '>/*                                                                      */</span> 
+<span style='color:#008000; '>/* Note : you may modify this program to create more options            */</span>
+<span style='color:#008000; '>/*        if you want to see more trace output, set the above TRACE 1   */</span>
+<span style='color:#008000; '>/*                                                                      */</span> 
+<span style='color:#008000; '>/************************************************************************/</span>
+
+<span style='color:#008000; '>/* Global variables */</span>
+<span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>[</span><span style='color:#800000; '>5</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> flag<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>,</span> init<span style='color:#0000ff; '>,</span> numLoops<span style='color:#0000ff; '>,</span>numSemaphores<span style='color:#0000ff; '>;</span>
+
+
+<span style='color:#008000; '>/* process input arguments */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> GetArguments<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> argc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+
+     <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> argc <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>6</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : Error! argc=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> != 6, cannot run this program!</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+               getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> argc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Usage : progName key numSemaphores initValue numLoops flag</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     <span style='color:#0000ff; '>}</span>
+        
+     <span style='color:#008000; '>/* get parameters */</span>
+     key           <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>argv<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     numSemaphores <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>argv<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     
+     init          <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>argv<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+     numLoops      <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>argv<span style='color:#0000ff; '>[</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     flag          <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>argv<span style='color:#0000ff; '>[</span><span style='color:#800000; '>5</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> TRACE</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>--------------------------------</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Key           = </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>numSemaphores = </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>numSemaphores<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>initial value = </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>init<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>numLoops      = </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>numLoops<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>flag          = </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>flag<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>--------------------------------</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+    
+    <span style='color:#008000; '>/* simple argumenty error checking. There may be more */</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>(</span>numSemaphores <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>numSemaphores <span style='color:#0000ff; '>></span> <span style='color:#800000; '>5</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> 
+         <span style='color:#0000ff; '>(</span>init <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>          <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>numLoops <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>      <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> 
+         <span style='color:#0000ff; '>(</span>flag <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>          <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>flag <span style='color:#0000ff; '>></span> <span style='color:#800000; '>1</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : Error in input parameters, program exits!</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+       <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+
+
+<span style='color:#008000; '>/* This function uses getSem() to get all semaphores */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> DoGetAllSemaphores<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> 
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>,</span> tmpKey<span style='color:#0000ff; '>;</span>
+
+    tmpKey <span style='color:#0000ff; '>=</span> key<span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> TRACE</span>
+    <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>In DoGetAllSemaphores: pid=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : numSemaphores=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>"</span>
+           <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> : key=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : init=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+            getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> numSemaphores<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>,</span> init<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>&lt;</span>numSemaphores<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>getSem<span style='color:#0000ff; '>(</span>tmpKey<span style='color:#0000ff; '>,</span> init<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> 
+             <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : Error in getSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>,</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>,--), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                     getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> tmpKey<span style='color:#0000ff; '>,</span>init<span style='color:#0000ff; '>,</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+             <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; '>{</span>
+             <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : OK in getSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>,</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>,--), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>, get semid=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                     getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>tmpKey<span style='color:#0000ff; '>,</span>init<span style='color:#0000ff; '>,</span>i<span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+             tmpKey<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+
+
+<span style='color:#008000; '>/* This function does waitSem() numLoops times on each semaphore */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> DoWaitAllSemaphores<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> 
+<span style='color:#0000ff; '>{</span>
+     <span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>,</span>j<span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> TRACE</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>In DoWaitAllSemaphores : pid=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : numLoops=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+            getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> numLoops<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+     <span style='color:#008000; '>/* do numLoops times */</span>
+     <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>j<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>&lt;</span>numLoops<span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+        <span style='color:#008000; '>/* do for each created semaphore */</span>
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>&lt;</span>numSemaphores<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : try waitSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span>j<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>waitSem<span style='color:#0000ff; '>(</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : Error in waitSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                        getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span>j<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>        
+            <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : OK  waitSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                        getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> j<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+
+
+<span style='color:#008000; '>/* This function does signalSem() numLoops times on each semaphore */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> DoSignalAllSemaphores<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> 
+<span style='color:#0000ff; '>{</span>
+     <span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>,</span>j<span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> TRACE</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>In DoSignalAllSemaphores : pid=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : numLoops=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+            getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> numLoops<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+     <span style='color:#008000; '>/* do numLoops times */</span>
+     <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>j<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>&lt;</span>numLoops<span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+        <span style='color:#008000; '>/* do for each created semaphore */</span>
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>&lt;</span>numSemaphores<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : try signalSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+                   getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> j<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>signalSem<span style='color:#0000ff; '>(</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : Error in signalSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                        getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span>j<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>        
+            <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : OK  signalSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                        getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> j<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>5</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>/* delay signalSem operations */</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+
+
+<span style='color:#008000; '>/* This function releases all semaphores */</span>
+<span style='color:#0000ff; font-weight:bold; '>void</span> DoReleaseAllSemaphores<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+     <span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> TRACE</span>
+     <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>In DoReleaseAllSemaphores : pid=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : numSemaphores=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+            getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> numSemaphores<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+     <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>&lt;</span>numSemaphores<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>releaseSem<span style='color:#0000ff; '>(</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : Error in releaseSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                    getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>exit</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+        <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>PID=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '> : OK in releaseSem(</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>), loop=</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                    getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>id<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>       
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+
+<span style='color:#008000; '>/************************************************************************/</span>
+<span style='color:#008000; '>/*                                                                      */</span>
+<span style='color:#008000; '>/* This main function uses above functions to generate semaphores       */</span>
+<span style='color:#008000; '>/* activities. The user can create 1 to 5 semaphores, input key word,   */</span>
+<span style='color:#008000; '>/* set initial value. The user has an option to do waitSem() only or    */</span>
+<span style='color:#008000; '>/* signalSem() only.                                                    */</span>
+<span style='color:#008000; '>/*                                                                      */</span>
+<span style='color:#008000; '>/* This program can be used to create multiple client processes.        */</span>
+<span style='color:#008000; '>/*                                                                      */</span>
+<span style='color:#008000; '>/* Example : Two processs share a semaphore, name = MySem, initial      */</span>
+<span style='color:#008000; '>/*           value is 0, the 1st process does semSignal() 10 times, and */</span>
+<span style='color:#008000; '>/*           the 2nd process does semWait() 10 times.                   */</span>
+<span style='color:#008000; '>/*                                                                      */</span>
+<span style='color:#008000; '>/*           a.out MySem 1 0 10 0                                       */</span>
+<span style='color:#008000; '>/*           a.out MySem 1 0 10 1                                       */</span>
+<span style='color:#008000; '>/*                                                                      */</span>
+<span style='color:#008000; '>/************************************************************************/</span>
+
+
+<span style='color:#0000ff; font-weight:bold; '>main</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> argc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>                    
+<span style='color:#0000ff; '>{</span>
+    
+    vsinit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>argc<span style='color:#0000ff; '>,</span> argv<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>        
+
+    GetArguments<span style='color:#0000ff; '>(</span>argc<span style='color:#0000ff; '>,</span> argv<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>/* get all semaphores */</span>
+    DoGetAllSemaphores<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>/* allow other processes to start */</span>   
+
+    <span style='color:#008000; '>/* do waitSem() or signalSem() */</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>flag<span style='color:#0000ff; '>)</span>
+        DoWaitAllSemaphores<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+        DoSignalAllSemaphores<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                
+    <span style='color:#008000; '>/* release all semaphores */</span>
+    DoReleaseAllSemaphores<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    vsexit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                                   
+<span style='color:#0000ff; '>}</span>
+</pre>

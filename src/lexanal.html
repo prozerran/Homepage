@@ -1,0 +1,213 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#3f7f59; '>/* =============================================================</span>
+<span style='color:#3f7f59; '>Author: Yee Hsu</span>
+<span style='color:#3f7f59; '>Instrc: Dr. Levine</span>
+<span style='color:#3f7f59; '>Course: Csc 413-02</span>
+<span style='color:#3f7f59; '>Date:   March 1, 2001</span>
+<span style='color:#3f7f59; '>============================================================= */</span>
+
+<span style='color:#7f0055; font-weight:bold; '>package</span><span style='color:#7f0055; '> lexer</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  The Lexer class is responsible for scanning the source file</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  which is a stream of characters and returning a stream of </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  tokens</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> each token object will contain the string (or access</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  to the string) that describes the token along with an</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  indication of its location in the source program to be used</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  for error reporting</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> we are tracking line numbers</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> white spaces</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  are space</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> tab</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> newlines</span>
+<span style='color:#3f5fbf; '>*/</span>
+
+<span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>class</span> Lexer {
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>boolean</span> atEOF = <span style='color:#7f0055; font-weight:bold; '>false</span>;
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>boolean</span> dec = <span style='color:#7f0055; font-weight:bold; '>false</span>;
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>char</span> ch;     <span style='color:#3f7f59; '>// next character to process</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> SourceReader source;
+    
+    <span style='color:#3f7f59; '>// positions in line of current token</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>int</span> startPosition, endPosition; 
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Lexer(<span style='color:#7f0055; font-weight:bold; '>String</span> sourceFile) <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>Exception</span> {
+        <span style='color:#7f0055; font-weight:bold; '>new</span> TokenType();  <span style='color:#3f7f59; '>// init token table</span>
+        source = <span style='color:#7f0055; font-weight:bold; '>new</span> SourceReader(sourceFile);
+        ch = source.read();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>void</span> main(<span style='color:#7f0055; font-weight:bold; '>String</span> args[]) {
+        Token tok;
+        <span style='color:#7f0055; font-weight:bold; '>try</span> {
+            Lexer lex = <span style='color:#7f0055; font-weight:bold; '>new</span> Lexer(args[0]);
+            <span style='color:#7f0055; font-weight:bold; '>while</span> (<span style='color:#7f0055; font-weight:bold; '>true</span>) {
+                tok = lex.nextToken();
+                <span style='color:#7f0055; font-weight:bold; '>String</span> p = <span style='color:#2a00ff; '>"</span><span style='color:#2a00ff; '>\t</span><span style='color:#2a00ff; '>"</span>;
+                
+                <span style='color:#3f7f59; '>// display tokens with line number</span>
+                <span style='color:#7f0055; font-weight:bold; '>if</span> ((tok.getKind() == Sym.Identifier) ||
+                    (tok.getKind() == Sym.INTeger) ||
+                    (tok.getKind() == Sym.FLoat))
+                    p += tok.toString();
+                <span style='color:#7f0055; font-weight:bold; '>else</span>
+                    p += TokenType.tokens[tok.getKind()];
+                    
+                p += <span style='color:#2a00ff; '>"</span><span style='color:#2a00ff; '>\t</span><span style='color:#2a00ff; '>left: "</span> + tok.getLeftPosition() +
+                     <span style='color:#2a00ff; '>" right: "</span> + tok.getRightPosition() +
+                     <span style='color:#2a00ff; '>" line: "</span> + lex.source.getLineno();
+
+                <span style='color:#7f0055; font-weight:bold; '>System</span>.out.println(p);
+            }
+        } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {}
+    }
+ 
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  newIdTokens are either ids or reserved words</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> new id's will be inserted</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  in the symbol table with an indication that they are id's</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> id is the String just scanned </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> it's either an id or reserved word</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> startPosition is the column in the source file where the token begins</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> endPosition is the column in the source file where the token ends</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the Token</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> either an id or one for the reserved word</span>
+<span style='color:#3f5fbf; '>*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Token newIdToken(<span style='color:#7f0055; font-weight:bold; '>String</span> id,<span style='color:#7f0055; font-weight:bold; '>int</span> startPosition,<span style='color:#7f0055; font-weight:bold; '>int</span> endPosition) {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>new</span> Token(startPosition,endPosition,Symbol.symbol(id,Sym.Identifier));
+    }
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  number tokens are inserted in the symbol table</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> we don't convert the </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  numeric strings to numbers until we load the bytecodes for interpreting</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  this ensures that any machine numeric dependencies are deferred</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  until we actually run the program</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> i</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>e. the numeric constraints of the</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  hardware used to compile the source program are not used</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> number is the int String just scanned</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> startPosition is the column in the source file where the int begins</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> endPosition is the column in the source file where the int ends</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the int Token</span>
+<span style='color:#3f5fbf; '>*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Token newNumberToken(<span style='color:#7f0055; font-weight:bold; '>String</span> number,<span style='color:#7f0055; font-weight:bold; '>int</span> startPosition,<span style='color:#7f0055; font-weight:bold; '>int</span> endPosition) {
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (number.indexOf(<span style='color:#2a00ff; '>'.'</span>) >= 0)
+            <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>new</span> Token(startPosition,endPosition,Symbol.symbol(number,Sym.FLoat));
+        <span style='color:#7f0055; font-weight:bold; '>else</span>
+            <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>new</span> Token(startPosition,endPosition,Symbol.symbol(number,Sym.INTeger));
+    }
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  build the token for operators (</span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '> </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>) or separators (parens</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> braces)</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  filter out comments which begin with two slashes</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> s is the String representing the token</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> startPosition is the column in the source file where the token begins</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> endPosition is the column in the source file where the token ends</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the Token just found</span>
+<span style='color:#3f5fbf; '>*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Token makeToken(<span style='color:#7f0055; font-weight:bold; '>String</span> s,<span style='color:#7f0055; font-weight:bold; '>int</span> startPosition,<span style='color:#7f0055; font-weight:bold; '>int</span> endPosition) {
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (s.equals(<span style='color:#2a00ff; '>"//"</span>)) {  <span style='color:#3f7f59; '>// filter comment</span>
+            <span style='color:#7f0055; font-weight:bold; '>try</span> {
+               <span style='color:#7f0055; font-weight:bold; '>int</span> oldLine = source.getLineno();
+               <span style='color:#7f0055; font-weight:bold; '>do</span> {
+                   ch = source.read();
+               } <span style='color:#7f0055; font-weight:bold; '>while</span> (oldLine == source.getLineno());
+            } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {
+                    atEOF = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+            }
+            <span style='color:#7f0055; font-weight:bold; '>return</span> nextToken();
+        }
+        Symbol sym = Symbol.symbol(s,-1); <span style='color:#3f7f59; '>// be sure it's a valid token</span>
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (sym == <span style='color:#7f0055; font-weight:bold; '>null</span>) {
+             <span style='color:#7f0055; font-weight:bold; '>System</span>.out.println(<span style='color:#2a00ff; '>"******** illegal character: "</span> + s);
+             atEOF = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+             <span style='color:#7f0055; font-weight:bold; '>return</span> nextToken();
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>new</span> Token(startPosition,endPosition,sym);
+        }
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the next Token found in the source file</span>
+<span style='color:#3f5fbf; '>*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Token nextToken() { <span style='color:#3f7f59; '>// ch is always the next char to process</span>
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (atEOF) {
+            <span style='color:#7f0055; font-weight:bold; '>if</span> (source != <span style='color:#7f0055; font-weight:bold; '>null</span>) {
+                source.close();
+                source = <span style='color:#7f0055; font-weight:bold; '>null</span>;
+            }
+            <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>try</span> {
+            <span style='color:#7f0055; font-weight:bold; '>while</span> (<span style='color:#7f0055; font-weight:bold; '>Character</span>.isWhitespace(ch)) {  <span style='color:#3f7f59; '>// scan past whitespace</span>
+                dec = <span style='color:#7f0055; font-weight:bold; '>false</span>;
+                ch = source.read();
+            }
+        } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {
+            atEOF = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+            <span style='color:#7f0055; font-weight:bold; '>return</span> nextToken();
+        }
+        startPosition = source.getPosition();
+        endPosition = startPosition - 1;
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (<span style='color:#7f0055; font-weight:bold; '>Character</span>.isJavaIdentifierStart(ch)) {
+            <span style='color:#3f7f59; '>// return tokens for ids and reserved words</span>
+            <span style='color:#7f0055; font-weight:bold; '>String</span> id = <span style='color:#2a00ff; '>""</span>;
+            <span style='color:#7f0055; font-weight:bold; '>try</span> {
+                <span style='color:#7f0055; font-weight:bold; '>do</span> {
+                    endPosition++;
+                    id += ch;
+                    ch = source.read();
+                } <span style='color:#7f0055; font-weight:bold; '>while</span> (<span style='color:#7f0055; font-weight:bold; '>Character</span>.isJavaIdentifierPart(ch));
+            } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {
+                atEOF = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+            }
+            <span style='color:#7f0055; font-weight:bold; '>return</span> newIdToken(id,startPosition,endPosition);
+        }
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (<span style='color:#7f0055; font-weight:bold; '>Character</span>.isDigit(ch) || ch == <span style='color:#2a00ff; '>'.'</span>) {
+        <span style='color:#3f7f59; '>// grab int/float tokens</span>
+            <span style='color:#7f0055; font-weight:bold; '>String</span> number = <span style='color:#2a00ff; '>""</span>;
+            <span style='color:#7f0055; font-weight:bold; '>try</span> {
+                <span style='color:#7f0055; font-weight:bold; '>do</span> {
+                    endPosition++;
+                    number += ch;
+                    ch = source.read();
+
+                    <span style='color:#7f0055; font-weight:bold; '>if</span> (ch == <span style='color:#2a00ff; '>'.'</span> &amp;&amp; dec == <span style='color:#7f0055; font-weight:bold; '>false</span>) {
+                        dec = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+                        endPosition++;
+                        number += ch;
+                        ch = source.read();
+                    }
+            
+                    <span style='color:#7f0055; font-weight:bold; '>if</span> (ch == <span style='color:#2a00ff; '>'.'</span>) <span style='color:#7f0055; font-weight:bold; '>break</span>;
+                } <span style='color:#7f0055; font-weight:bold; '>while</span> (<span style='color:#7f0055; font-weight:bold; '>Character</span>.isDigit(ch) || ch == <span style='color:#2a00ff; '>'.'</span>);
+            } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {
+                atEOF = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+            }
+            <span style='color:#7f0055; font-weight:bold; '>return</span> newNumberToken(number,startPosition,endPosition);
+        }
+        
+        <span style='color:#3f7f59; '>// At this point the only tokens to check for are one or two</span>
+        <span style='color:#3f7f59; '>// characters; we must also check for comments that begin with</span>
+        <span style='color:#3f7f59; '>// 2 slashes</span>
+        <span style='color:#7f0055; font-weight:bold; '>String</span> charOld = <span style='color:#2a00ff; '>""</span> + ch;
+        <span style='color:#7f0055; font-weight:bold; '>String</span> op = charOld;
+        Symbol sym;
+        <span style='color:#7f0055; font-weight:bold; '>try</span> {
+            endPosition++;
+            ch = source.read();
+            op += ch;
+            <span style='color:#3f7f59; '>// check if valid 2 char operator; if it's not in the symbol</span>
+            <span style='color:#3f7f59; '>// table then don't insert it since we really have a one char</span>
+            <span style='color:#3f7f59; '>// token</span>
+            sym = Symbol.symbol(op, -1); 
+            <span style='color:#7f0055; font-weight:bold; '>if</span> (sym == <span style='color:#7f0055; font-weight:bold; '>null</span>) {  <span style='color:#3f7f59; '>// it must be a one char token</span>
+                <span style='color:#7f0055; font-weight:bold; '>return</span> makeToken(charOld,startPosition,endPosition);
+            }
+            endPosition++;
+            ch = source.read();
+            <span style='color:#7f0055; font-weight:bold; '>return</span> makeToken(op,startPosition,endPosition);
+        } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {}
+        atEOF = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (startPosition == endPosition) {
+            op = charOld;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> makeToken(op,startPosition,endPosition);
+    }
+}
+</pre>

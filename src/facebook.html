@@ -1,0 +1,363 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/12/2010</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Facebook API connector. Allows developer to connect to</span>
+<span style='color:#008000; '>//          Facebook and perform certain Facebook operations to user</span>
+<span style='color:#008000; '>//          profiles. Exposes certain social API for easy publishing.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>StdAfx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Facebook.h</span><span style='color:#0000e6; '>"</span>
+
+Facebook<span style='color:#0000ff; '>::</span>Facebook<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    m_graph_url     <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>https://graph.facebook.com/</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    m_access_token  <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>121054341253966|1ed5a6d37cc6c45f0fb9feea-100001151298397|N91Bphh7SIMJp7xVkm74v4iRpEQ</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+Facebook<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Facebook<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>GetFriendList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> id<span style='color:#0000ff; '>,</span> FacebookFriendList<span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> id <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/friends?access_token=</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> m_access_token<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonArray jarr<span style='color:#0000ff; '>;</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>data</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> jarr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> jarr<span style='color:#0000ff; '>.</span>Size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>i<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                JsonObject item<span style='color:#0000ff; '>;</span>
+                jarr<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span> item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                FacebookUser _datum<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>_datum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>LikePost<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> id <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> id <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/likes?access_token=</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> m_access_token<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>PostRequest<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>.</span>compare<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>true</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>GetProfile<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> id<span style='color:#0000ff; '>,</span> FacebookProfile<span style='color:#0000ff; '>&amp;</span> profile <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> id <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>?access_token=</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> m_access_token<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        FacebookProfile _datum <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span><span style='color:#0000ff; '>;</span>
+        profile <span style='color:#0000ff; '>=</span> _datum<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>GetComments<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> id<span style='color:#0000ff; '>,</span> FacebookPostCommentList<span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>list</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> id <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/comments?access_token=</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> m_access_token<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonArray jarr<span style='color:#0000ff; '>;</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>data</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> jarr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> jarr<span style='color:#0000ff; '>.</span>Size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>i<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                JsonObject item<span style='color:#0000ff; '>;</span>
+                jarr<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span> item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                FacebookPostComment _datum<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>_datum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>GetPost<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> id<span style='color:#0000ff; '>,</span> FacebookPost<span style='color:#0000ff; '>&amp;</span> post <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> id <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>?&amp;access_token=</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> m_access_token<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        FacebookPost _datum <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        post <span style='color:#0000ff; '>=</span> _datum<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>GetStatus<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> id<span style='color:#0000ff; '>,</span> FacebookPost<span style='color:#0000ff; '>&amp;</span> post <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> id <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/statuses?limit=1&amp;access_token=</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> m_access_token<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonArray jarr<span style='color:#0000ff; '>;</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>data</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> jarr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            JsonObject item<span style='color:#0000ff; '>;</span>
+            jarr<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            post <span style='color:#0000ff; '>=</span> item<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>GetLikers<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> id<span style='color:#0000ff; '>,</span> FacebookLikerList<span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>list</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> id <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/likes?access_token=</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> m_access_token<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonArray jarr<span style='color:#0000ff; '>;</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>data</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> jarr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> jarr<span style='color:#0000ff; '>.</span>Size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>i<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                JsonObject item<span style='color:#0000ff; '>;</span>
+                jarr<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span> item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                FacebookUser _datum<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>_datum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>GetFeeds<span style='color:#0000ff; '>(</span> FacebookPostList<span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> likes <span style='color:#008000; '>/*= false*/</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> comments <span style='color:#008000; '>/*= false*/</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> b <span style='color:#0000ff; '>=</span> GetWall<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>FacebookPostList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// get all likers if there is any</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>likes <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>likes <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetLikers<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>id<span style='color:#0000ff; '>,</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>likers<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// get all comments not shown on wall, that is, more than 5 comments</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>comments <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>count</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>5</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetComments<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>id<span style='color:#0000ff; '>,</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>comments<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> b<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>GetWall<span style='color:#0000ff; '>(</span>FacebookPostList<span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>me/home?access_token=</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> m_access_token<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonArray jarr<span style='color:#0000ff; '>;</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>data</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> jarr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> jarr<span style='color:#0000ff; '>.</span>Size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>i<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                JsonObject item<span style='color:#0000ff; '>;</span>
+                jarr<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>,</span> item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                FacebookPost _datum<span style='color:#0000ff; '>(</span>item<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>list</span><span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>_datum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>PostComment<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> id<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> str<span style='color:#0000ff; '>,</span> OUT <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> pid<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> id <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/comments</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>access_token</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> m_access_token<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>message</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>id</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>PostNote<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> FacebookNotePost<span style='color:#0000ff; '>&amp;</span> post<span style='color:#0000ff; '>,</span> OUT <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> pid <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>me/notes</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>access_token</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> m_access_token <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>subject</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>subject <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>message</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>message <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>id</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>PostLink<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> FacebookLinkPost<span style='color:#0000ff; '>&amp;</span> post<span style='color:#0000ff; '>,</span> OUT <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> pid <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>me/feed</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>access_token</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> m_access_token <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>message</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>message <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>link</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>link <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>picture</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>picture <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>name</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>name <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>caption</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>caption <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>description</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>description <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>id</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>PostStatus<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> str<span style='color:#0000ff; '>,</span> OUT <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> pid <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    FacebookLinkPost post<span style='color:#0000ff; '>;</span>
+    post<span style='color:#0000ff; '>.</span>message <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PostLink<span style='color:#0000ff; '>(</span>post<span style='color:#0000ff; '>,</span> pid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>IsConnected<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>http://www.facebook.com/connect/login_success.html</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>CreateEvent</span><span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> FacebookEventPost<span style='color:#0000ff; '>&amp;</span> post<span style='color:#0000ff; '>,</span> OUT <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> pid <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    DownloadTask task<span style='color:#0000ff; '>;</span>
+    HttpClient http<span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>url <span style='color:#0000ff; '>=</span> m_graph_url <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>me/events</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>access_token</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> m_access_token <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>name</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>name <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>start_time</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>start_time <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    task<span style='color:#0000ff; '>.</span>AddPostFieldParam<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>end_time</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> post<span style='color:#0000ff; '>.</span>end_time <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>http<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        JsonObject job <span style='color:#0000ff; '>=</span> JsonObject<span style='color:#0000ff; '>(</span>Json<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>job<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>id</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Facebook<span style='color:#0000ff; '>::</span>ReplyEvent<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span> <span style='color:#0000ff; '>&amp;</span>id<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> FacebookEventPost<span style='color:#0000ff; '>::</span>EventResponse<span style='color:#0000ff; '>&amp;</span> res <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// TO DO.....</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>res<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>FacebookEventPost</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>ATTEND</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>FacebookEventPost</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>MAYBE</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>FacebookEventPost</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>DECLINE</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

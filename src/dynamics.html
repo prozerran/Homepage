@@ -1,0 +1,348 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Timers<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Diagnostics<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MapCommon<span style='color:#0000ff; '>;</span>
+<span style='color:#008000; '>/// &lt;summary></span>
+<span style='color:#008000; '>/// Package for all related classes that handles the parsing of data and saving to</span>
+<span style='color:#008000; '>/// the main database.</span>
+<span style='color:#008000; '>/// The engine for MapParser.</span>
+<span style='color:#008000; '>/// &lt;/summary></span>
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> ParserEngine
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/// &lt;summary></span>
+    <span style='color:#008000; '>/// Handles parsing of device data to MapDest Application data.</span>
+    <span style='color:#008000; '>/// &lt;/summary></span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>sealed</span> <span style='color:#0000ff; font-weight:bold; '>class</span> ParserEngine
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> ParserEngine _instance <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ParserEngine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Explicit static constructor to tell C# compiler not to mark type as beforefieldinit.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> ParserEngine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> ParserEngine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> ParserEngine Instance <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> _instance<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Volatile boolean for thread safety.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> volatile <span style='color:#0000ff; font-weight:bold; '>bool</span> _running <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Thread array for parser multi-threading.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Thread<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> thr_parsers <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// The actual start of the parsing process.</span>
+        <span style='color:#008000; '>/// Creates multiple threads base on model list.</span>
+        <span style='color:#008000; '>/// Model list is taken from &lt;see cref="ParserCfg.Models"/>.</span>
+        <span style='color:#008000; '>/// &lt;para>Is called by &lt;see cref="MapParser.ParserService.OnStart"/>.&lt;/para></span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>string</span> models <span style='color:#0000ff; '>=</span> ParserCfg<span style='color:#0000ff; '>.</span>Models<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> interval <span style='color:#0000ff; '>=</span> ParserCfg<span style='color:#0000ff; '>.</span>Interval<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> model_list <span style='color:#0000ff; '>=</span> models<span style='color:#0000ff; '>.</span>Split<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>','</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                thr_parsers <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>[</span>model_list<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                _running <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> model_list<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    ManualResetEvent manReset <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ManualResetEvent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// this way allows passing multiple objects</span>
+                    thr_parsers<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span>
+                        <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#008000; '>//manReset.Set();</span>
+                            Start_Parse_Loop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> manReset<span style='color:#0000ff; '>,</span> model_list<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    thr_parsers<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Name <span style='color:#0000ff; '>=</span> model_list<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                    thr_parsers<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>IsBackground <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                    thr_parsers<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    manReset<span style='color:#0000ff; '>.</span>WaitOne<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// wait for child thread to initiate signal before continuing</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                _running <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+                MapLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine.Start - Exception: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Aborts the threads doing parsing process.</span>
+        <span style='color:#008000; '>/// Clears thread array.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _running <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// stop all parsing threads, may need to force abort</span>
+                <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>Thread thr <span style='color:#0000ff; font-weight:bold; '>in</span> thr_parsers<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>thr<span style='color:#0000ff; '>.</span>Join<span style='color:#0000ff; '>(</span><span style='color:#800000; '>10</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span>   <span style='color:#008000; '>// abort if fail to finish in 10 secs</span>
+                        thr<span style='color:#0000ff; '>.</span>Abort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                thr_parsers <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#008000; '>//GC.Collect();</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span>
+            <span style='color:#0000ff; '>{</span>
+                MapLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine.Stop - Failed to terminate all threads.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>              
+            <span style='color:#0000ff; '>}</span>
+            MapLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine - All Stop.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// After creating the thread on &lt;see cref="Start"/> function,</span>
+        <span style='color:#008000; '>/// starts the thread and begin looping for actual parsing process.</span>
+        <span style='color:#008000; '>/// This function will execute on its respective thread.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="manReset">Thread event controller (blocks thread or continues it)&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="model">Device model&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;seealso cref="MapCommon.DeviceModels"/></span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Start_Parse_Loop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> ManualResetEvent manReset<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> model<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> wait_sec <span style='color:#0000ff; '>=</span> ParserCfg<span style='color:#0000ff; '>.</span>Interval<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                MapLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine - Started for [{0}]</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> model<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                TrackerSQL trkConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> TrackerSQL<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                MapDestSQL MapConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>model<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>RFID<span style='color:#0000ff; '>:</span>
+                        MapConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> RptRfidSQL<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>RCD<span style='color:#0000ff; '>:</span>
+                        MapConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MapRCDSQL<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>NEW1<span style='color:#0000ff; '>:</span>
+                    <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>NEW2<span style='color:#0000ff; '>:</span>
+                        MapConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MapNewSQL<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>SET1<span style='color:#0000ff; '>:</span>
+                    <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>SET2<span style='color:#0000ff; '>:</span>  
+                        MapConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DevSetCfgSQL<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#0000ff; '>:</span>
+                        MapConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MapDestSQL<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                manReset<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// signal the calling thread [main thread] to continue running</span>
+
+                <span style='color:#008000; '>// Main parser loop, there is where all the action happens!</span>
+                <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>_running<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    Start_Parsing_For<span style='color:#0000ff; '>(</span>model<span style='color:#0000ff; '>,</span> trkConn<span style='color:#0000ff; '>,</span> MapConn<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span>wait_sec<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                MapLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine - Stopped for [{0}]</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> model<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                _running <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+                MapLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception Start_Parse_Loop: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>              
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Handles the insertion of parsed data to main database</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="posdata">Parsed data. MapDest Application readable data&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="MapType">Which Sql connection/transaction to use. See &lt;see cref="ParserEngine.MapDestSQL"/>&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="conn_str">Connection string&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;seealso cref="ParserEngine.ParserCfg"/></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns &lt;see cref="MapCommon.ParseResult"/>&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> ParseResult StandaloneInsertPosData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> PosData posdata<span style='color:#0000ff; '>,</span> Type MapType<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> conn_str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// MapLogger.LogInfoLine("Previous insert error. Relying on ParserEngine.StandaloneInsertPosData.");</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MapDestSQL MapConn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>MapDestSQL<span style='color:#0000ff; '>)</span>Activator<span style='color:#0000ff; '>.</span>CreateInstance<span style='color:#0000ff; '>(</span>MapType<span style='color:#0000ff; '>,</span> conn_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>MapConn<span style='color:#0000ff; '>.</span>Connect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#008000; '>// It seems we are unable to connect to DB, we assume DB or network is down.</span>
+                        <span style='color:#008000; '>// Force data to be re-parse and enter DB at next loop</span>
+                        MapLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine.StandaloneInsertPosData: Unable to connect to DB.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> ParseResult<span style='color:#0000ff; '>.</span>NEWDATA<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>MapConn<span style='color:#0000ff; '>.</span>IsConnected<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#008000; '>// It seems we are unable to connect to DB, we assume DB or network is down.</span>
+                        <span style='color:#008000; '>// Force data to be re-parse and enter DB at next loop</span>
+                        MapLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine.StandaloneInsertPosData: Unable to connect to DB.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> ParseResult<span style='color:#0000ff; '>.</span>NEWDATA<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> strerr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+                    posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>=</span> MapConn<span style='color:#0000ff; '>.</span>InsertPosData<span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ref</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        MapLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine.StandaloneInsertPosData Bad Insert: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> ParseResult<span style='color:#0000ff; '>.</span>PARSE_OK_NEED_REPARSE<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> ParseResult<span style='color:#0000ff; '>.</span>PARSE_OK<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                MapLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ParserEngine.StandaloneInsertPosData Error: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> ParseResult<span style='color:#0000ff; '>.</span>PARSE_OK_NEED_REPARSE<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// The actual parsing process. Parses device data</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="model">Device model&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="trkConn">Socket/Parser database connection&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="MapConn">database connection&lt;/param></span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Start_Parsing_For<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> model<span style='color:#0000ff; '>,</span> TrackerSQL trkConn<span style='color:#0000ff; '>,</span> MapDestSQL MapConn<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                IParserBase pParserObj <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> nRows <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>do</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// get datagram </span>
+                    DataTable dt <span style='color:#0000ff; '>=</span> trkConn<span style='color:#0000ff; '>.</span>FetchTrackerLogData<span style='color:#0000ff; '>(</span>model<span style='color:#0000ff; '>,</span> ParseResult<span style='color:#0000ff; '>.</span>NEWDATA<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>dt <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>.</span>Count <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        Stopwatch sw_trk <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Stopwatch<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        Stopwatch sw_Map <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Stopwatch<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        nRows <span style='color:#0000ff; '>=</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>.</span>Count<span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>// loop through and parse data</span>
+                        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nRows<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#008000; '>//MapLogger.LogInfoLine("Parsing Data[{0}]... {1}", i, DateTime.Now.ToString());</span>
+                            <span style='color:#0000ff; font-weight:bold; '>long</span> nId <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToInt64<span style='color:#0000ff; '>(</span>dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; font-weight:bold; '>string</span> sDevModel <span style='color:#0000ff; '>=</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DevModel</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> szDatagram <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Datagram</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                            DateTime dtRecvTime <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>)</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>RecvTime</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#008000; '>// parse Datagram base on device model</span>
+                            ParseResult result <span style='color:#0000ff; '>=</span> ParseResult<span style='color:#0000ff; '>.</span>NEWDATA<span style='color:#0000ff; '>;</span>
+                            PosData posdata <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> PosData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            posdata<span style='color:#0000ff; '>.</span>SvrDtTm <span style='color:#0000ff; '>=</span> dtRecvTime<span style='color:#0000ff; '>;</span>
+                            posdata<span style='color:#0000ff; '>.</span>deviceInfo<span style='color:#0000ff; '>.</span>DevModel <span style='color:#0000ff; '>=</span> sDevModel<span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>sDevModel<span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>DEV1<span style='color:#0000ff; '>:</span>
+                                    pParserObj <span style='color:#0000ff; '>=</span> Parse_DEV1<span style='color:#0000ff; '>.</span>Instance<span style='color:#0000ff; '>;</span>
+                                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>DEV2<span style='color:#0000ff; '>:</span>
+                                    pParserObj <span style='color:#0000ff; '>=</span> Parse_DEV2<span style='color:#0000ff; '>.</span>Instance<span style='color:#0000ff; '>;</span>
+                                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#0000ff; font-weight:bold; '>case</span> DeviceModels<span style='color:#0000ff; '>.</span>DEV3<span style='color:#0000ff; '>:</span>
+                                    pParserObj <span style='color:#0000ff; '>=</span> Parse_DEV3<span style='color:#0000ff; '>.</span>Instance<span style='color:#0000ff; '>;</span>
+                                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#0000ff; '>:</span>
+                                    pParserObj <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                                    result <span style='color:#0000ff; '>=</span> ParseResult<span style='color:#0000ff; '>.</span>PARSE_MODEL_NOT_FOUND<span style='color:#0000ff; '>;</span>
+                                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+
+                            <span style='color:#008000; '>// call the appropriate parser</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pParserObj <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                result <span style='color:#0000ff; '>=</span> pParserObj<span style='color:#0000ff; '>.</span>ParseDataGram<span style='color:#0000ff; '>(</span>szDatagram<span style='color:#0000ff; '>,</span> MapConn<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ref</span> posdata<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+
+                            <span style='color:#008000; '>// insert into MapDest DB</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>result <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ParseResult<span style='color:#0000ff; '>.</span>PARSE_OK<span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                sw_Map<span style='color:#0000ff; '>.</span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                sw_Map<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; font-weight:bold; '>string</span> strerr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+                                posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>=</span> MapConn<span style='color:#0000ff; '>.</span>InsertPosData<span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ref</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#008000; '>// 2nd try</span>
+                                    posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>=</span> MapConn<span style='color:#0000ff; '>.</span>InsertPosData<span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ref</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#008000; '>// 3rd try</span>
+                                    posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>=</span> MapConn<span style='color:#0000ff; '>.</span>InsertPosData<span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ref</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#008000; '>// 3 tries and we failed to insert into DB, let's try one last time</span>
+                                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                                <span style='color:#0000ff; '>{</span>
+                                    <span style='color:#008000; '>// insert posdata into DB in its own instance independent of previous connection</span>
+                                    result <span style='color:#0000ff; '>=</span> ParserEngine<span style='color:#0000ff; '>.</span>StandaloneInsertPosData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> posdata<span style='color:#0000ff; '>,</span> MapConn<span style='color:#0000ff; '>.</span>GetType<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> ParserCfg<span style='color:#0000ff; '>.</span>MapConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; '>}</span>
+
+                                <span style='color:#008000; '>// final try using a different network leg</span>
+                                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                                <span style='color:#0000ff; '>{</span>
+                                    result <span style='color:#0000ff; '>=</span> ParserEngine<span style='color:#0000ff; '>.</span>StandaloneInsertPosData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> posdata<span style='color:#0000ff; '>,</span> MapConn<span style='color:#0000ff; '>.</span>GetType<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> ParserCfg<span style='color:#0000ff; '>.</span>MapAlternativeConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; '>}</span>
+                                sw_Map<span style='color:#0000ff; '>.</span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+
+                            <span style='color:#008000; '>// update result if needed</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>posdata<span style='color:#0000ff; '>.</span>ID <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span> ParseResult<span style='color:#0000ff; '>.</span>PARSE_OK_SET_ONLY<span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                result <span style='color:#0000ff; '>=</span> ParseResult<span style='color:#0000ff; '>.</span>PARSE_OK_SET_ONLY<span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+
+                            <span style='color:#008000; '>// update Tracker log table and log it</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pParserObj <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                sw_trk<span style='color:#0000ff; '>.</span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                sw_trk<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; font-weight:bold; '>string</span> strerr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+                                trkConn<span style='color:#0000ff; '>.</span>UpdateTrackerLog<span style='color:#0000ff; '>(</span>nId<span style='color:#0000ff; '>,</span> posdata<span style='color:#0000ff; '>,</span> result<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                sw_trk<span style='color:#0000ff; '>.</span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#008000; '>// log data</span>
+                                pParserObj<span style='color:#0000ff; '>.</span>LogData<span style='color:#0000ff; '>(</span>
+                                    nId<span style='color:#0000ff; '>,</span>     
+                                    posdata<span style='color:#0000ff; '>.</span>ID<span style='color:#0000ff; '>,</span>      
+                                    result<span style='color:#0000ff; '>,</span>                         <span style='color:#008000; '>// ParseResult</span>
+                                    sw_Map<span style='color:#0000ff; '>.</span>Elapsed<span style='color:#0000ff; '>.</span>TotalSeconds<span style='color:#0000ff; '>,</span>  
+                                    sw_trk<span style='color:#0000ff; '>.</span>Elapsed<span style='color:#0000ff; '>.</span>TotalSeconds<span style='color:#0000ff; '>,</span> 
+                                    posdata<span style='color:#0000ff; '>.</span>DevID<span style='color:#0000ff; '>,</span>                  <span style='color:#008000; '>// Device Id</span>
+                                    szDatagram<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                    <span style='color:#008000; '>// Original raw datagram</span>
+                            <span style='color:#0000ff; '>}</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>_running<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>_running<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>_running &amp;&amp; nRows <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> trkConn<span style='color:#0000ff; '>.</span>GetLimit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                MapLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception Start_Parsing_For: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

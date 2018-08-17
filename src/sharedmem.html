@@ -1,0 +1,595 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/11/2011</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    A Configuration Manager that uses Boost shared object library.</span>
+<span style='color:#008000; '>//      This API allows user to read/write into a shared resource</span>
+<span style='color:#008000; '>//      accessible by any external processes. It is mainly used for</span>
+<span style='color:#008000; '>//      configuration settings but may also be used as a means for IPC</span>
+<span style='color:#008000; '>//      (Inter-Process Communication). The API also allows a callback</span>
+<span style='color:#008000; '>//      to any process when a setting has been changed.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>ConfigFile.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>ConfigManager.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>ConfigThread.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>boost/lexical_cast.hpp</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>boost/uuid/uuid_io.hpp</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>boost/uuid/uuid_generators.hpp</span><span style='color:#0000e6; '>></span>
+<span style='color:#008000; '>//#include &lt;boost/interprocess/sync/interprocess_condition.hpp> </span>
+<span style='color:#008000; '>//#include &lt;boost/interprocess/mapped_region.hpp></span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; font-weight:bold; '>namespace</span> boost<span style='color:#0000ff; '>::</span>interprocess<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> bip <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>interprocess<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> __ET__ 
+<span style='color:#0000ff; '>{</span>
+    ConfigManager<span style='color:#0000ff; '>::</span>ConfigManager<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>:</span> m_bInitialized<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_self_name<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_psm_map<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_cb_context<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> CallBackFunc<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_ipc_mutex<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_cb_config<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_pthr<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_ptime<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// Initialize in constructor</span>
+        Init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    ConfigManager<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>ConfigManager<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// Shutdown in destructor</span>
+        Shutdown<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> ConfigManager<span style='color:#0000ff; '>::</span>PurgeSharedMemory<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// delete all queues by looking at the list</span>
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            managed_shared_memory smp<span style='color:#0000ff; '>(</span>open_only<span style='color:#0000ff; '>,</span> SHARED_MEM_LIST<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            managed_shared_memory<span style='color:#0000ff; '>::</span>const_named_iterator iter <span style='color:#0000ff; '>=</span> smp<span style='color:#0000ff; '>.</span>named_begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> smp<span style='color:#0000ff; '>.</span>named_end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>const</span> managed_shared_memory<span style='color:#0000ff; '>::</span>char_type <span style='color:#0000ff; '>*</span>name <span style='color:#0000ff; '>=</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>name<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> shared_memory_object<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>remove</span><span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>bip<span style='color:#0000ff; '>::</span>interprocess_exception<span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> ignore <span style='color:#0000ff; '>=</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - PurgeSharedMemory(Queue) : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// delete all segments</span>
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            shared_memory_object<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>remove</span><span style='color:#0000ff; '>(</span>SHARED_MEM_LIST<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+            shared_memory_object<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>remove</span><span style='color:#0000ff; '>(</span>SHARED_MEM_DATA<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+            shared_memory_object<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>remove</span><span style='color:#0000ff; '>(</span>SHARED_MEM_GLOB<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - PurgeSharedMemory(Segment) : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    ConfigManager<span style='color:#0000ff; '>&amp;</span> ConfigManager<span style='color:#0000ff; '>::</span>Instance<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> ConfigManager _instance<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> _instance<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>SetSharedMemory<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> managed_shared_memory<span style='color:#0000ff; '>(</span>open_or_create<span style='color:#0000ff; '>,</span> segment<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> SHARED_MEM_SIZE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            ET_ASSERT<span style='color:#0000ff; '>(</span>m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> <span style='color:#0000ff; '>(</span>m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - SetSharedMemory : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>Init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_bInitialized<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ConfigFile<span style='color:#0000ff; '>::</span>Instance<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// create all our shared memory segments</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>SetSharedMemory<span style='color:#0000ff; '>(</span>SHARED_MEM_GLOB<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>SetSharedMemory<span style='color:#0000ff; '>(</span>SHARED_MEM_DATA<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>SetSharedMemory<span style='color:#0000ff; '>(</span>SHARED_MEM_LIST<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>SetSharedMemory<span style='color:#0000ff; '>(</span>GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// create or find our shared mutex</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                m_ipc_mutex <span style='color:#0000ff; '>=</span> m_psm_map<span style='color:#0000ff; '>[</span>SHARED_MEM_GLOB<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>find_or_construct<span style='color:#0000ff; '>&lt;</span>interprocess_mutex<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>_ipc_mutex</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                ET_ASSERT<span style='color:#0000ff; '>(</span>m_ipc_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_ipc_mutex<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+            <span style='color:#0000ff; '>{</span>
+                ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - Init : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// create timer thread to keep checking shared mutex</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_ptime<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_ptime <span style='color:#0000ff; '>=</span> m_tTimer<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> ConfigManagerTimer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                m_tTimer<span style='color:#0000ff; '>.</span>StartAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// lets add ourself to the shared process list</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                SharedMemScopedLock lock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>m_ipc_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                m_psm_map<span style='color:#0000ff; '>[</span>SHARED_MEM_LIST<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>destroy<span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                m_psm_map<span style='color:#0000ff; '>[</span>SHARED_MEM_LIST<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>construct<span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> m_psm_map<span style='color:#0000ff; '>[</span>SHARED_MEM_LIST<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>get_segment_manager<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+            <span style='color:#0000ff; '>{</span>
+                ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - Init : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#008000; '>// return false;</span>
+            <span style='color:#0000ff; '>}</span>
+            m_bInitialized <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> m_bInitialized<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>RegisterCallback<span style='color:#0000ff; '>(</span> ConfigManagerCallback callback <span style='color:#008000; '>/*= NULL*/</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span> context <span style='color:#008000; '>/*= NULL*/</span> <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; '>!</span>CallBackFunc<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CallBackFunc<span style='color:#0000ff; '>=</span>callback<span style='color:#0000ff; '>;</span>
+            m_cb_context<span style='color:#0000ff; '>=</span>context<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pthr<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pthr <span style='color:#0000ff; '>=</span> m_tWorker<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> ConfigManagerWorker<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                m_tWorker<span style='color:#0000ff; '>.</span>StartAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> ConfigManager<span style='color:#0000ff; '>::</span>DelSharedMemory<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>delete</span> m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+            m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> ConfigManager<span style='color:#0000ff; '>::</span>Shutdown<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            m_tWorker<span style='color:#0000ff; '>.</span>StopAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            m_tTimer<span style='color:#0000ff; '>.</span>StopAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                SharedMemScopedLock lock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>m_ipc_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                m_psm_map<span style='color:#0000ff; '>[</span>SHARED_MEM_LIST<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>destroy<span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// remove self from list</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+            <span style='color:#0000ff; '>{</span>
+                ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - Shutdown : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                shared_memory_object<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>remove</span><span style='color:#0000ff; '>(</span>GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>          <span style='color:#008000; '>// remove self queue</span>
+                DelSharedMemory<span style='color:#0000ff; '>(</span>GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                DelSharedMemory<span style='color:#0000ff; '>(</span>SHARED_MEM_LIST<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                DelSharedMemory<span style='color:#0000ff; '>(</span>SHARED_MEM_DATA<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                DelSharedMemory<span style='color:#0000ff; '>(</span>SHARED_MEM_GLOB<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+            <span style='color:#0000ff; '>{</span>
+                ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - Shutdown : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            ConfigFile<span style='color:#0000ff; '>::</span>Instance<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Shutdown<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            m_bInitialized <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>HasSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> HasSettings<span style='color:#0000ff; '>(</span>SHARED_MEM_DATA<span style='color:#0000ff; '>,</span> sKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>GetSettings<span style='color:#0000ff; '>(</span> KeyList<span style='color:#0000ff; '>&amp;</span> Keys <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> GetSettings<span style='color:#0000ff; '>(</span>SHARED_MEM_DATA<span style='color:#0000ff; '>,</span> Keys<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>GetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sValue<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetSettings<span style='color:#0000ff; '>(</span>SHARED_MEM_DATA<span style='color:#0000ff; '>,</span> sKey<span style='color:#0000ff; '>,</span> sValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> ConfigFile<span style='color:#0000ff; '>::</span>Instance<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>GetSettings<span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>,</span> sValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>DelSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>DelSettings<span style='color:#0000ff; '>(</span>SHARED_MEM_DATA<span style='color:#0000ff; '>,</span> sKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            SetSettings<span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>,</span> CONFIG_DEL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>SetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sValue<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ConfigFile<span style='color:#0000ff; '>::</span>Instance<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>HasSettings<span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>,</span> sValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>SetSettings<span style='color:#0000ff; '>(</span>SHARED_MEM_DATA<span style='color:#0000ff; '>,</span> sKey<span style='color:#0000ff; '>,</span> sValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            SetSettings<span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>,</span> CONFIG_SET<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>HasSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//SharedMemScopedLock lock(*m_ipc_mutex); </span>
+            std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>pair</span><span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>size_t</span><span style='color:#0000ff; '>></span> sp <span style='color:#0000ff; '>=</span> m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sp<span style='color:#0000ff; '>.</span>first<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - HasSettings : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>GetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> KeyList<span style='color:#0000ff; '>&amp;</span> Keys<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//SharedMemScopedLock lock(*m_ipc_mutex); </span>
+            managed_shared_memory<span style='color:#0000ff; '>::</span>const_named_iterator iter <span style='color:#0000ff; '>=</span> m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>named_begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Keys<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>named_end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>const</span> managed_shared_memory<span style='color:#0000ff; '>::</span>char_type <span style='color:#0000ff; '>*</span>name <span style='color:#0000ff; '>=</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>name<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>            
+                <span style='color:#008000; '>//std::size_t name_len = iter->name_length();</span>
+                <span style='color:#008000; '>//const void *value = iter->value();</span>
+                Keys<span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - GetSettings : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>GetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> MapList<span style='color:#0000ff; '>&amp;</span> objs<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        KeyList keys<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetSettings<span style='color:#0000ff; '>(</span>segment<span style='color:#0000ff; '>,</span> keys<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            objs<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>KeyList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> keys<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> keys<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                ConfigObject obj<span style='color:#0000ff; '>;</span>
+                obj<span style='color:#0000ff; '>.</span>sKey <span style='color:#0000ff; '>=</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetSettings<span style='color:#0000ff; '>(</span>segment<span style='color:#0000ff; '>,</span> obj<span style='color:#0000ff; '>.</span>sKey<span style='color:#0000ff; '>,</span> obj<span style='color:#0000ff; '>.</span>sValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    objs<span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>obj<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>GetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> SelfMemMap<span style='color:#0000ff; '>&amp;</span> objs<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        KeyList keys<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetSettings<span style='color:#0000ff; '>(</span>segment<span style='color:#0000ff; '>,</span> keys<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            objs<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>KeyList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> keys<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> keys<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> nValue<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetSettings<span style='color:#0000ff; '>(</span>segment<span style='color:#0000ff; '>,</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> nValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    objs<span style='color:#0000ff; '>[</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> nValue<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>DelSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            SharedMemScopedLock lock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>m_ipc_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+            m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>destroy<span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> ConfigFile<span style='color:#0000ff; '>::</span>Instance<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>DelSettings<span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - DelSettings : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>DelSelfKeys<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//SharedMemScopedLock lock(*m_ipc_mutex); </span>
+            managed_shared_memory smp<span style='color:#0000ff; '>(</span>open_only<span style='color:#0000ff; '>,</span> GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            smp<span style='color:#0000ff; '>.</span>destroy<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - DelSelfKeys : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>SetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sValue<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            SharedMemScopedLock lock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>m_ipc_mutex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+            m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>destroy<span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>construct<span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>sValue<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>get_segment_manager<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                ConfigFile<span style='color:#0000ff; '>::</span>Instance<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>SetSettings<span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>,</span> sValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - SetSettings : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>SetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>&amp;</span> nOpCode<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        KeyList keys<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetSettings<span style='color:#0000ff; '>(</span>SHARED_MEM_LIST<span style='color:#0000ff; '>,</span> keys<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>KeyList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> keys<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> keys<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>String</span> other_uuid <span style='color:#0000ff; '>=</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>other_uuid <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    SetSettings<span style='color:#0000ff; '>(</span>other_uuid<span style='color:#0000ff; '>,</span> sKey<span style='color:#0000ff; '>,</span> nOpCode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>SetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>&amp;</span> nOpCode<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//SharedMemScopedLock lock(*m_ipc_mutex); </span>
+            managed_shared_memory smp<span style='color:#0000ff; '>(</span>open_only<span style='color:#0000ff; '>,</span> segment<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            smp<span style='color:#0000ff; '>.</span>destroy<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+            smp<span style='color:#0000ff; '>.</span>construct<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>nOpCode<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - SetSettings : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>GetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sValue<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            sValue <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#008000; '>//SharedMemScopedLock lock(*m_ipc_mutex); </span>
+            std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>pair</span><span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>size_t</span><span style='color:#0000ff; '>></span> sp <span style='color:#0000ff; '>=</span> m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>&lt;</span>shared_string<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sp<span style='color:#0000ff; '>.</span>first<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                sValue <span style='color:#0000ff; '>=</span> sp<span style='color:#0000ff; '>.</span>first<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - GetSettings : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> ConfigManager<span style='color:#0000ff; '>::</span>GetSettings<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; '>&amp;</span>nValue<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//SharedMemScopedLock lock(*m_ipc_mutex); </span>
+            std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>pair</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>size_t</span><span style='color:#0000ff; '>></span> sp <span style='color:#0000ff; '>=</span> m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sp<span style='color:#0000ff; '>.</span>first<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                nValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>sp<span style='color:#0000ff; '>.</span>first<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - GetSettings : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>long</span> ConfigManager<span style='color:#0000ff; '>::</span>NumSettings<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> segment <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>        
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//SharedMemScopedLock lock(*m_ipc_mutex); </span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> m_psm_map<span style='color:#0000ff; '>[</span>segment<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>get_num_named_objects<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - NumSettings : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> ConfigManager<span style='color:#0000ff; '>::</span>NotifyCallback<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>&amp;</span> nValue <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsReady<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>CallBackFunc<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            m_cb_config<span style='color:#0000ff; '>.</span>sKey    <span style='color:#0000ff; '>=</span> sKey<span style='color:#0000ff; '>;</span>
+            m_cb_config<span style='color:#0000ff; '>.</span>sValue  <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            m_cb_config<span style='color:#0000ff; '>.</span>nOpCode <span style='color:#0000ff; '>=</span> nValue<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_cb_config<span style='color:#0000ff; '>.</span>nOpCode <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CONFIG_SET<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                GetSettings<span style='color:#0000ff; '>(</span>sKey<span style='color:#0000ff; '>,</span> m_cb_config<span style='color:#0000ff; '>.</span>sValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            CallBackFunc<span style='color:#0000ff; '>(</span>m_cb_config<span style='color:#0000ff; '>,</span> m_cb_context<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - NotifyCallback : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    __ET__<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>String</span> ConfigManager<span style='color:#0000ff; '>::</span>GenerateOrGetSelfUUID<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_self_name<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            boost<span style='color:#0000ff; '>::</span>uuids<span style='color:#0000ff; '>::</span>uuid uuid <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>uuids<span style='color:#0000ff; '>::</span>random_generator<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>const</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span> suuid <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>lexical_cast<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>uuid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            m_self_name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>__ET___APP_</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> suuid<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> m_self_name<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span> 
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> ConfigManager<span style='color:#0000ff; '>::</span>UnlockInfiniteBlockedSharedMutex<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>      
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_ipc_mutex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                boost<span style='color:#0000ff; '>::</span>system_time timeout<span style='color:#0000ff; '>=</span>boost<span style='color:#0000ff; '>::</span>get_system_time<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span>
+                boost<span style='color:#0000ff; '>::</span>posix_time<span style='color:#0000ff; '>::</span>milliseconds<span style='color:#0000ff; '>(</span><span style='color:#800000; '>10</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_ipc_mutex<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>timed_lock<span style='color:#0000ff; '>(</span>timeout<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    ET_TRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Aquiring Shared Mutex Failed: Unlocking!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error - ConfigManager:UnlockInfiniteBlockedSharedMutex : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            m_ipc_mutex<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>unlock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

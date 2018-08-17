@@ -1,0 +1,778 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// FILE:    Poly.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// AUTHORS: Giang, Cam  #4975</span>
+<span style='color:#008000; '>//          Hsu, Yee    #8748</span>
+<span style='color:#008000; '>//          Lin, Jacky  #5230</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// USAGE COMMENTS:</span>
+<span style='color:#008000; '>//      In UNIX     --  % make</span>
+<span style='color:#008000; '>//                  --  % Poly &lt; PolyData.txt</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// LIBRARIES:</span>
+<span style='color:#008000; '>//      iostream.h  --  For stream input/output</span>
+<span style='color:#008000; '>//      Term.h      --  To access class Term where declared</span>
+<span style='color:#008000; '>//      Poly.h      --  To access class Poly where declared</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// FUNCTIONS/METHODS DEFINED:</span>
+<span style='color:#008000; '>//      Poly                --  Poly default constructor</span>
+<span style='color:#008000; '>//      ~Poly               --  Poly default destructor</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//      void InsertTerm     --  Append new term to link list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//      Poly operator =     --  To assign a poly to a poly</span>
+<span style='color:#008000; '>//      Poly operator +     --  To add polynomials</span>
+<span style='color:#008000; '>//      Poly operator -     --  To subtract polynomials</span>
+<span style='color:#008000; '>//      Poly operator *     --  To multiply polynomials</span>
+<span style='color:#008000; '>//      Poly operator ^     --  To multiply polynomial to itself</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//      friend operator *           --  Multiply polynomial</span>
+<span style='color:#008000; '>//      friend ostream&amp; operator &lt;&lt; --  Output a polynomial</span>
+<span style='color:#008000; '>//      friend istream&amp; operator >> --  Input  a polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//      void RecAdd     -- Recursively add polynomials</span>
+<span style='color:#008000; '>//      void RecSub     -- Recursively subtract polynomials </span>
+<span style='color:#008000; '>//      void RecMul     -- Recursively multiply polynomials</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>iostream.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Term.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Poly.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Poly()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly default constructor.</span>
+<span style='color:#008000; '>//              Assigns the head pointer to NULL.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly<span style='color:#0000ff; '>::</span>Poly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>:</span> head<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Poly(const Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         An integer that needs to be cast to a polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: int nCoeff  --  An integer soon becoming a poly</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        An integer cast into a polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       InsertTerm  --  Appends the integer as a</span>
+<span style='color:#008000; '>//                              polynomial to the link list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly overloaded constructor with one argument.</span>
+<span style='color:#008000; '>//              Creates a polynomial of 1 term.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly<span style='color:#0000ff; '>::</span>Poly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nCoeff<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    InsertTerm<span style='color:#0000ff; '>(</span>nCoeff<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Poly(const int nCoeff1, const int nCoeff2)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Two integer that needs to be cast to a polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: int nCoeff1 --  An integer soon becoming a poly</span>
+<span style='color:#008000; '>//              int nCoeff2 --  An integer soon becoming a poly</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        Two integer cast into a polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       InsertTerm  --  Appends the integer as a</span>
+<span style='color:#008000; '>//                              polynomial to the link list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly overloaded constructor with two argument.</span>
+<span style='color:#008000; '>//              Creates a polynomial of 2 term.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly<span style='color:#0000ff; '>::</span>Poly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nCoeff1<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nCoeff2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    InsertTerm<span style='color:#0000ff; '>(</span>nCoeff1<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    InsertTerm<span style='color:#0000ff; '>(</span>nCoeff2<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Poly(const Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A Polynomial that needs to be copied</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: Poly&amp; p --  A reference polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A polynomial is copied</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly copy constructor.</span>
+<span style='color:#008000; '>//              Makes a deep copy of a polynomial.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly<span style='color:#0000ff; '>::</span>Poly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>.</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>   
+        <span style='color:#008000; '>//copy the head</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Term<span style='color:#0000ff; '>;</span>
+        head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>;</span>
+        head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>;</span>
+
+        pTerm newptr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+        pTerm oldptr <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>//copy the rest of the list</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>oldptr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Term<span style='color:#0000ff; '>;</span>
+            newptr <span style='color:#0000ff; '>=</span> newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>;</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>;</span>
+            oldptr <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  ~Poly()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A polynomial that needs to be destroyed</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A polynomial deleted and memory is returned</span>
+<span style='color:#008000; '>//              back to the system.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly default destructor.</span>
+<span style='color:#008000; '>//              Destroys the polynomial link list to</span>
+<span style='color:#008000; '>//              prevent memory leak.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Poly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pTerm curr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>head <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        head <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> curr<span style='color:#0000ff; '>;</span>
+        curr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  InsertTerm(const int nCoeff, const int nExp)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         An coefficient and exponent that needs to be</span>
+<span style='color:#008000; '>//              cast into a term and append to the link list    </span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: int nCoeff  --  Coefficient integer</span>
+<span style='color:#008000; '>//              int nExp    --  Exponent integer</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A new term appended to the link list.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Creates a new term and appends it to the link list.</span>
+<span style='color:#008000; '>//              The new term consist a coefficient, an exponent,</span>
+<span style='color:#008000; '>//              and a pointer to NULL. All integers are valid</span>
+<span style='color:#008000; '>//              coefficient except 0.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Poly<span style='color:#0000ff; '>::</span>InsertTerm<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nCoeff<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nExp<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nCoeff <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>       
+        pTerm curr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Term<span style='color:#0000ff; '>;</span>
+
+        curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>=</span> nCoeff<span style='color:#0000ff; '>;</span>
+        curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>=</span> nExp<span style='color:#0000ff; '>;</span>
+        curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            head <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            pTerm walker <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>walker<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+                walker <span style='color:#0000ff; '>=</span> walker<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+            walker<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator=(const Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A polynomial that needs to be assigned to another</span>
+<span style='color:#008000; '>//              polynomial.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: Poly&amp; p --  A reference polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A polynomial assigned to this poly object.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      *this   --  this object for concatenation</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly overloaded = operator.</span>
+<span style='color:#008000; '>//              The = operator is overloaded so that assigment</span>
+<span style='color:#008000; '>//              may be used for polynomials. It copies a poly to</span>
+<span style='color:#008000; '>//              a poly if it doesn't already exist.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly Poly<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>&amp;</span>p<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//prevents memory leak;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>~</span>Poly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>.</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>   
+            <span style='color:#008000; '>//copies the head of the list</span>
+            head <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Term<span style='color:#0000ff; '>;</span>
+            head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>;</span>
+            head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>;</span>
+
+            pTerm newptr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+            pTerm oldptr <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>//copy the rest of the list</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>oldptr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Term<span style='color:#0000ff; '>;</span>
+                newptr <span style='color:#0000ff; '>=</span> newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>;</span>
+                newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>;</span>
+                oldptr <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator+(const Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Two polynomials that need to be added</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: Poly&amp; p --  A reference polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A polynomial from two polynomials added</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       RecAdd  --  Performs addition recursively</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      pp  --  The polynomial after addition</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly overloaded + operator.</span>
+<span style='color:#008000; '>//              The + operator is overloaded so that polynomials</span>
+<span style='color:#008000; '>//              may perform addition.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly Poly<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Poly pp<span style='color:#0000ff; '>;</span>
+    RecAdd<span style='color:#0000ff; '>(</span>head<span style='color:#0000ff; '>,</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>,</span> pp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator-(const Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Two polynomials that need to be subtracted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: Poly&amp; p --  A reference polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A polynomial from two polynomials subtracted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       RecSub  --  Performs subtraction recursively</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      pp  --  The polynomial after subtraction</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly overloaded - operator.</span>
+<span style='color:#008000; '>//              The - operator is overloaded so that polynomials</span>
+<span style='color:#008000; '>//              may perform subtraction.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly Poly<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Poly pp<span style='color:#0000ff; '>;</span>
+    RecSub<span style='color:#0000ff; '>(</span>head<span style='color:#0000ff; '>,</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>,</span> pp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator*(const Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Two polynomials that need to be multiplied</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: Poly&amp; p --  A reference polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A polynomial from two polynomials multiplied</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       RecMul  --  Performs multiplication recursively</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      pp  --  The polynomial after multiplication</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly overloaded * operator.</span>
+<span style='color:#008000; '>//              The * operator is overloaded so that polynomials</span>
+<span style='color:#008000; '>//              may perform multiplication.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly Poly<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Poly pp<span style='color:#0000ff; '>;</span>
+    RecMul<span style='color:#0000ff; '>(</span>head<span style='color:#0000ff; '>,</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>,</span> pp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator^(const int nExp)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A polynomial that needs to be raised to a power</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: int nExp    --  An exponent of a polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A polynomial raised to the power of an exponent</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      pp  --  The polynomial after exponentiation</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Create a base polynomial with coefficient 1.</span>
+<span style='color:#008000; '>//              For nExp loops, multiply the base polynomial to</span>
+<span style='color:#008000; '>//              the passing polynomial (*this) and stores it back</span>
+<span style='color:#008000; '>//              to itself. The multiplication will call the</span>
+<span style='color:#008000; '>//              overloaded * to perform polynomials recursively.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Poly overloaded ^ operator.</span>
+<span style='color:#008000; '>//              The ^ operator is overloaded so that a polynomial</span>
+<span style='color:#008000; '>//              may perform exponentiation.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly Poly<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>^</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nExp<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Poly pp<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nExp<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        pp <span style='color:#0000ff; '>=</span> pp <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator*(const int nNum, const Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A polynomial that needs to be multiplied to an int</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: int nNum    --  An integer to be multiplied to poly</span>
+<span style='color:#008000; '>//              Poly&amp; p     --  A reference polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A polynomial multiplied by an integer</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      pp  --  The polynomial after multiplication</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Create a polynomial with coefficient nNum.</span>
+<span style='color:#008000; '>//              nNum is cast from an integer to a polynomial.</span>
+<span style='color:#008000; '>//              Multiply the polynomial with the passing</span>
+<span style='color:#008000; '>//              polynomial p. The multiplication is done by calling</span>
+<span style='color:#008000; '>//              the * operator to perform multiplication of two</span>
+<span style='color:#008000; '>//              polynomials.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Ordinary overloaded * operator.</span>
+<span style='color:#008000; '>//              The * operator is overloaded so that a polynomial</span>
+<span style='color:#008000; '>//              may be multiplied to an integer.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Poly <span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nNum<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Poly pp<span style='color:#0000ff; '>(</span>nNum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    pp <span style='color:#0000ff; '>=</span> pp <span style='color:#0000ff; '>*</span> p<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> pp<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator&lt;&lt;(ostream&amp; out, const Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A polynomial stored in a link list waiting to be</span>
+<span style='color:#008000; '>//              streamed to output using standard cout.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: ostream&amp; out    --  Standard cout stream</span>
+<span style='color:#008000; '>//              Poly&amp; p         --  A reference polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        All terms in the link list is displayed</span>
+<span style='color:#008000; '>//              algebraically on standard output</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      out     --  For concatenation</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   If the polynomial doesn't exist, output 0.</span>
+<span style='color:#008000; '>//              Otherwise, run through the list and display each</span>
+<span style='color:#008000; '>//              term. Do not display the exponent if it carries 1,</span>
+<span style='color:#008000; '>//              and do not display the coefficient if it carries 1.</span>
+<span style='color:#008000; '>//              Move the pointer down the list, display + if the</span>
+<span style='color:#008000; '>//              coefficient is positive but display - if negative</span>
+<span style='color:#008000; '>//              first by negating the coefficient. Repeat through</span>
+<span style='color:#008000; '>//              until the end of the list.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Ordinary overloaded &lt;&lt; operator.</span>
+<span style='color:#008000; '>//              The &lt;&lt; operator is overloaded so that</span>
+<span style='color:#008000; '>//              polynomials stored in the link list may be</span>
+<span style='color:#008000; '>//              output to the screen.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>ostream</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ostream</span><span style='color:#0000ff; '>&amp;</span> out<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pTerm curr <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>//do not display the coefficient if it is 1</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                    out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>X</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                    out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>X</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>//do not display the coefficient if it is 1</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                    out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff  <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>X^</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                    out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>X^</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>//display the sign of the coefficient</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                    out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> + </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>//change coefficient from - to + and output -</span>
+                    out<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> - </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                    curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> out<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator>>(istream&amp; in, Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Data available to be read as a polynomial and</span>
+<span style='color:#008000; '>//              then stored to a link list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: istream&amp; in     --  Standard cin stream</span>
+<span style='color:#008000; '>//              Poly&amp; p         --  A reference polynomial</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        All data read will be stored in a link list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       InsertTerm      --  Inserts a coefficient</span>
+<span style='color:#008000; '>//                                  and exponent to the link list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      in  --  For concatenation</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Delete any existing polynomials. Take input</span>
+<span style='color:#008000; '>//              character left paren (. Loop and take integer</span>
+<span style='color:#008000; '>//              inputs while ignoring all whitespaces. Insert</span>
+<span style='color:#008000; '>//              the coefficient and a fake exponent to the link</span>
+<span style='color:#008000; '>//              list. Coefficient with 0 will be ignored by the</span>
+<span style='color:#008000; '>//              InsertTerm() function. Loop until all integers are</span>
+<span style='color:#008000; '>//              read and right paren ) is captured. The exponent</span>
+<span style='color:#008000; '>//              is entered starting with 0 and incrementing by 1</span>
+<span style='color:#008000; '>//              every integer is read. When all integer is read,</span>
+<span style='color:#008000; '>//              decrement the exponent by 1 then run through the</span>
+<span style='color:#008000; '>//              link list correcting all the exponents by</span>
+<span style='color:#008000; '>//              subtracting current exponent to the previous one</span>
+<span style='color:#008000; '>//              entered. When all this is done, the link list</span>
+<span style='color:#008000; '>//              will have a sparse representation of the polynomial</span>
+<span style='color:#008000; '>//              with correct coefficient and exponents.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Ordinary overloaded >> operator.</span>
+<span style='color:#008000; '>//              The >> operator is overloaded so that</span>
+<span style='color:#008000; '>//              data may be read and stored in a link list.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>istream</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>istream</span><span style='color:#0000ff; '>&amp;</span> in<span style='color:#0000ff; '>,</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> ch <span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nExp <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> nCoeff <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// destroy existing Poly to accept new Poly</span>
+    p<span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>~</span>Poly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//ignore '('</span>
+    in<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>in<span style='color:#0000ff; '>.</span>peek<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>')'</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//skip whitespace otherwise read coefficient input</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>in<span style='color:#0000ff; '>.</span>peek<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>' '</span><span style='color:#0000ff; '>)</span>
+            in<span style='color:#0000ff; '>.</span>ignore<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//takes input and inserts coefficient</span>
+            <span style='color:#008000; '>//and fake exponent to the list</span>
+            in<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>;</span>
+            p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>nCoeff<span style='color:#0000ff; '>,</span> nExp<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>//ignore ')'</span>
+    in<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span>ch<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//undo last exponent increment</span>
+    nExp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>;</span>
+
+    pTerm curr <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//run through the list correcting each exponent</span>
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>=</span> nExp <span style='color:#0000ff; '>-</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>;</span>
+        curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> in<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  RecAdd(pTerm t1, pTerm t2, Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Two polynomials that needs to be added</span>
+<span style='color:#008000; '>//              term by term</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: pTerm t1    --  First term of object poly</span>
+<span style='color:#008000; '>//              pTerm t2    --  First term of passing poly</span>
+<span style='color:#008000; '>//              Poly&amp; p     --  Reference polynomial with will be</span>
+<span style='color:#008000; '>//                              the result from addition</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        The polynomial p from recursive addition</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       InsertTerm      --  Inserts a coefficient</span>
+<span style='color:#008000; '>//                                  and exponent to the link list</span>
+<span style='color:#008000; '>//              RecAdd          --  Calls itself recursively to</span>
+<span style='color:#008000; '>//                                  perform addition term by term</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      NONE    --  However, p is the true return value as</span>
+<span style='color:#008000; '>//                          p is both an argument and final value</span>
+<span style='color:#008000; '>//                          from passing by reference</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Do nothing if both heads of the two polynomial</span>
+<span style='color:#008000; '>//              are empty. If first head t1 is empty. Insert the</span>
+<span style='color:#008000; '>//              head of t2 in the list; otherwise, insert the head</span>
+<span style='color:#008000; '>//              of t1. If t1's exponent is greater than t2's</span>
+<span style='color:#008000; '>//              exponent, insert t1's content in the list;</span>
+<span style='color:#008000; '>//              otherwise, if t2's exponent is greater, insert t2's</span>
+<span style='color:#008000; '>//              content. If both term have equal exponent value,</span>
+<span style='color:#008000; '>//              add the coefficient of the two terms and insert</span>
+<span style='color:#008000; '>//              the result to the list with its exponent. On each</span>
+<span style='color:#008000; '>//              of those case, update its corresponding term</span>
+<span style='color:#008000; '>//              pointer then call RecAdd again to perform each</span>
+<span style='color:#008000; '>//              addition of the polynomial term by term</span>
+<span style='color:#008000; '>//              recursively.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    The RecAdd() method performs term by term addition</span>
+<span style='color:#008000; '>//              of two polynomials recursively. The result p is</span>
+<span style='color:#008000; '>//              passed and returned by reference.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Poly<span style='color:#0000ff; '>::</span>RecAdd<span style='color:#0000ff; '>(</span>pTerm t1<span style='color:#0000ff; '>,</span> pTerm t2<span style='color:#0000ff; '>,</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>t1 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> t2 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t1 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//insert t2 content if t1 is empty</span>
+            p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            t2 <span style='color:#0000ff; '>=</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t2 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//insert t1 content if t2 is empty</span>
+            p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            t1 <span style='color:#0000ff; '>=</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>></span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>//t1's exponent greater, so insert t1's content</span>
+                p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t1 <span style='color:#0000ff; '>=</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>&lt;</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>//t2's exponent greater, so insert t2's content</span>
+                p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t2 <span style='color:#0000ff; '>=</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>//same exponent, insert added coefficient</span>
+                p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>+</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t1 <span style='color:#0000ff; '>=</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                t2 <span style='color:#0000ff; '>=</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        RecAdd<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>,</span> t2<span style='color:#0000ff; '>,</span> p<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  RecSub(pTerm t1, pTerm t2, Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Two polynomials that needs to be subtracted</span>
+<span style='color:#008000; '>//              term by term</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: pTerm t1    --  First term of object poly</span>
+<span style='color:#008000; '>//              pTerm t2    --  First term of passing poly</span>
+<span style='color:#008000; '>//              Poly&amp; p     --  Reference polynomial with will be</span>
+<span style='color:#008000; '>//                              the result from subtraction</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        The polynomial p from recursive subtraction</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       InsertTerm      --  Inserts a coefficient</span>
+<span style='color:#008000; '>//                                  and exponent to the link list</span>
+<span style='color:#008000; '>//              RecSub          --  Calls itself recursively to</span>
+<span style='color:#008000; '>//                                  perform subtraction term by</span>
+<span style='color:#008000; '>//                                  term</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      NONE    --  However, p is the true return value as</span>
+<span style='color:#008000; '>//                          p is both an argument and final value</span>
+<span style='color:#008000; '>//                          from passing by reference</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Do nothing if both heads of the two polynomial</span>
+<span style='color:#008000; '>//              are empty. If first head t1 is empty. Insert the</span>
+<span style='color:#008000; '>//              head of t2 in the list with its coefficient negated;</span>
+<span style='color:#008000; '>//              otherwise, insert the head of t1. If t1's exponent</span>
+<span style='color:#008000; '>//              is greater than t2's exponent, insert t1's content</span>
+<span style='color:#008000; '>//              in the list; otherwise, if t2's exponent is greater,</span>
+<span style='color:#008000; '>//              insert t2's content with negated coefficent. If</span>
+<span style='color:#008000; '>//              both term have equal exponent value, subtract the</span>
+<span style='color:#008000; '>//              coefficient of the two terms t1 - t2 and insert</span>
+<span style='color:#008000; '>//              the result to the list with its exponent. On each</span>
+<span style='color:#008000; '>//              of those case, update its corresponding term</span>
+<span style='color:#008000; '>//              pointer then call RecSub again to perform each</span>
+<span style='color:#008000; '>//              subtraction of the polynomial term by term</span>
+<span style='color:#008000; '>//              recursively.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    The RecSub method performs term by term subtraction</span>
+<span style='color:#008000; '>//              of two polynomials recursively. The result p is</span>
+<span style='color:#008000; '>//              passed and returned by reference.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Poly<span style='color:#0000ff; '>::</span>RecSub<span style='color:#0000ff; '>(</span>pTerm t1<span style='color:#0000ff; '>,</span> pTerm t2<span style='color:#0000ff; '>,</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t1 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> t2 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t1 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//negate t2's coefficient and insert if t1 is empty</span>
+            p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>(</span>t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            t2 <span style='color:#0000ff; '>=</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t2 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//insert t1 content if t2 is empty</span>
+            p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            t1 <span style='color:#0000ff; '>=</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>></span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>//t1's exponent greater, so insert t1's content</span>
+                p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t1 <span style='color:#0000ff; '>=</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>&lt;</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>//t2's exponent greater, insert t2's coeff negate</span>
+                p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>(</span>t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t2 <span style='color:#0000ff; '>=</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>//same exponent, insert subtracted coefficient</span>
+                p<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>-</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t1 <span style='color:#0000ff; '>=</span> t1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                t2 <span style='color:#0000ff; '>=</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        RecSub<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>,</span> t2<span style='color:#0000ff; '>,</span> p<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  RecMul(pTerm t1, pTerm t2, Poly&amp; p)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Two polynomials that needs to be multiplied</span>
+<span style='color:#008000; '>//              term by term</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// INPUT PARAM: pTerm t1    --  First term of object poly</span>
+<span style='color:#008000; '>//              pTerm t2    --  First term of passing poly</span>
+<span style='color:#008000; '>//              Poly&amp; p     --  Reference polynomial with will be</span>
+<span style='color:#008000; '>//                              the result from multiplication</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        The polynomial p from recursive multiplication</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       InsertTerm      --  Inserts a coefficient</span>
+<span style='color:#008000; '>//                                  and exponent to the link list</span>
+<span style='color:#008000; '>//              RecMul          --  Calls itself recursively to</span>
+<span style='color:#008000; '>//                                  perform multiplication term by</span>
+<span style='color:#008000; '>//                                  term</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      NONE    --  However, p is the true return value as</span>
+<span style='color:#008000; '>//                          p is both an argument and final value</span>
+<span style='color:#008000; '>//                          from passing by reference</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Do nothing if 2nd polynomials head t2 is empty</span>
+<span style='color:#008000; '>//              (base case). Copy 1st poly's head to another</span>
+<span style='color:#008000; '>//              pointer pt. While pt (1'st poly's head) is not</span>
+<span style='color:#008000; '>//              empty, insert a term with the coefficient from</span>
+<span style='color:#008000; '>//              both head's multiplied and the exponents from</span>
+<span style='color:#008000; '>//              each term added. Update pt's pointer and keep</span>
+<span style='color:#008000; '>//              inserting until pt is empty. Add the new</span>
+<span style='color:#008000; '>//              polynomial after the multiplication of each</span>
+<span style='color:#008000; '>//              to passing polynomial p and stores it back to</span>
+<span style='color:#008000; '>//              itself. The adding of two polynomials is done</span>
+<span style='color:#008000; '>//              recusively by calling the overloaded + operator.</span>
+<span style='color:#008000; '>//              Call RecMul again by passing the head of t1,</span>
+<span style='color:#008000; '>//              the next pointer of t2, and the original poly p.</span>
+<span style='color:#008000; '>//              Keep calling RecMul until the base case is reached.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    The RecMul method performs term by term</span>
+<span style='color:#008000; '>//              multiplicably of two polynomials recursively.</span>
+<span style='color:#008000; '>//              The result p is passed and returned by reference.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Poly<span style='color:#0000ff; '>::</span>RecMul<span style='color:#0000ff; '>(</span>pTerm t1<span style='color:#0000ff; '>,</span> pTerm t2<span style='color:#0000ff; '>,</span> Poly<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Poly pp<span style='color:#0000ff; '>;</span>
+    pTerm pt <span style='color:#0000ff; '>=</span> t1<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t2 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>pt <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//insert with multiplied coefficients and added exponents</span>
+            pp<span style='color:#0000ff; '>.</span>InsertTerm<span style='color:#0000ff; '>(</span>t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff <span style='color:#0000ff; '>*</span> pt<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nCoeff<span style='color:#0000ff; '>,</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp <span style='color:#0000ff; '>+</span> pt<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nExp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            pt <span style='color:#0000ff; '>=</span> pt<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        p <span style='color:#0000ff; '>=</span> p <span style='color:#0000ff; '>+</span> pp<span style='color:#0000ff; '>;</span>
+        RecMul<span style='color:#0000ff; '>(</span>t1<span style='color:#0000ff; '>,</span> t2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>,</span> p<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

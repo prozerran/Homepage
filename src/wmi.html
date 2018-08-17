@@ -1,0 +1,447 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/7/2008</span>
+<span style='color:#008000; '>// File:    WMI.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    WMI Wrapper that wraps around the Windows Management Instrumental</span>
+<span style='color:#008000; '>//          API. This wrapper puts the procedures into an Object Oriented</span>
+<span style='color:#008000; '>//          Model for easy usage.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Wmi.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>IntCommon.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  WMI()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: WMI Constructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+WMI<span style='color:#0000ff; '>::</span>WMI<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  WMI()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: WMI Destructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+WMI<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>WMI<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Connect()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Connect to WMI DB by root path</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> WMI<span style='color:#0000ff; '>::</span>Connect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>OLECHAR</span><span style='color:#0000ff; '>*</span> pRootPath<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// Step 1: --------------------------------------------------</span>
+    <span style='color:#008000; '>// Initialize COM. ------------------------------------------</span>
+
+    <span style='color:#008000; '>//hres =  CoInitializeEx(NULL, COINIT_MULTITHREADED); </span>
+    hres <span style='color:#0000ff; '>=</span> CoInitialize<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>hres <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> RPC_E_CHANGED_MODE<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//cout &lt;&lt;"Cannot Change com apartment model!";</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FAILED</span><span style='color:#0000ff; '>(</span>hres<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//cout &lt;&lt; "Failed to initialize COM library. Error code = 0x" &lt;&lt; hex &lt;&lt; hres &lt;&lt; endl;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>                  <span style='color:#008000; '>// Program has failed.</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// Step 2: --------------------------------------------------</span>
+    <span style='color:#008000; '>// Set general COM security levels --------------------------</span>
+    <span style='color:#008000; '>// Note: If you are using Windows 2000, you need to specify -</span>
+    <span style='color:#008000; '>// the default authentication credentials for a user by using</span>
+    <span style='color:#008000; '>// a SOLE_AUTHENTICATION_LIST structure in the pAuthList ----</span>
+    <span style='color:#008000; '>// parameter of CoInitializeSecurity ------------------------</span>
+
+    hres <span style='color:#0000ff; '>=</span>  CoInitializeSecurity<span style='color:#0000ff; '>(</span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> 
+        <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span>                          <span style='color:#008000; '>// COM authentication</span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>                        <span style='color:#008000; '>// Authentication services</span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>                        <span style='color:#008000; '>// Reserved</span>
+        RPC_C_AUTHN_LEVEL_DEFAULT<span style='color:#0000ff; '>,</span>   <span style='color:#008000; '>// Default authentication </span>
+        RPC_C_IMP_LEVEL_IMPERSONATE<span style='color:#0000ff; '>,</span> <span style='color:#008000; '>// Default Impersonation  </span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>                        <span style='color:#008000; '>// Authentication info</span>
+        EOAC_NONE<span style='color:#0000ff; '>,</span>                   <span style='color:#008000; '>// Additional capabilities </span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span>                         <span style='color:#008000; '>// Reserved</span>
+        <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>(</span>hres <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> RPC_E_TOO_LATE<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>FAILED</span><span style='color:#0000ff; '>(</span>hres<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Failed to initialize security. Error code = 0x</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> hex <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> hres <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; font-weight:bold; '>endl</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>                    <span style='color:#008000; '>// Program has failed.</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// Step 3: ---------------------------------------------------</span>
+    <span style='color:#008000; '>// Obtain the initial locator to WMI -------------------------</span>
+
+    hres <span style='color:#0000ff; '>=</span> CoCreateInstance<span style='color:#0000ff; '>(</span>
+        CLSID_WbemLocator<span style='color:#0000ff; '>,</span>             
+        <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> 
+        <span style='color:#808080; font-weight:bold; '>CLSCTX_INPROC_SERVER</span><span style='color:#0000ff; '>,</span> 
+        IID_IWbemLocator<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPVOID</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span>pLoc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FAILED</span><span style='color:#0000ff; '>(</span>hres<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//cout &lt;&lt; "Failed to create IWbemLocator object." &lt;&lt; " Err code = 0x" &lt;&lt; hex &lt;&lt; hres &lt;&lt; endl;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>                 <span style='color:#008000; '>// Program has failed.</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// Step 4: -----------------------------------------------------</span>
+    <span style='color:#008000; '>// Connect to WMI through the IWbemLocator::ConnectServer method</span>
+    BSTR WMI_DB <span style='color:#0000ff; '>=</span> SysAllocString<span style='color:#0000ff; '>(</span>pRootPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>// Connect to the root\cimv2 namespace with</span>
+    <span style='color:#008000; '>// the current user and obtain pointer pSvc</span>
+    <span style='color:#008000; '>// to make IWbemServices calls.</span>
+    hres <span style='color:#0000ff; '>=</span> pLoc<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ConnectServer<span style='color:#0000ff; '>(</span>
+        WMI_DB<span style='color:#0000ff; '>,</span>                  <span style='color:#008000; '>// Object path of WMI namespace</span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>                    <span style='color:#008000; '>// User name. NULL = current user</span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>                    <span style='color:#008000; '>// User password. NULL = current</span>
+        <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>                       <span style='color:#008000; '>// Locale. NULL indicates current</span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>                    <span style='color:#008000; '>// Security flags.</span>
+        <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>                       <span style='color:#008000; '>// Authority (e.g. Kerberos)</span>
+        <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>                       <span style='color:#008000; '>// Context object </span>
+        <span style='color:#0000ff; '>&amp;</span>pSvc                    <span style='color:#008000; '>// pointer to IWbemServices proxy</span>
+        <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FAILED</span><span style='color:#0000ff; '>(</span>hres<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//cout &lt;&lt; "Could not connect. Error code = 0x" &lt;&lt; hex &lt;&lt; hres &lt;&lt; endl;</span>
+        <span style='color:#008000; '>//pLoc->Release();     </span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>                <span style='color:#008000; '>// Program has failed.</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>//cout &lt;&lt; "Connected to " &lt;&lt; (_bstr_t) WMI_DB &lt;&lt; " WMI namespace" &lt;&lt; endl;</span>
+
+    <span style='color:#008000; '>// Step 5: --------------------------------------------------</span>
+    <span style='color:#008000; '>// Set security levels on the proxy -------------------------</span>
+
+    hres <span style='color:#0000ff; '>=</span> CoSetProxyBlanket<span style='color:#0000ff; '>(</span>
+        pSvc<span style='color:#0000ff; '>,</span>                        <span style='color:#008000; '>// Indicates the proxy to set</span>
+        RPC_C_AUTHN_WINNT<span style='color:#0000ff; '>,</span>           <span style='color:#008000; '>// RPC_C_AUTHN_xxx</span>
+        RPC_C_AUTHZ_NONE<span style='color:#0000ff; '>,</span>            <span style='color:#008000; '>// RPC_C_AUTHZ_xxx</span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>                        <span style='color:#008000; '>// Server principal name </span>
+        RPC_C_AUTHN_LEVEL_CALL<span style='color:#0000ff; '>,</span>      <span style='color:#008000; '>// RPC_C_AUTHN_LEVEL_xxx </span>
+        RPC_C_IMP_LEVEL_IMPERSONATE<span style='color:#0000ff; '>,</span> <span style='color:#008000; '>// RPC_C_IMP_LEVEL_xxx</span>
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>                        <span style='color:#008000; '>// client identity</span>
+        EOAC_NONE                    <span style='color:#008000; '>// proxy capabilities </span>
+        <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FAILED</span><span style='color:#0000ff; '>(</span>hres<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//cout &lt;&lt; "Could not set proxy blanket. Error code = 0x" &lt;&lt; hex &lt;&lt; hres &lt;&lt; endl;</span>
+        <span style='color:#008000; '>//pSvc->Release();</span>
+        <span style='color:#008000; '>//pLoc->Release();     </span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>               <span style='color:#008000; '>// Program has failed.</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  QueryEx()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Construct the WMI SQL query</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> WMI<span style='color:#0000ff; '>::</span>QueryEx<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>OLECHAR</span><span style='color:#0000ff; '>*</span> pSQLQuery<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// Step 5.5: --------------------------------------------------</span>
+    <span style='color:#008000; '>// Assign SQL statement</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>pSQLQuery <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>OLECHAR</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> pSQLQuery<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetStringValue()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets WMI string value</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> WMI<span style='color:#0000ff; '>::</span>GetStringValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPCWSTR</span> wszName<span style='color:#0000ff; '>,</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> sString<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> bRet   <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetWmiValue<span style='color:#0000ff; '>(</span>wszName<span style='color:#0000ff; '>,</span> WMI<span style='color:#0000ff; '>::</span>QUERY_STRING<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    sString     <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sRetString<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bRet<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetBoolValue()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets WMI bool value</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> WMI<span style='color:#0000ff; '>::</span>GetBoolValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPCWSTR</span> wszName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>&amp;</span> bBool<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> bRet   <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetWmiValue<span style='color:#0000ff; '>(</span>wszName<span style='color:#0000ff; '>,</span> WMI<span style='color:#0000ff; '>::</span>QUERY_BOOL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    bBool       <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bRetBool<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bRet<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetIntValue()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets WMI int value</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> WMI<span style='color:#0000ff; '>::</span>GetIntValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPCWSTR</span> wszName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>&amp;</span> nInt<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> bRet   <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetWmiValue<span style='color:#0000ff; '>(</span>wszName<span style='color:#0000ff; '>,</span> WMI<span style='color:#0000ff; '>::</span>QUERY_SINT32<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    nInt        <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nRetInt<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bRet<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetWmiValue()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets WMI value</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> WMI<span style='color:#0000ff; '>::</span>GetWmiValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPCWSTR</span> wszName<span style='color:#0000ff; '>,</span> eWmiInfo eInfo<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>// Step 6: --------------------------------------------------</span>
+    <span style='color:#008000; '>// Use the IWbemServices pointer to make requests of WMI ----</span>
+
+    <span style='color:#008000; '>// For example, get the name of the operating system</span>
+    BSTR Language   <span style='color:#0000ff; '>=</span> SysAllocString<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>WQL</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    BSTR Query      <span style='color:#0000ff; '>=</span> SysAllocString<span style='color:#0000ff; '>(</span>pSQLQuery<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    hres <span style='color:#0000ff; '>=</span> pSvc<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ExecQuery<span style='color:#0000ff; '>(</span>
+        Language<span style='color:#0000ff; '>,</span> 
+        Query<span style='color:#0000ff; '>,</span>
+        WBEM_FLAG_FORWARD_ONLY <span style='color:#0000ff; '>|</span> WBEM_FLAG_RETURN_IMMEDIATELY<span style='color:#0000ff; '>,</span> 
+        <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span>
+        <span style='color:#0000ff; '>&amp;</span>pEnumerator<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>FAILED</span><span style='color:#0000ff; '>(</span>hres<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//cout &lt;&lt; "Query for operating system name failed." &lt;&lt; " Error code = 0x"  &lt;&lt; hex &lt;&lt; hres &lt;&lt; endl;</span>
+        <span style='color:#008000; '>//pSvc->Release();</span>
+        <span style='color:#008000; '>//pLoc->Release();</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>               <span style='color:#008000; '>// Program has failed.</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>// Step 7: -------------------------------------------------</span>
+    <span style='color:#008000; '>// Get the data from the query in step 6 -------------------</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>ULONG</span>   uReturn <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span>    bInfoExist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>pEnumerator<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> hr <span style='color:#0000ff; '>=</span> pEnumerator<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Next<span style='color:#0000ff; '>(</span>WBEM_INFINITE<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>pclsObj<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>uReturn<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> uReturn<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        VARIANT vtProp<span style='color:#0000ff; '>;</span>
+        VariantInit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>vtProp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>eInfo<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_STRING</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                vtProp<span style='color:#0000ff; '>.</span>bstrVal <span style='color:#0000ff; '>=</span> SysAllocString<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                hr <span style='color:#0000ff; '>=</span> pclsObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Get<span style='color:#0000ff; '>(</span>wszName<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>vtProp<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                sRetString<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                sRetString <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>_bstr_t<span style='color:#0000ff; '>)</span> vtProp<span style='color:#0000ff; '>.</span>bstrVal<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_BOOL</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                vtProp<span style='color:#0000ff; '>.</span>boolVal <span style='color:#0000ff; '>=</span> VARIANT_FALSE<span style='color:#0000ff; '>;</span>
+                hr <span style='color:#0000ff; '>=</span> pclsObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Get<span style='color:#0000ff; '>(</span>wszName<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>vtProp<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                bRetBool <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>vtProp<span style='color:#0000ff; '>.</span>boolVal <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> VARIANT_TRUE<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>?</span> <span style='color:#0000ff; font-weight:bold; '>true</span> <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_SINT32</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                hr <span style='color:#0000ff; '>=</span> pclsObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Get<span style='color:#0000ff; '>(</span>wszName<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>vtProp<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                nRetInt <span style='color:#0000ff; '>=</span> vtProp<span style='color:#0000ff; '>.</span>intVal<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        VariantClear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>vtProp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        bInfoExist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bInfoExist<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Release()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Releases all WMI objects</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> WMI<span style='color:#0000ff; '>::</span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;//Cleanup</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;//========</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;if (pSvc)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;pSvc->Release();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;if (pLoc)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;pLoc->Release();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;if (pEnumerator)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;pEnumerator->Release();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;if (pclsObj)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;pclsObj->Release();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    CoUninitialize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Class: ExWMI</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: WMI extension. An extended version of WMI for even easier</span>
+<span style='color:#008000; '>//              access. </span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#008000; '>// static counter</span>
+<span style='color:#0000ff; font-weight:bold; '>int</span> ExWMI<span style='color:#0000ff; '>::</span>nCounter <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  ExWMI()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: ExWMI Constructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+ExWMI<span style='color:#0000ff; '>::</span>ExWMI<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>pRootPath <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>pSQLQuery <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mrswmi<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  ExWMI()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: ExWMI Destructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+ExWMI<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>ExWMI<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>pRootPath <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>pSQLQuery <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mrswmi<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetType()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Get type of WMI variable</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>string</span> ExWMI<span style='color:#0000ff; '>::</span>GetType<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nType<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>string</span> sRet <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>nType<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>ExWMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_STRING</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            sRet <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>string</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>ExWMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_BOOL</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            sRet <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>boolean</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>ExWMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_SINT32</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            sRet <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>sint32</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+            sRet <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>unknown</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> sRet<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetEntryFor()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets the WMI entry</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> ExWMI<span style='color:#0000ff; '>::</span>GetEntryFor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPCWSTR</span> sName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nType<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    rsWMI rswmi<span style='color:#0000ff; '>;</span>
+
+    rswmi<span style='color:#0000ff; '>.</span>sName <span style='color:#0000ff; '>=</span> sName<span style='color:#0000ff; '>;</span>
+    rswmi<span style='color:#0000ff; '>.</span>nType <span style='color:#0000ff; '>=</span> nType<span style='color:#0000ff; '>;</span>
+    rswmi<span style='color:#0000ff; '>.</span>sValue<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mrswmi<span style='color:#0000ff; '>[</span>nCounter<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> rswmi<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  ExecuteGetWmi()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Executes the WMI query and sets the value for return</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> ExWMI<span style='color:#0000ff; '>::</span>ExecuteGetWmi<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Connect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>pRootPath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>QueryEx<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>pSQLQuery<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>MapRSWMI<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iwmi <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mrswmi<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iwmi <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>mrswmi<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iwmi<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>iwmi<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>nType<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_STRING</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetStringValue<span style='color:#0000ff; '>(</span>iwmi<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>sName<span style='color:#0000ff; '>,</span> iwmi<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>sValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_BOOL</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                        <span style='color:#0000ff; font-weight:bold; '>bool</span> bBool<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetBoolValue<span style='color:#0000ff; '>(</span>iwmi<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>sName<span style='color:#0000ff; '>,</span> bBool<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        iwmi<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>sValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>bBool <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span> <span style='color:#0000ff; '>?</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>true</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>:</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>false</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WMI</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>QUERY_SINT32</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                        <span style='color:#0000ff; font-weight:bold; '>int</span> nInt<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>char</span> szInt<span style='color:#0000ff; '>[</span><span style='color:#800000; '>32</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetIntValue<span style='color:#0000ff; '>(</span>iwmi<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>sName<span style='color:#0000ff; '>,</span> nInt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>szInt<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> nInt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        iwmi<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>sValue <span style='color:#0000ff; '>=</span> szInt<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+                        iwmi<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>.</span>sValue<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

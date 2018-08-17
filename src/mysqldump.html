@@ -1,0 +1,22 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#806030; '>@</span><span style='color:#400000; font-weight:bold; '>REM</span><span style='color:#c34e00; '> BATCH </span><span style='color:#400000; font-weight:bold; '>FILE</span>
+<span style='color:#806030; '>@</span><span style='color:#400000; font-weight:bold; '>ECHO off</span>
+
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>=========================================================</span>
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>Declare global variables here.</span>
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>=========================================================</span>
+
+<span style='color:#400000; font-weight:bold; '>set</span> MYSQL_DUMP_EXE<span style='color:#806030; '>=</span><span style='color:#e60000; '>"C:\Program Files\MySQL\MySQL Server 5.7\bin"</span>
+<span style='color:#400000; font-weight:bold; '>set</span> MYSQL_USER<span style='color:#806030; '>=</span><span style='color:#e60000; '>"root"</span>
+<span style='color:#400000; font-weight:bold; '>set</span> MYSQL_PASS<span style='color:#806030; '>=</span><span style='color:#e60000; '>"password"</span>
+<span style='color:#400000; font-weight:bold; '>set</span> MYSQL_DB<span style='color:#806030; '>=</span><span style='color:#e60000; '>"dbname"</span>
+<span style='color:#400000; font-weight:bold; '>set</span> DT<span style='color:#806030; '>=</span>%date:~7,2%<span style='color:#806030; '>-</span>%date:~4,2%<span style='color:#806030; '>-</span>%date:~10,4%_%time:~0,2%_%time:~3,2%_%time:~6,2%
+<span style='color:#400000; font-weight:bold; '>set</span> MYSQL_OUTF<span style='color:#806030; '>=</span><span style='color:#e60000; '>"C:\Temp\DB_Backup_%DT%.sql"</span>
+
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>=========================================================</span>
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>Backup DB</span>
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>=========================================================</span>
+
+%MYSQL_DUMP_EXE%<span style='color:#806030; '>\</span>mysqldump.exe <span style='color:#806030; '>-</span>u %MYSQL_USER% <span style='color:#806030; '>-</span>p%MYSQL_PASS% %MYSQL_DB% <span style='color:#806030; '>></span> %MYSQL_OUTF%
+
+<span style='color:#400000; font-weight:bold; '>echo</span><span style='color:#e60000; '> "MySQL backup Done."</span>
+</pre>

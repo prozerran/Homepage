@@ -1,0 +1,341 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#c34e00; '>#|</span>
+<span style='color:#c34e00; '>Yee Hsu</span>
+<span style='color:#c34e00; '>Dr. V. Cavalli-Sforza</span>
+<span style='color:#c34e00; '>Csc 600 - Programming Languages</span>
+<span style='color:#c34e00; '>Nov 18, 2001</span>
+<span style='color:#c34e00; '></span>
+<span style='color:#c34e00; '>Assignment #2:  Forsim - Fortran Interpreter</span>
+<span style='color:#c34e00; '></span>
+<span style='color:#c34e00; '>USAGE:</span>
+<span style='color:#c34e00; '></span>
+<span style='color:#c34e00; '>libra% clisp</span>
+<span style='color:#c34e00; '>> (load "hw2.lsp")</span>
+<span style='color:#c34e00; '>> (forsim "program.for")</span>
+<span style='color:#c34e00; '>> (quit)</span>
+<span style='color:#c34e00; '></span>
+<span style='color:#c34e00; '>|#</span> 
+
+<span style='color:#c34e00; '>;; Initialize variables</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#007d45; '>NIL</span><span style='color:#806030; '>)</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> code <span style='color:#007d45; '>NIL</span><span style='color:#806030; '>)</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> symtab <span style='color:#007d45; '>NIL</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Load fortran file (*.for) and start the interpreter</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> forsim <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>fname</span><span style='color:#806030; '>)</span>
+   <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> code <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>make-list-from-sexpr-file</span> fname<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+   <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp code<span style='color:#806030; '>)</span>
+   <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> linenum <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>loop</span>
+            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> token <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cond</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'PROGRAM</span><span style='color:#806030; '>)</span>         <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parseprog</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'SUBPROGRAM</span><span style='color:#806030; '>)</span>      <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsesubp</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'CALL</span><span style='color:#806030; '>)</span>            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsecall</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'READ</span><span style='color:#806030; '>)</span>            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parser</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'WRITE</span><span style='color:#806030; '>)</span>           <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsew</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'WRITELN</span><span style='color:#806030; '>)</span>         <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsewl</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'INTEGER</span><span style='color:#806030; '>)</span>         <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parseint</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'IF</span><span style='color:#806030; '>)</span>              <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parseif</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'DO</span><span style='color:#806030; '>)</span>              <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsedo</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'GOTO</span><span style='color:#806030; '>)</span>            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsego</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'CONTINUE</span><span style='color:#806030; '>)</span>        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsecont</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'</span><span style='color:#806030; '>.</span>EQ<span style='color:#806030; '>.</span><span style='color:#806030; '>)</span>            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parseeq</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'</span><span style='color:#806030; '>.</span>NEQ<span style='color:#806030; '>.</span><span style='color:#806030; '>)</span>           <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parseneq</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'</span><span style='color:#806030; '>.</span>LT<span style='color:#806030; '>.</span><span style='color:#806030; '>)</span>            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parselt</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'</span><span style='color:#806030; '>.</span>LE<span style='color:#806030; '>.</span><span style='color:#806030; '>)</span>            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsele</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'</span><span style='color:#806030; '>.</span>GT<span style='color:#806030; '>.</span><span style='color:#806030; '>)</span>            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsegt</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'</span><span style='color:#806030; '>.</span>GE<span style='color:#806030; '>.</span><span style='color:#806030; '>)</span>            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsege</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'DIMENSION</span><span style='color:#806030; '>)</span>       <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsed</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+                <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> token <span style='color:#806030; '>'END</span><span style='color:#806030; '>)</span>             <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsee</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;;; Read a file of s-expressions and return the whole thing as a list</span>
+<span style='color:#c34e00; '>;;; in the same order that it was read.</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> make-list-from-sexpr-file <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>fname</span><span style='color:#806030; '>)</span>
+   <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>let*</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>header</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> <span style='color:#806030; '>'header</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>lastitem</span> header<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+     <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>format</span> <span style='color:#007d45; '>T</span> <span style='color:#e60000; '>"Opening file ~s~%"</span> fname<span style='color:#806030; '>)</span>
+     <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>dofile</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>item</span> fname<span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setf</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> lastitem<span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> item<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> lastitem <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> lastitem<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+     <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> header<span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;;; Call syntax is just like for dolist:</span>
+<span style='color:#c34e00; '>;;; (dofile (x "filename" 'DONE) s-expr s-expr ... s-expr)</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defmacro</span> dofile <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>var</span> filename <span style='color:#800000; font-weight:bold; '>&amp;optional</span> return-form<span style='color:#806030; '>)</span> <span style='color:#806030; '>&amp;</span>body body<span style='color:#806030; '>)</span>
+  "Opens the specified file for input<span style='color:#00dddd; '>,</span> reads successive forms 
+   from the file<span style='color:#00dddd; '>,</span> setting the specified variable <span style='color:#806030; '>&lt;</span>var<span style='color:#806030; '>></span> to
+   each form<span style='color:#806030; '>.</span>  When end of file is reached<span style='color:#00dddd; '>,</span> the value of <span style='color:#806030; '>&lt;</span>return-form<span style='color:#806030; '>></span>
+   is returned<span style='color:#806030; '>.</span>"
+  <span style='color:#c34e00; '>;; After an idea by Eric Nyberg.</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>let</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eof</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>gensym</span> <span style='color:#e60000; '>"EOF"</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>stream</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>gensym</span> <span style='color:#e60000; '>"STREAM"</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>`</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>with-open-file</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>,stream</span> <span style='color:#00dddd; '>,filename</span> <span style='color:#800000; font-weight:bold; '>:direction</span> <span style='color:#800000; font-weight:bold; '>:input</span><span style='color:#806030; '>)</span>
+       <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>do</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>,var</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>read</span> <span style='color:#00dddd; '>,stream</span> <span style='color:#007d45; '>nil</span> <span style='color:#806030; '>'</span><span style='color:#00dddd; '>,eof</span><span style='color:#806030; '>)</span>
+            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>read</span> <span style='color:#00dddd; '>,stream</span> <span style='color:#007d45; '>nil</span> <span style='color:#806030; '>'</span><span style='color:#00dddd; '>,eof</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+           <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> <span style='color:#00dddd; '>,var</span> <span style='color:#806030; '>'</span><span style='color:#00dddd; '>,eof</span><span style='color:#806030; '>)</span>
+            <span style='color:#00dddd; '>,return-form</span><span style='color:#806030; '>)</span>
+         <span style='color:#00dddd; '>,@body</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; Test if symbol is an opcode</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> isopcode <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>s</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#007d45; '>NIL</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>dolist</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>i</span> <span style='color:#806030; '>'</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>+</span> - * <span style='color:#806030; '>/</span><span style='color:#806030; '>)</span> ret<span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> i s<span style='color:#806030; '>)</span>
+            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#007d45; '>T</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> 
+
+
+<span style='color:#c34e00; '>;; Evaluate [+,-,*,/]: opr1 [opcode] opr2</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> compute <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>opcode</span> opr1 opr2<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cond</span>
+        <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> opcode <span style='color:#806030; '>'*</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>*</span> opr1 opr2<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> opcode <span style='color:#806030; '>'+</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>+</span> opr1 opr2<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> opcode <span style='color:#806030; '>'</span><span style='color:#806030; '>/</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>/</span> opr1 opr2<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> opcode <span style='color:#806030; '>'-</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>-</span> opr1 opr2<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>t</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>print</span> <span style='color:#e60000; '>"Error: invalid operator"</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; Test if symbol is already in the symbol table</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> issymbol<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>symtab</span> symnum subnum symkey<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#007d45; '>nil</span><span style='color:#806030; '>)</span>    
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>dotimes</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>i</span> symnum ret<span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>equal</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>aref</span> symtab subnum i <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span> symkey<span style='color:#806030; '>)</span>
+            <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ret <span style='color:#007d45; '>T</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; Add a symbol in the symble table</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> addsym <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>s</span> value id<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cond</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>null</span> s<span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> id value<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> s<span style='color:#806030; '>)</span> id<span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>append</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> s<span style='color:#806030; '>)</span> value<span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cddr</span> s<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>not</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> s<span style='color:#806030; '>)</span> id<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>append</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> s<span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cadr</span> s<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>addsym</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cddr</span> s<span style='color:#806030; '>)</span> value id<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; Delete a symbol in the symbol table</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> delsym <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>s</span> key<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cond</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> s<span style='color:#806030; '>)</span> key<span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cddr</span> s<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>not</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> s<span style='color:#806030; '>)</span> key<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>append</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> s<span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cadr</span> s<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>delsym</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cddr</span> s<span style='color:#806030; '>)</span> key<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; Make a list if it is already not a list</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> mklist <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>x</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>listp</span> x<span style='color:#806030; '>)</span>
+    x
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> x<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; Get an entry from the symbol table</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> getentry <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>entry</span> s<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> s<span style='color:#806030; '>)</span> entry<span style='color:#806030; '>)</span>
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> entry <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cadr</span> s<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>getentry</span> entry <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cddr</span> s<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>#|</span>
+<span style='color:#c34e00; '>;; Make a record entry</span>
+<span style='color:#c34e00; '>(defun record-entry (name rec)</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;(incf (getf kind 0))</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;(let ((entry (get-entry name)))</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;(if (numberp rec)</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;(setf (entry-page entry) rec)</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;(push (entry) (rec))</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;(entry-defs entry)))</span>
+<span style='color:#c34e00; '>|#</span>
+
+<span style='color:#c34e00; '>;; Return the frist atom of a list</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> first-atom <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>L</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>atom</span> L<span style='color:#806030; '>)</span>
+        L
+        <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>first-atom</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>first</span> L<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Apply L to list and append</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> mappend <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>L</span> <span style='color:#800000; font-weight:bold; '>&amp;rest</span> lists<span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>reduce</span> <span style='color:#806030; '>#'append</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>apply</span> <span style='color:#806030; '>#'mapcar</span> L lists<span style='color:#806030; '>)</span> <span style='color:#800000; font-weight:bold; '>:from-end</span> <span style='color:#007d45; '>T</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; test list starts with element</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> starts-with <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>list</span> element<span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>and</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>consp</span> list<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>first</span> list<span style='color:#806030; '>)</span> element<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; convert lable table to list</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> lable-table-<span style='color:#806030; '>></span>list <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>table</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>maphash</span> <span style='color:#806030; '>#'cons</span> table<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Print label table</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> lable-print <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>l</span> <span style='color:#800000; font-weight:bold; '>&amp;optional</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>stream</span> <span style='color:#007d45; '>t</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> 
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>maphash</span> <span style='color:#806030; '>#'</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>lambda</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>key</span> val<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>format</span> stream <span style='color:#e60000; '>"~&amp;~A:~10T ~A"</span> key val<span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span> l<span style='color:#806030; '>)</span> l<span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; A list as a queue data structure</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defstruct</span> Queue
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>key</span> <span style='color:#806030; '>#'data</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>last</span> <span style='color:#007d45; '>nil</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elements</span> <span style='color:#007d45; '>nil</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Queue constructor</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> make-empty-queue <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>nil</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Test if queue is an empty queue</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> queue-empty <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>q</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>=</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>length</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elements</span> q<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Remove the first element of the queue</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> dequeue <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>q</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elt</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elements</span> q<span style='color:#806030; '>)</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Add an element into the front of the queue</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> enqueue-at-front <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>q</span> items<span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setf</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elements</span> q<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>nconc</span> items <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elements</span> q<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Add an element at the end of the queue</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> enqueue <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>q</span> items<span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cond</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>null</span> items<span style='color:#806030; '>)</span> <span style='color:#007d45; '>nil</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>or</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>null</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>last</span> q<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>null</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elements</span> q<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+     <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setf</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>last</span> q<span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>last</span> items<span style='color:#806030; '>)</span>
+           <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elements</span> q<span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>nconc</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>elements</span> q<span style='color:#806030; '>)</span> items<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>t</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setf</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>last</span> q<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> items
+         <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>last</span> q<span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>last</span> items<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Count the elements in the queue</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> count-elements <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>q</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>endp</span> q<span style='color:#806030; '>)</span>
+    <span style='color:#c00000; '>0</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>+</span> <span style='color:#c00000; '>1</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>count-elements</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>rest</span> q<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Count the atoms in the queue</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> count-atoms <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>q</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cond</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>null</span> q<span style='color:#806030; '>)</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>atom</span> q<span style='color:#806030; '>)</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>T</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>+</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>count-atoms</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>first</span> q<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+          <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>count-atoms</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>rest</span> q<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the program statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parseprog <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> pname <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the subprogram statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsesubp <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> psname <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> linenum <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the call statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsecall <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> subpname <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> param <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Prase the read statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parser <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> input <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>print</span> input<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the write statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsew <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> output <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>print</span> output<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the writeln statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsewl <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parsew</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>print</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the int statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parseint <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> ident <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> value <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>addsym</span> symtab <span style='color:#806030; '>'value</span> <span style='color:#806030; '>'ident</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the if statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parseif <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> op1 <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> op2 <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> op1 op2<span style='color:#806030; '>)</span>
+    <span style='color:#007d45; '>T</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span> <span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the do statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsedo <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> dotok <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the goto satement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsego <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> label <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the continue statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsecont <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '>;; Test equal</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> <span style='color:#806030; '>.</span>eq<span style='color:#806030; '>.</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> op1 <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> op2 <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> op1 op2<span style='color:#806030; '>)</span>
+    <span style='color:#007d45; '>T</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Test not equal</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> <span style='color:#806030; '>.</span>neq<span style='color:#806030; '>.</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> op1 <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> op2 <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>not</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>eq</span> op1 op2<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#007d45; '>T</span>
+    <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the dimension statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsed <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> dim <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>car</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> temp <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>cdr</span> temp<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parseint</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>parseint</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>incf</span> linenum<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '>;; Parse the end statement</span>
+<span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>defun</span> parsee <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span>
+    <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>setq</span> linenum <span style='color:#c00000; '>0</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+</pre>

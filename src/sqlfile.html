@@ -1,0 +1,113 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#400000; font-weight:bold; '>USE</span> <span style='color:#806030; '>[</span>DBName<span style='color:#806030; '>]</span>
+<span style='color:#400000; font-weight:bold; '>GO</span>
+<span style='color:#c34e00; '>/****** Object:  StoredProcedure [dbo].[sp_InsertLogWeb]    ******/</span>
+<span style='color:#400000; font-weight:bold; '>SET</span> ANSI_NULLS <span style='color:#400000; font-weight:bold; '>ON</span>
+<span style='color:#400000; font-weight:bold; '>GO</span>
+<span style='color:#400000; font-weight:bold; '>SET</span> QUOTED_IDENTIFIER <span style='color:#400000; font-weight:bold; '>ON</span>
+<span style='color:#400000; font-weight:bold; '>GO</span>
+<span style='color:#c34e00; '>-- =============================================</span>
+<span style='color:#c34e00; '>-- Author:    Tim Hsu</span>
+<span style='color:#c34e00; '>-- Description:  Insert Logon/Retrieve Log.</span>
+<span style='color:#c34e00; '>-- Ref        : http://devwithdave.com/SQLServer/stored-procedures/SQLServer-StoredProcedures--HOW-TO-WRITE-TO-A-TEXT-FILE.asp</span>
+<span style='color:#c34e00; '>-- =============================================</span>
+
+<span style='color:#400000; font-weight:bold; '>IF</span> <span style='color:#bb7977; font-weight:bold; '>OBJECT_ID</span><span style='color:#806030; '>(</span><span style='color:#e60000; '>'[dbo].[sp_InsertLogWeb]'</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>IS</span> <span style='color:#400000; font-weight:bold; '>not</span> <span style='color:#400000; font-weight:bold; '>NULL</span>
+    <span style='color:#400000; font-weight:bold; '>DROP</span> <span style='color:#400000; font-weight:bold; '>PROCEDURE</span> <span style='color:#806030; '>[</span>dbo<span style='color:#806030; '>]</span><span style='color:#806030; '>.</span><span style='color:#806030; '>[</span>sp_InsertLogWeb<span style='color:#806030; '>]</span>
+<span style='color:#400000; font-weight:bold; '>GO</span>
+
+<span style='color:#400000; font-weight:bold; '>CREATE</span> <span style='color:#400000; font-weight:bold; '>PROCEDURE</span> <span style='color:#806030; '>[</span>dbo<span style='color:#806030; '>]</span><span style='color:#806030; '>.</span><span style='color:#806030; '>[</span>sp_InsertLogWeb<span style='color:#806030; '>]</span> 
+  @LogDateTime DATETIME<span style='color:#806030; '>,</span>
+  @UserId <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>50</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @UserGroup <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>20</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @Source <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>10</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @LogType <span style='color:#400000; font-weight:bold; '>CHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @Result <span style='color:#400000; font-weight:bold; '>CHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @Bank <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>3</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @Category <span style='color:#400000; font-weight:bold; '>CHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @AcctNo <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>30</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @WorkstationId <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>50</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+  @Remarks <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>200</span><span style='color:#806030; '>)</span>
+<span style='color:#400000; font-weight:bold; '>AS</span>
+<span style='color:#400000; font-weight:bold; '>BEGIN</span>
+
+<span style='color:#400000; font-weight:bold; '>DECLARE</span> @OLE            <span style='color:#400000; font-weight:bold; '>INT</span>        <span style='color:#c34e00; '>-- Object link/embed interface</span>
+<span style='color:#400000; font-weight:bold; '>DECLARE</span> @FileID         <span style='color:#400000; font-weight:bold; '>INT</span>        <span style='color:#c34e00; '>-- File descriptor Id</span>
+<span style='color:#400000; font-weight:bold; '>DECLARE</span> @Path      <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>2048</span><span style='color:#806030; '>)</span>  <span style='color:#c34e00; '>-- path to log file</span>
+<span style='color:#400000; font-weight:bold; '>DECLARE</span> @Txt      <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>2048</span><span style='color:#806030; '>)</span>  <span style='color:#c34e00; '>-- concatenated log string</span>
+<span style='color:#400000; font-weight:bold; '>DECLARE</span> @RW_Status    <span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>128</span><span style='color:#806030; '>)</span>  <span style='color:#c34e00; '>-- DB read/write status</span>
+
+<span style='color:#400000; font-weight:bold; '>SET</span> NOCOUNT <span style='color:#400000; font-weight:bold; '>ON</span><span style='color:#806030; '>;</span>
+
+<span style='color:#400000; font-weight:bold; '>SELECT</span> @RW_Status <span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span>
+  <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>,</span> DATABASEPROPERTYEX<span style='color:#806030; '>(</span>DB_Name<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#e60000; '>'Updateability'</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+  <span style='color:#806030; '>)</span>
+
+<span style='color:#400000; font-weight:bold; '>IF</span> @RW_Status <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'READ_WRITE'</span>
+<span style='color:#400000; font-weight:bold; '>BEGIN</span>
+
+  <span style='color:#c34e00; '>-- Insert log into Audit table</span>
+  <span style='color:#400000; font-weight:bold; '>INSERT</span> <span style='color:#400000; font-weight:bold; '>INTO</span> SDSAuditLog<span style='color:#806030; '>(</span>LogDateTime<span style='color:#806030; '>,</span>
+              UserId<span style='color:#806030; '>,</span>
+              UserGroup<span style='color:#806030; '>,</span>
+              <span style='color:#400000; font-weight:bold; '>Source</span><span style='color:#806030; '>,</span>
+              LogType<span style='color:#806030; '>,</span>
+              Result<span style='color:#806030; '>,</span>
+              Bank<span style='color:#806030; '>,</span>
+              <span style='color:#400000; font-weight:bold; '>Category</span><span style='color:#806030; '>,</span>
+              AcctNo<span style='color:#806030; '>,</span>
+              WorkstationId<span style='color:#806030; '>,</span>
+              Remarks<span style='color:#806030; '>)</span>
+          <span style='color:#400000; font-weight:bold; '>VALUES</span> <span style='color:#806030; '>(</span>
+              @LogDateTime<span style='color:#806030; '>,</span>
+              <span style='color:#bb7977; font-weight:bold; '>UPPER</span><span style='color:#806030; '>(</span>@UserId<span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+              <span style='color:#bb7977; font-weight:bold; '>UPPER</span><span style='color:#806030; '>(</span>@UserGroup<span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+              @Source<span style='color:#806030; '>,</span>
+              @LogType<span style='color:#806030; '>,</span>
+              @Result<span style='color:#806030; '>,</span>
+              @Bank<span style='color:#806030; '>,</span>
+              @Category<span style='color:#806030; '>,</span>
+              @AcctNo<span style='color:#806030; '>,</span>
+              <span style='color:#bb7977; font-weight:bold; '>UPPER</span><span style='color:#806030; '>(</span>@WorkstationId<span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+              @Remarks<span style='color:#806030; '>)</span>
+
+<span style='color:#400000; font-weight:bold; '>END</span>
+<span style='color:#400000; font-weight:bold; '>ELSE</span>
+<span style='color:#400000; font-weight:bold; '>BEGIN</span>
+  <span style='color:#c34e00; '>-- create / write / append to daily log</span>
+  <span style='color:#400000; font-weight:bold; '>SET</span> @Path <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'C:\Comp\Logs\SDSAuditLog_'</span> <span style='color:#806030; '>+</span> 
+      <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>112</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#e60000; '>'.log'</span>
+
+  <span style='color:#c34e00; '>-- create concatenated log string</span>
+  <span style='color:#400000; font-weight:bold; '>SET</span> @Txt <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>121</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span> 
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@UserId<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>      <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@UserGroup<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>    <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@Source<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>      <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@LogType<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>      <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@Result<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>      <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@Bank<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>        <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@Category<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>      <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>RTRIM</span><span style='color:#806030; '>(</span><span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@AcctNo<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>  <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@WorkstationId<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>  <span style='color:#806030; '>+</span> <span style='color:#e60000; '>','</span>
+        <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>RTRIM</span><span style='color:#806030; '>(</span><span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@Remarks<span style='color:#806030; '>,</span> <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span>
+
+  <span style='color:#400000; font-weight:bold; '>BEGIN</span> TRY
+
+    <span style='color:#c34e00; '>-- open file I/O, write, then close file</span>
+    <span style='color:#400000; font-weight:bold; '>EXECUTE</span> sp_OACreate <span style='color:#e60000; '>'Scripting.FileSystemObject'</span><span style='color:#806030; '>,</span> @OLE <span style='color:#400000; font-weight:bold; '>OUT</span>  
+    <span style='color:#400000; font-weight:bold; '>EXECUTE</span> sp_OAMethod @OLE<span style='color:#806030; '>,</span> <span style='color:#e60000; '>'OpenTextFile'</span><span style='color:#806030; '>,</span> @FileID <span style='color:#400000; font-weight:bold; '>OUT</span><span style='color:#806030; '>,</span> @Path<span style='color:#806030; '>,</span> <span style='color:#c00000; '>8</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span>  
+    <span style='color:#400000; font-weight:bold; '>EXECUTE</span> sp_OAMethod @FileID<span style='color:#806030; '>,</span> <span style='color:#e60000; '>'WriteLine'</span><span style='color:#806030; '>,</span> <span style='color:#400000; font-weight:bold; '>Null</span><span style='color:#806030; '>,</span> @Txt 
+    <span style='color:#400000; font-weight:bold; '>EXECUTE</span> sp_OADestroy @FileID  
+    <span style='color:#400000; font-weight:bold; '>EXECUTE</span> sp_OADestroy @OLE  
+
+  <span style='color:#400000; font-weight:bold; '>END</span> TRY
+
+  <span style='color:#400000; font-weight:bold; '>BEGIN</span> CATCH
+    
+    <span style='color:#c34e00; '>-- open/write file I/O error</span>
+    <span style='color:#400000; font-weight:bold; '>PRINT</span> N<span style='color:#e60000; '>'Error writing to file.'</span>
+
+  <span style='color:#400000; font-weight:bold; '>END</span> CATCH<span style='color:#806030; '>;</span>
+
+<span style='color:#400000; font-weight:bold; '>END</span>
+<span style='color:#400000; font-weight:bold; '>END</span>
+</pre>

@@ -1,0 +1,384 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    2/2/2005</span>
+<span style='color:#008000; '>// File:    BST.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    BST is a binary search tree class. It does data storing,</span>
+<span style='color:#008000; '>//          retrieval and sorting using a BST. This is my attempted</span>
+<span style='color:#008000; '>//          implementation of a BST tree object.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>iostream.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Node.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>BST.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  BST()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: BST Constructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+BST<span style='color:#0000ff; '>::</span>BST<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>:</span> root<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  BST(const BST &amp;b)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: BST Copy Constructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+BST<span style='color:#0000ff; '>::</span>BST<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> BST <span style='color:#0000ff; '>&amp;</span>b<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>CloneTree<span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>.</span>root<span style='color:#0000ff; '>,</span> root<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  ~BST()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: BST Destructor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+BST<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>BST<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>RemoveTree<span style='color:#0000ff; '>(</span>root<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  operator =(const BST &amp;b)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: overloaded assignment = operator</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+BST<span style='color:#0000ff; '>&amp;</span> BST<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> BST <span style='color:#0000ff; '>&amp;</span>b<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>&amp;</span>b<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>RemoveTree<span style='color:#0000ff; '>(</span>root<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>CloneTree<span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>.</span>root<span style='color:#0000ff; '>,</span> root<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  operator ==(const BST &amp;b)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: overloaded comparison == operator</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> BST<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> BST <span style='color:#0000ff; '>&amp;</span>b<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> same <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsEqual<span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>.</span>root<span style='color:#0000ff; '>,</span> root<span style='color:#0000ff; '>,</span> same<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> same<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  IsEmpty()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Determines if the tree is empty</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> BST<span style='color:#0000ff; '>::</span>IsEmpty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>(</span>root <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Insert()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Inserts a key into the BST</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>Insert<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> key<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Insert<span style='color:#0000ff; '>(</span>root<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Search()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Searches for a value in the BST base on a key</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> BST<span style='color:#0000ff; '>::</span>Search<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> key<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Search<span style='color:#0000ff; '>(</span>root<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Delete()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Delete a value in the BST base on a key</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> BST<span style='color:#0000ff; '>::</span>Delete<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> key<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Delete<span style='color:#0000ff; '>(</span>root<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Traverse()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Traverses the BST in order</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>Traverse<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> order<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>order<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>PREORDER</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PreOrder<span style='color:#0000ff; '>(</span>root<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>INORDER</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>InOrder<span style='color:#0000ff; '>(</span>root<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>POSTORDER</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PostOrder<span style='color:#0000ff; '>(</span>root<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Usage - Traverse(PREORDER | INORDER | POSTORDER)</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; font-weight:bold; '>endl</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  PreOrder()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Traverses the BST in pre-order</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>PreOrder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pNode<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        PreOrder<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        PreOrder<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  InOrder()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Traverses the BST in in-order</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>InOrder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pNode<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        InOrder<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key  <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        InOrder<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  PostOrder()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Traverses the BST in post-order</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>PostOrder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pNode<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        PostOrder<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        PostOrder<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Insert()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Inserts a node into the tree base on key value</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>Insert<span style='color:#0000ff; '>(</span>pNode <span style='color:#0000ff; '>&amp;</span>p<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> key<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        p <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>(</span>key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>&lt;</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>)</span>
+            Insert<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>></span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>)</span>
+            Insert<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Search()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Search a data node in the tree base on key value</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> BST<span style='color:#0000ff; '>::</span>Search<span style='color:#0000ff; '>(</span>pNode <span style='color:#0000ff; '>&amp;</span>p<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> key<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> data <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        data <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>)</span>
+            data <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>&lt;</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>)</span>
+            data <span style='color:#0000ff; '>=</span> Search<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+            data <span style='color:#0000ff; '>=</span> Search<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  Delete()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Delete a data node in the tree base on key value</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> BST<span style='color:#0000ff; '>::</span>Delete<span style='color:#0000ff; '>(</span>pNode <span style='color:#0000ff; '>&amp;</span>p<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> key<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> del <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        del <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DeleteNode<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            del <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>&lt;</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>)</span>
+            del <span style='color:#0000ff; '>=</span> Delete<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+            del <span style='color:#0000ff; '>=</span> Delete<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> del<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  DeleteNode()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Delets a node</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>DeleteNode<span style='color:#0000ff; '>(</span>pNode <span style='color:#0000ff; '>&amp;</span>p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode delptr<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> key<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> p<span style='color:#0000ff; '>;</span>
+        p <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        delptr <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>;</span>
+        p <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>;</span>
+        delptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> delptr<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        delptr <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>;</span>
+        p <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>;</span>
+        delptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> delptr<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetSuccesser<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key <span style='color:#0000ff; '>=</span> key<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  GetSuccesser()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Gets the next data node base on key value</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>GetSuccesser<span style='color:#0000ff; '>(</span>pNode <span style='color:#0000ff; '>&amp;</span>p<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>&amp;</span> key<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        key <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>;</span>
+        pNode delptr <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>;</span>
+        p <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>;</span>
+        delptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> delptr<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+        GetSuccesser<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>,</span> key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  CloneTree()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Makes a duplicate copy of the BST tree</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>CloneTree<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pNode p1<span style='color:#0000ff; '>,</span> pNode<span style='color:#0000ff; '>&amp;</span> p2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p1 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        p2 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>(</span>p1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        CloneTree<span style='color:#0000ff; '>(</span>p1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>,</span> p2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        CloneTree<span style='color:#0000ff; '>(</span>p1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>,</span> p2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+        p2 <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  IsEqual()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Test is see if the tree has the same contents</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>IsEqual<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pNode p1<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> pNode p2<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> <span style='color:#0000ff; '>&amp;</span>same<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p1 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> p2 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        same <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p1 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> p2 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        same <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p1 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> p2 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        IsEqual<span style='color:#0000ff; '>(</span>p1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>,</span> p2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>,</span> same<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        IsEqual<span style='color:#0000ff; '>(</span>p1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>,</span> p2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>,</span> same<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>same <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> p2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>key<span style='color:#0000ff; '>)</span>
+                same <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                same <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Identifier:  RemoveTree()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description: Removes the tree base on node</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> BST<span style='color:#0000ff; '>::</span>RemoveTree<span style='color:#0000ff; '>(</span>pNode<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>p <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        RemoveTree<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>left<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        RemoveTree<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>right<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> p<span style='color:#0000ff; '>;</span>
+        p <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

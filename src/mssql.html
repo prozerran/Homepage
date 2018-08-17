@@ -1,0 +1,211 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>.</span>SqlClient<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> FILib
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> FISql
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>string</span> connStr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> FISql<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            connStr <span style='color:#0000ff; '>=</span> FIConfig<span style='color:#0000ff; '>.</span>DBConnStr<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> FISql<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> connStr<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>connStr <span style='color:#0000ff; '>=</span> connStr<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> DataTable ExecuteReader<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> query<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            SqlConnection conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            DataTable dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlConnection<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>connStr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>SqlCommand cmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlCommand<span style='color:#0000ff; '>(</span>query<span style='color:#0000ff; '>,</span> conn<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        conn<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        SqlDataReader dr <span style='color:#0000ff; '>=</span> cmd<span style='color:#0000ff; '>.</span>ExecuteReader<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DataTable<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        dt<span style='color:#0000ff; '>.</span>Load<span style='color:#0000ff; '>(</span>dr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        dr<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>Dispose<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> dt<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>SqlException ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SqlException: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>conn <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span> conn<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> dt<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> ExecuteNonQuery<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> query<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>SqlConnection conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlConnection<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>connStr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>SqlCommand cmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlCommand<span style='color:#0000ff; '>(</span>query<span style='color:#0000ff; '>,</span> conn<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        conn<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> cmd<span style='color:#0000ff; '>.</span>ExecuteNonQuery<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>SqlException ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SqlException: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>object</span> ExecuteScalar<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> query<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>SqlConnection conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlConnection<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>connStr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>SqlCommand cmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlCommand<span style='color:#0000ff; '>(</span>query<span style='color:#0000ff; '>,</span> conn<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        conn<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> cmd<span style='color:#0000ff; '>.</span>ExecuteScalar<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>SqlException ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SqlException: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> DataTable Query_GTSP_Interface_SAP<span style='color:#0000ff; '>(</span>DateTime businessdate<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            SqlConnection conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            DataTable dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlConnection<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>connStr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>SqlCommand cmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlCommand<span style='color:#0000ff; '>(</span>FIConfig<span style='color:#0000ff; '>.</span>SP_Exec_SAP_Export<span style='color:#0000ff; '>,</span> conn<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        cmd<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>StoredProcedure<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>CommandTimeout <span style='color:#0000ff; '>=</span> TimeSpan<span style='color:#0000ff; '>.</span>FromHours<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Seconds<span style='color:#0000ff; '>;</span>
+
+                        cmd<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>@GalaxyRule</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> SqlDbType<span style='color:#0000ff; '>.</span>Int<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span> FIConfig<span style='color:#0000ff; '>.</span>SP_Galaxy_Rule<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>@BusinessDateTime</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> SqlDbType<span style='color:#0000ff; '>.</span>DateTime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span> businessdate<span style='color:#0000ff; '>.</span>Date<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>@OverrideExisting</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> SqlDbType<span style='color:#0000ff; '>.</span>Int<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span> FIConfig<span style='color:#0000ff; '>.</span>SP_Override<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>@DebugFlag</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> SqlDbType<span style='color:#0000ff; '>.</span>Int<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span> FIConfig<span style='color:#0000ff; '>.</span>SP_Debug_Flag<span style='color:#0000ff; '>;</span>
+
+                        conn<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        SqlDataReader dr <span style='color:#0000ff; '>=</span> cmd<span style='color:#0000ff; '>.</span>ExecuteReader<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DataTable<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        dt<span style='color:#0000ff; '>.</span>Load<span style='color:#0000ff; '>(</span>dr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        dr<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>Dispose<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> dt<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>SqlException ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SqlException: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>conn <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span> conn<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> dt<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> async Task<span style='color:#0000ff; '>&lt;</span>DataTable<span style='color:#0000ff; '>></span> Query_GTSP_Interface_SAP_Async<span style='color:#0000ff; '>(</span>DateTime businessdate<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            SqlConnection conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            DataTable dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> asyncConnStr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlConnectionStringBuilder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>connStr<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+                AsynchronousProcessing <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span>
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlConnection<span style='color:#0000ff; '>(</span>asyncConnStr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> cmd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SqlCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        cmd<span style='color:#0000ff; '>.</span>Connection <span style='color:#0000ff; '>=</span> conn<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> FIConfig<span style='color:#0000ff; '>.</span>SP_Exec_SAP_Export<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>StoredProcedure<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>CommandTimeout <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+                        cmd<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>@GalaxyRule</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> SqlDbType<span style='color:#0000ff; '>.</span>Int<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span> FIConfig<span style='color:#0000ff; '>.</span>SP_Galaxy_Rule<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>@BusinessDateTime</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> SqlDbType<span style='color:#0000ff; '>.</span>DateTime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span> businessdate<span style='color:#0000ff; '>.</span>Date<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>@OverrideExisting</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> SqlDbType<span style='color:#0000ff; '>.</span>Int<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span> FIConfig<span style='color:#0000ff; '>.</span>SP_Override<span style='color:#0000ff; '>;</span>
+                        cmd<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>@DebugFlag</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> SqlDbType<span style='color:#0000ff; '>.</span>Int<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span> FIConfig<span style='color:#0000ff; '>.</span>SP_Debug_Flag<span style='color:#0000ff; '>;</span>
+                        <span style='color:#008000; '>//cmd.Parameters.Add("@Param2", SqlDbType.DateTime).Value = DateTime.Now;</span>
+
+                        conn<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>SqlDataReader dr <span style='color:#0000ff; '>=</span> await cmd<span style='color:#0000ff; '>.</span>ExecuteReaderAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DataTable<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            dt<span style='color:#0000ff; '>.</span>Load<span style='color:#0000ff; '>(</span>dr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            dr<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            cmd<span style='color:#0000ff; '>.</span>Dispose<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; font-weight:bold; '>return</span> dt<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>SqlException ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SqlException: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                NLogger<span style='color:#0000ff; '>.</span>LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>typeof</span><span style='color:#0000ff; '>(</span>FISql<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>conn <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span> conn<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> dt<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

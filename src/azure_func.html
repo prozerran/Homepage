@@ -1,0 +1,36 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Newtonsoft<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>.</span>Http<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>Azure<span style='color:#0000ff; '>.</span>WebJobs<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>Azure<span style='color:#0000ff; '>.</span>WebJobs<span style='color:#0000ff; '>.</span>Extensions<span style='color:#0000ff; '>.</span>Http<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>Azure<span style='color:#0000ff; '>.</span>WebJobs<span style='color:#0000ff; '>.</span>Host<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> FunctionApp1
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>class</span> Function1
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>[</span>FunctionName<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>MyWebHook2</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> async Task<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>></span> Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>[</span>HttpTrigger<span style='color:#0000ff; '>(</span>WebHookType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>genericJson</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>HttpRequestMessage req<span style='color:#0000ff; '>,</span> TraceWriter log<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            log<span style='color:#0000ff; '>.</span>Info<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HELLO: Tim MyWebHook2 was triggered!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>string</span> jsonContent <span style='color:#0000ff; '>=</span> await req<span style='color:#0000ff; '>.</span>Content<span style='color:#0000ff; '>.</span>ReadAsStringAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            dynamic data <span style='color:#0000ff; '>=</span> JsonConvert<span style='color:#0000ff; '>.</span>DeserializeObject<span style='color:#0000ff; '>(</span>jsonContent<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>.</span>first <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> || data<span style='color:#0000ff; '>.</span>last <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> req<span style='color:#0000ff; '>.</span>CreateResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>BadRequest<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>new</span>
+                <span style='color:#0000ff; '>{</span>
+                    error <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Please pass first/last properties in the input object</span><span style='color:#0000e6; '>"</span>
+                <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> req<span style='color:#0000ff; '>.</span>CreateResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>OK<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>new</span>
+            <span style='color:#0000ff; '>{</span>
+                greeting <span style='color:#0000ff; '>=</span> $<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Hello {data.first} {data.last}!</span><span style='color:#0000e6; '>"</span>
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

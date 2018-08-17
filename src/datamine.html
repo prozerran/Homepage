@@ -1,0 +1,101 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    8/5/2008</span>
+<span style='color:#008000; '>// File:    WebMiner.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    WebMiner base architecture written using advanced C# topics</span>
+<span style='color:#008000; '>//          and coding practices.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Xml<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Reflection<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> CommonLib<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> WebMiner
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> MinerManager
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Queue<span style='color:#0000ff; '>&lt;</span>XmlConfStruct<span style='color:#0000ff; '>></span> qFunctionId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// populates the queue and executes X number of threads on that queue</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ProcessQueue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Common<span style='color:#0000ff; '>.</span>DataMineLog<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>-----------------------------------------------------------------</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Common<span style='color:#0000ff; '>.</span>DataMineLog<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WebMiner Started.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>qFunctionId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Queue<span style='color:#0000ff; '>&lt;</span>XmlConfStruct<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>Configuration<span style='color:#0000ff; '>.</span>qFunctionId<span style='color:#0000ff; '>.</span>ToArray<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>            
+
+            Thread<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> t <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>[</span>Configuration<span style='color:#0000ff; '>.</span>nNumThreads<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> t<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                t<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ExecuteUpdates<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DataMineThread_</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> i<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> t<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                t<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Join<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>60</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>30</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>          <span style='color:#008000; '>// half hour wait for each queue thread</span>
+            <span style='color:#0000ff; '>}</span>
+            Common<span style='color:#0000ff; '>.</span>DataMineLog<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>All Done. Waiting for next update...</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// each thread executes this function, but only one exclusive thread</span>
+        <span style='color:#008000; '>// may enter the CS, create another thread within the CS and operate on it</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ExecuteUpdates<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>qFunctionId<span style='color:#0000ff; '>.</span>Count <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                XmlConfStruct xmlc <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> XmlConfStruct<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                Thread tt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#008000; '>//////////////////////////////////     CRITICAL SECTION       ///////////////////////////////////////</span>
+                <span style='color:#0000ff; font-weight:bold; '>lock</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>qFunctionId<span style='color:#0000ff; '>.</span>Count <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        xmlc <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>qFunctionId<span style='color:#0000ff; '>.</span>Dequeue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        tt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ExecuteFunctionId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        tt<span style='color:#0000ff; '>.</span>Name <span style='color:#0000ff; '>=</span> Thread<span style='color:#0000ff; '>.</span>CurrentThread<span style='color:#0000ff; '>.</span>Name <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>_</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> xmlc<span style='color:#0000ff; '>.</span>nFunctionId<span style='color:#0000ff; '>;</span>
+                        tt<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span>xmlc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////////////////////////////</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>tt <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                    tt<span style='color:#0000ff; '>.</span>Join<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>60</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>5</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>          <span style='color:#008000; '>// five minute wait for each update id</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// use reflections to actually call the underlying function</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ExecuteFunctionId<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> obj<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> objs <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>{</span> obj <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            XmlConfStruct xmlconf <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>XmlConfStruct<span style='color:#0000ff; '>)</span>objs<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+            xmlconf<span style='color:#0000ff; '>.</span>sMethodName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>UpdateMethod_</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> xmlconf<span style='color:#0000ff; '>.</span>nFunctionId<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xmlconf<span style='color:#0000ff; '>.</span>sThreadName <span style='color:#0000ff; '>=</span> Thread<span style='color:#0000ff; '>.</span>CurrentThread<span style='color:#0000ff; '>.</span>Name<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// Dynamic Runtime Execution with Reflections here</span>
+                Type t <span style='color:#0000ff; '>=</span> Assembly<span style='color:#0000ff; '>.</span>GetExecutingAssembly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>GetType<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WebMiner.Vendors.Vendor</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                t<span style='color:#0000ff; '>.</span>InvokeMember<span style='color:#0000ff; '>(</span>xmlconf<span style='color:#0000ff; '>.</span>sMethodName<span style='color:#0000ff; '>,</span> BindingFlags<span style='color:#0000ff; '>.</span>InvokeMethod<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>,</span> Activator<span style='color:#0000ff; '>.</span>CreateInstance<span style='color:#0000ff; '>(</span>t<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> objs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Common<span style='color:#0000ff; '>.</span>DataMineLog<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error In Method: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> xmlconf<span style='color:#0000ff; '>.</span>sMethodName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

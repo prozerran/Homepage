@@ -1,0 +1,524 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// FILE:    ArraySort.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// AUTHOR:  Yee Hsu</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// DATE:    November 11, 2000</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// LIBRARIES:</span>
+<span style='color:#008000; '>//      iostream.h  --  standard steam I/O</span>
+<span style='color:#008000; '>//      ArraySort.h --  declaration of ArraySort class</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// FUNCTIONS/METHODS DEFINED:</span>
+<span style='color:#008000; '>//  CONSTRUCTOR/DESTRUCTOR</span>
+<span style='color:#008000; '>//      Sort()                          --  default constructor</span>
+<span style='color:#008000; '>//      Sort(const Sort&amp; s)             --  overloaded constructor</span>
+<span style='color:#008000; '>//      ~Sort()                         --  default destructor</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//  OPERATOR OVERLOADS  </span>
+<span style='color:#008000; '>//      operator=(const Sort&amp; s)        --  overloaded =</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//  SORT LIST ADT</span>
+<span style='color:#008000; '>//      Push(const int nNum)            --  push onto FIFO stack</span>
+<span style='color:#008000; '>//      Pop()                           --  pop off FIFO stack</span>
+<span style='color:#008000; '>//      Display(const char[])           --  display the list</span>
+<span style='color:#008000; '>//      Swap(int&amp;, int&amp;)                --  swap two numbers</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//  SORTING ALGORITHMS</span>
+<span style='color:#008000; '>//      BubbleSort()                    --  Bubble Sort</span>
+<span style='color:#008000; '>//      InsertionSort()                 --  Insertion Sort</span>
+<span style='color:#008000; '>//      SelectionSort()                 --  Selection Sort</span>
+<span style='color:#008000; '>//      MergeSort()                     --  MergeSort</span>
+<span style='color:#008000; '>//      QuickSort()                     --  QuickSort</span>
+<span style='color:#008000; '>//      HashSort()                      --  HashSort</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//  HELPER SORTING ALGORITHMS</span>
+<span style='color:#008000; '>//      MergeSort(int, int)             --  Recursive MergeSort</span>
+<span style='color:#008000; '>//      MergeSort(int, int, int)        --  Merge list</span>
+<span style='color:#008000; '>//      QuickSort(int[], int, int)      --  Recursive QuickSort</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>iostream.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>ArraySort.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Sort()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sort default constructor.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Sort<span style='color:#0000ff; '>::</span>Sort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>:</span> nTop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_NUM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> EOD<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Sort(const Sort&amp; s)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         Needs a copy of the list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        An identical copy of the list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       &amp;s  -- reference to the list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sort copy constructor. Makes a copy of the</span>
+<span style='color:#008000; '>//              sort list.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Sort<span style='color:#0000ff; '>::</span>Sort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Sort<span style='color:#0000ff; '>&amp;</span> s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    nTop <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>nTop<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> s<span style='color:#0000ff; '>.</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> EOD<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  ~Sort()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list wich needs to be destroyed</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list destroyed</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sort destructor.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Sort<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Sort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    nTop <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_NUM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  operator=(const Sort&amp; s)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list needs to be assigned to a list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A copy of list to another list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       &amp;s -- a reference to a list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     *this   -- for concatenation</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    sort assignment = overload. Enables = to</span>
+<span style='color:#008000; '>//              assign a list to a list.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Sort<span style='color:#0000ff; '>&amp;</span> Sort<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Sort<span style='color:#0000ff; '>&amp;</span> s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>~</span>Sort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        nTop <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>nTop<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> s<span style='color:#0000ff; '>.</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> EOD<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Push(const int nNum)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A number that needs to be pushed onto the stack</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A number pushed on top of the stack</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       nNUm    --  the number to be pushed on the stack</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Update the top pointer. Assign the number to</span>
+<span style='color:#008000; '>//              the top array.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Pushes a number on top of the FIFO stack</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>Push<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nNum<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    nNumList<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>nTop<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> nNum<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Pop()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A number that needs to be popped off the stack</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A number popped off the stack</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURN:      The number on top of the stack</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Return the number on the top of the stack.</span>
+<span style='color:#008000; '>//              Decrement the top pointer.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Pops a number off the FIFO stack</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> Sort<span style='color:#0000ff; '>::</span>Pop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> nNumList<span style='color:#0000ff; '>[</span>nTop<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Display(const char sMsg[])</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A need to display the contents in the list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        The list displayed</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       sMsg[]  --  the message to display</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Run through the stack list and display each</span>
+<span style='color:#008000; '>//              element until the list is empty.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Displays the contents in the list array</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>Display<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> sMsg<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>cout</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span>sMsg  <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>endl</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> EOD<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span>   <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>cout</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>endl</span>  <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>endl</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Swap(int&amp; nNum1, int&amp; nNum2)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A need to swap two numbers</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        Two number exchange places</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       &amp;nNum1  --  reference to 1st number</span>
+<span style='color:#008000; '>//              &amp;num2   --  reference to 2nd number</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Make a temporary integer. Store the first integer</span>
+<span style='color:#008000; '>//              to the temporary buffer. Assign the second number</span>
+<span style='color:#008000; '>//              to the first integer. Assign the buffer number</span>
+<span style='color:#008000; '>//              back to the second number.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Swaps the contents of two numbers.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>Swap<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>&amp;</span> nNum1<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>&amp;</span> nNum2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;int temp = nNum1;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;nNum1 = nNum2;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;nNum2 = temp;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#008000; '>// fast algo</span>
+    nNum1 <span style='color:#0000ff; '>^</span><span style='color:#0000ff; '>=</span> nNum2 <span style='color:#0000ff; '>^</span><span style='color:#0000ff; '>=</span> nNum1 <span style='color:#0000ff; '>^</span><span style='color:#0000ff; '>=</span> nNum2<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  BubbleSort()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       Swap(int&amp;, int&amp;)    --  the swap routine</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Run through the list and compare each element to</span>
+<span style='color:#008000; '>//              the next element. If the 1st number is greater</span>
+<span style='color:#008000; '>//              than the 2nd number, swap them and continue to</span>
+<span style='color:#008000; '>//              bubble up the array, else the list is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// EFFICIENCY   Best:       N</span>
+<span style='color:#008000; '>//              Average:    N^2</span>
+<span style='color:#008000; '>//              Worst:      N^2</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using BubbleSort</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>BubbleSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> sorted <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nTop <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; '>!</span>sorted<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        sorted <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> nTop <span style='color:#0000ff; '>-</span> i<span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>></span> nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Swap<span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                sorted <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  InsertionSort()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Run through the list. Take a number and assign</span>
+<span style='color:#008000; '>//              it to a temporary variable. Compare the 1st number</span>
+<span style='color:#008000; '>//              to the 2nd number. Loop and shift all numbers</span>
+<span style='color:#008000; '>//              down the array. Insert the number at the back.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// EFFICIENCY   Best:       N^2</span>
+<span style='color:#008000; '>//              Average:    N^2</span>
+<span style='color:#008000; '>//              Worst:      N^2</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using</span>
+<span style='color:#008000; '>//              InsertionSort</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>InsertionSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> nTop<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> temp <span style='color:#0000ff; '>=</span> nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> i <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>j <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>></span> temp<span style='color:#0000ff; '>)</span>
+            nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+        nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  SelectionSort()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       Swap(int&amp;, int&amp;)    --  swap routine</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Run through the array and search for the largest</span>
+<span style='color:#008000; '>//              number. Swap it with the last position number</span>
+<span style='color:#008000; '>//              and repeat</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// EFFICIENCY   Best:       N^2</span>
+<span style='color:#008000; '>//              Average:    N^2</span>
+<span style='color:#008000; '>//              Worst:      N^2</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using</span>
+<span style='color:#008000; '>//              SelectionSort</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>SelectionSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> nTop<span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> nMax <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> i<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>j<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>></span> nNumList<span style='color:#0000ff; '>[</span>nMax<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+                nMax <span style='color:#0000ff; '>=</span> j<span style='color:#0000ff; '>;</span>
+
+            Swap<span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> nNumList<span style='color:#0000ff; '>[</span>nMax<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  MergeSort()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       MergeSort(int, int) -- Merge sort</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using MergeSort</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>MergeSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    MergeSort<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> nTop<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  QuickSort()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       QuickSort(int[], int, int)  -- Quick sort</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using QuickSort</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>QuickSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    QuickSort<span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> nTop<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  HashSort()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Make a temporary list loaded with 0s. Increment</span>
+<span style='color:#008000; '>//              the elements of the temporary list by the</span>
+<span style='color:#008000; '>//              frequency of the numbers that appear in the first</span>
+<span style='color:#008000; '>//              list. Store the number back to the original list.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// EFFICIENCY   Best:       N^2</span>
+<span style='color:#008000; '>//              Average:    N^2</span>
+<span style='color:#008000; '>//              Worst:      N^2</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using HashSort.</span>
+<span style='color:#008000; '>//              Bad overhead of using additional memory.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>HashSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> k <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> temp<span style='color:#0000ff; '>[</span>MAX_NUM<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> nTop<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        temp<span style='color:#0000ff; '>[</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> MAX_NUM<span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> l <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> l <span style='color:#0000ff; '>&lt;</span> temp<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span> l<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            nNumList<span style='color:#0000ff; '>[</span>k<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> j<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  MergeSort(int, int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   If the first element is less than the last</span>
+<span style='color:#008000; '>//              element, find their midpoint and call itself</span>
+<span style='color:#008000; '>//              recursively twice with the first half then the</span>
+<span style='color:#008000; '>//              second half. After that, sort them and merge them</span>
+<span style='color:#008000; '>//              back into a single list. The splitting process has</span>
+<span style='color:#008000; '>//              an algorithm efficiency LogN, and the Merge process</span>
+<span style='color:#008000; '>//              is N. Thus, N*LogN.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       MergeSort(int, int) --  recursively call itself</span>
+<span style='color:#008000; '>//              MergeSort(int, int, int)    --  call Merge Sort</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// EFFICIENCY   Best:       N*LogN</span>
+<span style='color:#008000; '>//              Average:    N*LogN</span>
+<span style='color:#008000; '>//              Worst:      N*LogN</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using MergeSort.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>MergeSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> first<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> last<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>first <span style='color:#0000ff; '>&lt;</span> last<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> mid <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>first <span style='color:#0000ff; '>+</span> last<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+
+        MergeSort<span style='color:#0000ff; '>(</span>first<span style='color:#0000ff; '>,</span> mid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        MergeSort<span style='color:#0000ff; '>(</span>mid<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> last<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        MergeSort<span style='color:#0000ff; '>(</span>first<span style='color:#0000ff; '>,</span> mid<span style='color:#0000ff; '>,</span> last<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  MergeSort(int, int, int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   N/A</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using MergeSort.</span>
+<span style='color:#008000; '>//              Bad overhead of using additional memory.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>MergeSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> first<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> mid<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> last<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> templist<span style='color:#0000ff; '>[</span>MAX_NUM<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> k1 <span style='color:#0000ff; '>=</span> first<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> k2 <span style='color:#0000ff; '>=</span> mid <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> k3 <span style='color:#0000ff; '>=</span> last<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>k1 <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> mid <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> k2 <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> last<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>&lt;</span> nNumList<span style='color:#0000ff; '>[</span>k2<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+            templist<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> nNumList<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+            templist<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> nNumList<span style='color:#0000ff; '>[</span>k2<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>;</span>k1 <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> mid<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>)</span>
+    <span style='color:#008000; '>//while (k1 &lt;= mid)</span>
+        templist<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> nNumList<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>;</span> k2 <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> last<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>)</span>
+        templist<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> nNumList<span style='color:#0000ff; '>[</span>k2<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>k1 <span style='color:#0000ff; '>=</span> first<span style='color:#0000ff; '>;</span> k1 <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> last<span style='color:#0000ff; '>;</span> k1<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        nNumList<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> templist<span style='color:#0000ff; '>[</span>k1<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  QuickSort(int[], int, int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A list that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        A list that is sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// ALGORITHM:   Chose a pivot in the middle of the list.</span>
+<span style='color:#008000; '>//              Place all numbers &lt; pivot on the left.</span>
+<span style='color:#008000; '>//              Place all numbers > pivot on the right.</span>
+<span style='color:#008000; '>//              Sort each portion recursively.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS:       Swap(int&amp;, int&amp;)    --  calls swap routine</span>
+<span style='color:#008000; '>//              QuickSort(int[], int, int)</span>
+<span style='color:#008000; '>//                                  -- calls itself recursively</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// EFFICIENCY   Best:       N*LogN</span>
+<span style='color:#008000; '>//              Average:    N*LogN</span>
+<span style='color:#008000; '>//              Worst:      N^2</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the array in ascending order using MergeSort.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Sort<span style='color:#0000ff; '>::</span>QuickSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> nNumList<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> first<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> last<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>   
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>last <span style='color:#0000ff; '>></span> first<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>last <span style='color:#0000ff; '>-</span> first<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span>  <span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> pivot <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>first <span style='color:#0000ff; '>+</span> last<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pivot <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> last<span style='color:#0000ff; '>)</span>
+                Swap<span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span>pivot<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> nNumList<span style='color:#0000ff; '>[</span>last<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> first <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> last<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>&lt;</span>  nNumList<span style='color:#0000ff; '>[</span>last<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>-</span>j<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>></span>  nNumList<span style='color:#0000ff; '>[</span>last<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>i <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> j<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                Swap<span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> nNumList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        Swap<span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> nNumList<span style='color:#0000ff; '>[</span>last<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        QuickSort<span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>,</span> first<span style='color:#0000ff; '>,</span> i<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        QuickSort<span style='color:#0000ff; '>(</span>nNumList<span style='color:#0000ff; '>,</span> i<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> last<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

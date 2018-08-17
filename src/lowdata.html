@@ -1,0 +1,432 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>StdAfx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>NetProtocol.h</span><span style='color:#0000e6; '>"</span>
+
+NetProtocol<span style='color:#0000ff; '>::</span>NetProtocol<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+NetProtocol<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>NetProtocol<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> NetProtocol<span style='color:#0000ff; '>::</span>Clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> NetProtocol<span style='color:#0000ff; '>::</span>AddContent<span style='color:#0000ff; '>(</span>byte b<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddContent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>b<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> NetProtocol<span style='color:#0000ff; '>::</span>AddContent<span style='color:#0000ff; '>(</span>pbyte pBuf<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nSize<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> pBuf<span style='color:#0000ff; '>,</span> nSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> nSize<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> NetProtocol<span style='color:#0000ff; '>::</span>GetContent<span style='color:#0000ff; '>(</span>pbyte<span style='color:#0000ff; '>*</span> pPtr<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>long</span><span style='color:#0000ff; '>*</span> nSize<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nSize<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>*</span>pPtr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>*</span>nSize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/* ********************************************************************************************************* */</span>
+
+DeviceProtocol<span style='color:#0000ff; '>::</span>DeviceProtocol<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+DeviceProtocol<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>DeviceProtocol<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+PFTC DeviceProtocol<span style='color:#0000ff; '>::</span>GetDeviceContent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>long</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetDeviceContentSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> DeviceProtocol<span style='color:#0000ff; '>::</span>AddSeparator<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddContent<span style='color:#0000ff; '>(</span><span style='color:#000080; '>'|'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> DeviceProtocol<span style='color:#0000ff; '>::</span>AddTerminator<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddContent<span style='color:#0000ff; '>(</span><span style='color:#000080; '>'#'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetFlexStrHexToLong<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> beg<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> len<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>char</span> buf<span style='color:#0000ff; '>[</span>PDA_BODY_PACKET_SIZE<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span>beg<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> len<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>strtol</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>16</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetDeviceId<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>char</span> buf<span style='color:#0000ff; '>[</span>PDA_BODY_PACKET_SIZE<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>6</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetType<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetFlexStrHexToLong<span style='color:#0000ff; '>(</span><span style='color:#800000; '>10</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetCode<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetFlexStrHexToLong<span style='color:#0000ff; '>(</span><span style='color:#800000; '>13</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetReferenceId<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetFlexStrHexToLong<span style='color:#0000ff; '>(</span><span style='color:#800000; '>16</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetFlexStrHexToLong<span style='color:#0000ff; '>(</span><span style='color:#800000; '>21</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+PFTC DeviceProtocol<span style='color:#0000ff; '>::</span>GetPayload<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span>Device_PACKET_HEAD_SIZE<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetCheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetFlexStrHexToLong<span style='color:#0000ff; '>(</span>Device_PACKET_HEAD_SIZE<span style='color:#0000ff; '>+</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> DeviceProtocol<span style='color:#0000ff; '>::</span>VerifyCheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>short</span> sXor <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>char</span> b<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>int</span> nCheckSize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>-</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>Device_PACKET_HEAD_SIZE<span style='color:#0000ff; '>+</span>Device_PACKET_TAIL_SIZE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> nCheckSize<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>  
+      sXor <span style='color:#0000ff; '>^</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%02X</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sXor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>strncmp</span><span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span>nCheckSize<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> DeviceProtocol<span style='color:#0000ff; '>::</span>VerifyHeader<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pbyte pContent<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nSize<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  byte b<span style='color:#0000ff; '>[</span>Device_PACKET_SIZE<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>,</span> pContent<span style='color:#0000ff; '>,</span> nSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nSize <span style='color:#0000ff; '>></span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>strncmp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> b<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>>H|</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> DeviceProtocol<span style='color:#0000ff; '>::</span>VerifyTerminator<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'#'</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> DeviceProtocol<span style='color:#0000ff; '>::</span>VerifyDeviceProtocolString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>Device_PACKET_HEAD_SIZE<span style='color:#0000ff; '>+</span>Device_PACKET_TAIL_SIZE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>VerifyHeader<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>VerifyTerminator<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>VerifyCheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> DeviceProtocol<span style='color:#0000ff; '>::</span>AddCheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>short</span> sXor <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>char</span> cs<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+  byte bs<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>  
+    sXor <span style='color:#0000ff; '>^</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>cs<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%02X</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sXor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>bs<span style='color:#0000ff; '>,</span> cs<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddContent<span style='color:#0000ff; '>(</span>bs<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>void DeviceProtocol::AddDeviceProtocolString(const pbyte pContent, const int nSize)</span>
+<span style='color:#008000; '>{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;if (this->VerifyHeader(pContent, nSize))</span>
+<span style='color:#008000; '>&#xa0;&#xa0;{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;this->SetDeviceProtocolString(pContent, nSize);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>&#xa0;&#xa0;else</span>
+<span style='color:#008000; '>&#xa0;&#xa0;{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;if (this->nSize > Device_PACKET_SIZE / 2)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;this->Clear();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;memcpy(&amp;this->bContent[this->nSize], pContent, nSize);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;this->nSize+=nSize;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>}</span>
+<span style='color:#008000; '>*/</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> DeviceProtocol<span style='color:#0000ff; '>::</span>AddDeviceProtocolString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pbyte pContent<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nSize<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>static</span> byte bContent<span style='color:#0000ff; '>[</span>Device_PACKET_SIZE<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>int</span>  bSize <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>bContent<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>bContent<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetRealDeviceProtocolString<span style='color:#0000ff; '>(</span>pContent<span style='color:#0000ff; '>,</span> nSize<span style='color:#0000ff; '>,</span> bContent<span style='color:#0000ff; '>,</span> bSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>VerifyHeader<span style='color:#0000ff; '>(</span>bContent<span style='color:#0000ff; '>,</span> bSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetDeviceProtocolString<span style='color:#0000ff; '>(</span>bContent<span style='color:#0000ff; '>,</span> bSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize <span style='color:#0000ff; '>></span> Device_PACKET_SIZE <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> bContent<span style='color:#0000ff; '>,</span> bSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span>bSize<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetCharacterPosition<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pbyte pContent<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nSize<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span> ch<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> bRev <span style='color:#008000; '>/* = false */</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>bRev<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> ipos <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> ipos <span style='color:#0000ff; '>&lt;</span> nSize<span style='color:#0000ff; '>;</span> ipos<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pContent<span style='color:#0000ff; '>[</span>ipos<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ch<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> ipos<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> ipos <span style='color:#0000ff; '>=</span> nSize<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span> ipos <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> ipos<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pContent<span style='color:#0000ff; '>[</span>ipos<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ch<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> ipos<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> DeviceProtocol<span style='color:#0000ff; '>::</span>GetRealDeviceProtocolString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pbyte pContent<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nSize<span style='color:#0000ff; '>,</span> byte<span style='color:#0000ff; '>*</span> ppContent<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>&amp;</span> nnSize<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ppContent<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>ppContent<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> Device_PACKET_SIZE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>ppContent<span style='color:#0000ff; '>,</span> pContent<span style='color:#0000ff; '>,</span> nSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    nnSize <span style='color:#0000ff; '>=</span> nSize<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> ipos <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ipos <span style='color:#0000ff; '>=</span> GetCharacterPosition<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pbyte<span style='color:#0000ff; '>)</span> ppContent<span style='color:#0000ff; '>,</span> nnSize<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'>'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      nnSize <span style='color:#0000ff; '>=</span> nSize<span style='color:#0000ff; '>-</span>ipos<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>ppContent<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> Device_PACKET_SIZE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>ppContent<span style='color:#0000ff; '>,</span> pContent<span style='color:#0000ff; '>+</span>ipos<span style='color:#0000ff; '>,</span> nnSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>ipos <span style='color:#0000ff; '>=</span> GetCharacterPosition<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pbyte<span style='color:#0000ff; '>)</span> ppContent<span style='color:#0000ff; '>,</span> nnSize<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'#'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      nnSize <span style='color:#0000ff; '>=</span> ipos<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+      ppContent<span style='color:#0000ff; '>[</span>nnSize<span style='color:#0000ff; '>+</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+      ppContent<span style='color:#0000ff; '>[</span>nnSize<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> DeviceProtocol<span style='color:#0000ff; '>::</span>SetDeviceProtocolString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pbyte pContent<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nSize<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bContent<span style='color:#0000ff; '>,</span> pContent<span style='color:#0000ff; '>,</span> nSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nSize <span style='color:#0000ff; '>=</span> nSize<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> DeviceProtocol<span style='color:#0000ff; '>::</span>SetDeviceProtocolString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nDevId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> pType<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> pCode<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> pRefId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> pLen<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> pbyte pBuf<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>char</span> cuf<span style='color:#0000ff; '>[</span>Device_PACKET_HEAD_SIZE<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+  byte buf<span style='color:#0000ff; '>[</span>Device_PACKET_HEAD_SIZE<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>cuf<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>>H|</span><span style='color:#007997; '>%06d</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%02X</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%02X</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%04X</span><span style='color:#0000e6; '>|</span><span style='color:#007997; '>%02X</span><span style='color:#0000e6; '>|</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> nDevId<span style='color:#0000ff; '>,</span> pType<span style='color:#0000ff; '>,</span> pCode<span style='color:#0000ff; '>,</span> pRefId<span style='color:#0000ff; '>,</span> pLen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> cuf<span style='color:#0000ff; '>,</span> Device_PACKET_HEAD_SIZE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddContent<span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> Device_PACKET_HEAD_SIZE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddContent<span style='color:#0000ff; '>(</span>pBuf<span style='color:#0000ff; '>,</span> pLen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddSeparator<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddCheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddTerminator<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/* ********************************************************************************************************* */</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _WIN32</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifndef</span><span style='color:#004a43; '> _CONSOLE</span>
+
+PdaProtocol<span style='color:#0000ff; '>::</span>PdaProtocol<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+PdaProtocol<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>PdaProtocol<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+PPLC PdaProtocol<span style='color:#0000ff; '>::</span>GetPdaProtocolString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> PdaProtocol<span style='color:#0000ff; '>::</span>GetPdaContentType<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadType<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>long</span> PdaProtocol<span style='color:#0000ff; '>::</span>GetPdaContentSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadSize<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>long</span> PdaProtocol<span style='color:#0000ff; '>::</span>GetPdaContentLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadLength<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> PdaProtocol<span style='color:#0000ff; '>::</span>VerifyContent<span style='color:#0000ff; '>(</span>pbyte pPayload<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pPayload<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nContentSize <span style='color:#0000ff; '>=</span> _tcslen<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PTCHAR</span><span style='color:#0000ff; '>)</span> pPayload<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nContentSize <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> PDA_HEADER_SIZE<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>CString</span> str<span style='color:#0000ff; '>;</span>
+      str<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pPayload<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      str<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%c</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>PDA_HEADER_SIZE<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>.</span>Compare<span style='color:#0000ff; '>(</span>_T<span style='color:#0000ff; '>(</span>PDA_CONTENT_SEPARATOR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> PdaProtocol<span style='color:#0000ff; '>::</span>SetPdaProtocolString<span style='color:#0000ff; '>(</span>pbyte pPayload<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pPayload <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>VerifyContent<span style='color:#0000ff; '>(</span>pPayload<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>TCHAR</span> tch<span style='color:#0000ff; '>[</span>PDA_BODY_PACKET_SIZE<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>tch<span style='color:#0000ff; '>,</span> pPayload<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadType <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>_wtoi</span><span style='color:#0000ff; '>(</span>tch<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadLength <span style='color:#0000ff; '>=</span> _tcslen<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PTCHAR</span><span style='color:#0000ff; '>)</span> pPayload<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadSize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadLength <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>TCHAR</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>,</span> pPayload<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> PdaProtocol<span style='color:#0000ff; '>::</span>SetPdaProtocolString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> pType<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> sContent<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>TCHAR</span> tch<span style='color:#0000ff; '>[</span>PDA_BODY_PACKET_SIZE<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>char</span> sbuf<span style='color:#0000ff; '>[</span>PDA_BODY_PACKET_SIZE<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>sbuf<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%02d</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pType<span style='color:#0000ff; '>,</span> PDA_CONTENT_SEPARATOR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> sContent<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>strcat</span><span style='color:#0000ff; '>(</span>sbuf<span style='color:#0000ff; '>,</span> sContent<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>strcat</span><span style='color:#0000ff; '>(</span>sbuf<span style='color:#0000ff; '>,</span> PDA_CONTENT_DELIMENTOR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadType <span style='color:#0000ff; '>=</span> pType<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>MultiByteToWideChar</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>CP_ACP</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> sbuf<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> tch<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>tch<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadLength <span style='color:#0000ff; '>=</span> _tcslen<span style='color:#0000ff; '>(</span>tch<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadSize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadLength <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>TCHAR</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>,</span> tch<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> PdaProtocol<span style='color:#0000ff; '>::</span>SetPdaProtocolString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> ptype<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CStringArray</span><span style='color:#0000ff; '>*</span> sContent<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> str<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+  str<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>L"</span><span style='color:#007997; '>%02d</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ptype<span style='color:#0000ff; '>,</span> PDA_CONTENT_SEPARATOR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> sContent<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetCount<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    str<span style='color:#0000ff; '>.</span>Append<span style='color:#0000ff; '>(</span>sContent<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    str<span style='color:#0000ff; '>.</span>Append<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>TEXT</span><span style='color:#0000ff; '>(</span>PDA_CONTENT_DELIMENTOR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadType <span style='color:#0000ff; '>=</span> ptype<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadLength <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadSize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadLength <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>TCHAR</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadSize<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> PdaProtocol<span style='color:#0000ff; '>::</span>Tokenize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> str<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CStringArray</span><span style='color:#0000ff; '>*</span> sContent<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>&amp;</span> delimiters <span style='color:#008000; '>/* = L */</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> tmp<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>L"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>int</span> lpos <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>int</span> cpos <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>.</span>FindOneOf<span style='color:#0000ff; '>(</span>delimiters<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>cpos <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> sContent<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      tmp <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>.</span>Mid<span style='color:#0000ff; '>(</span>lpos<span style='color:#0000ff; '>,</span> cpos<span style='color:#0000ff; '>-</span>lpos<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>tmp<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+      sContent<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Add<span style='color:#0000ff; '>(</span>tmp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      lpos <span style='color:#0000ff; '>=</span> cpos<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+      cpos <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>.</span>Find<span style='color:#0000ff; '>(</span>delimiters<span style='color:#0000ff; '>,</span> lpos<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>cpos <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+        cpos <span style='color:#0000ff; '>=</span> str<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> PdaProtocol<span style='color:#0000ff; '>::</span>GetPdaContent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CStringArray</span> <span style='color:#0000ff; '>*</span>sContent<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> str<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CStringArray</span> payload<span style='color:#0000ff; '>,</span> content<span style='color:#0000ff; '>;</span>
+  str<span style='color:#0000ff; '>.</span>SetString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>PTCHAR</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>bPayload<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>nPayloadLength<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sContent<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Tokenize<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>payload<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>TEXT</span><span style='color:#0000ff; '>(</span>PDA_CONTENT_SEPARATOR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Tokenize<span style='color:#0000ff; '>(</span>payload<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>content<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>TEXT</span><span style='color:#0000ff; '>(</span>PDA_CONTENT_DELIMENTOR<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> content<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+      sContent<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Add<span style='color:#0000ff; '>(</span>content<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+</pre>

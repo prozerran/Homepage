@@ -1,0 +1,488 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// File: Server.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Implementation of the Server class. Server handles all</span>
+<span style='color:#008000; '>// request from Com and Client. It is responsible to</span>
+<span style='color:#008000; '>// simultanously service them both while handling and</span>
+<span style='color:#008000; '>// maintaining multiple list/queues. By servicing both a</span>
+<span style='color:#008000; '>// console and user program, it simulates the activities of</span>
+<span style='color:#008000; '>// a simple multi-process virtual OS.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>iostream.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>fstream.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>string.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdio.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>time.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>unistd.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Pcib.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>List.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Semaphore.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Message.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Server.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  Server()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Server default constructor. Creates two</span>
+<span style='color:#008000; '>//              structure, an active list and semaphore(s)</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+Server<span style='color:#0000ff; '>::</span>Server<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_SEM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Semaphore<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semId <span style='color:#0000ff; '>=</span> i<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ~Server()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Server destructor. Prevents memory leak</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+Server<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Server<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_SEM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  LsCommand(const ComMsg)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   m1      -- Communication message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    List the informations in the active queue.</span>
+<span style='color:#008000; '>//              Also can list information of all semaphores</span>
+<span style='color:#008000; '>//              (authorize queue &amp; waiting queue) depending</span>
+<span style='color:#008000; '>//              if a semaphore option is present.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Server<span style='color:#0000ff; '>::</span>LsCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> ComMsg m1<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Active List:</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DisplayList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>head<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>option <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'s'</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_SEM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Sem ID: </span><span style='color:#0000e6; '>"</span>    <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> i<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsEmpty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span>
+                <span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsEmpty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>Occupied</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>Sem Key: </span><span style='color:#0000e6; '>"</span>   <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semKey<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>Sem Value: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Authorized List:</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DisplayList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>head<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Waiting List:</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DisplayList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>head<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>Free</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ExitCommand()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Calls Server destructor and cleans up all</span>
+<span style='color:#008000; '>//              list/queues to prevent memory leak</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Server<span style='color:#0000ff; '>::</span>ExitCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>~</span>Server<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  bool GetSemId(const int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   semKey      -- semaphore key</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Gets the semaphore Id by providing a key</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     semId       -- the semaphore Id</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> Server<span style='color:#0000ff; '>::</span>GetSemId<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> semKey<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> semId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_SEM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>semKey <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semKey<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            semId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semId<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> semId<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  bool Verify(const int, const int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   semId       -- semaphore ID</span>
+<span style='color:#008000; '>//              pid         -- process ID</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Verifies the semdId and PID.</span>
+<span style='color:#008000; '>//              This is usually called by semaphore actions.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     true if valid, false otherwise</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Server<span style='color:#0000ff; '>::</span>Verify<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> semId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> pid<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>semId <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> semId <span style='color:#0000ff; '>></span> MAX_SEM <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>semId<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ContainPid<span style='color:#0000ff; '>(</span>pid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  bool NewKey(const int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   semKey      -- semaphore key</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Test if semaphore key already exist</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     true if exist, false otherwise</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Server<span style='color:#0000ff; '>::</span>NewKey<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> semKey<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> newKey <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_SEM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>semKey <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semKey<span style='color:#0000ff; '>)</span>
+            newKey <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            newKey <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> newKey<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  bool FreeSem(int&amp;)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   &amp;newSem     -- new Semaphore ID</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Test if there is a free semaphore. If there</span>
+<span style='color:#008000; '>//              is, then give newSem a new semId. The new</span>
+<span style='color:#008000; '>//              semaphore is returned by reference.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     true if free semaphore exist, false otherwise</span>
+<span style='color:#008000; '>//              newSem is set to new Semaphore, otherwise -1</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Server<span style='color:#0000ff; '>::</span>FreeSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; '>&amp;</span>newSem<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> freeSem <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    newSem <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_SEM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsEmpty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            newSem <span style='color:#0000ff; '>=</span> i<span style='color:#0000ff; '>;</span>
+            freeSem <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> freeSem<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  Insert(const int, const int, const ComMsg)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   pid         -- process ID</span>
+<span style='color:#008000; '>//              pipeId      -- pipe ID</span>
+<span style='color:#008000; '>//              m1          -- communication message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Inserts a new PCIB into the active list.</span>
+<span style='color:#008000; '>//              If there is the option of creating a log file,</span>
+<span style='color:#008000; '>//              method will do so with the file name equal</span>
+<span style='color:#008000; '>//              to the process ID. All initial informations</span>
+<span style='color:#008000; '>//              are recording into the file. Later, the file</span>
+<span style='color:#008000; '>//              will append relevant informations about</span>
+<span style='color:#008000; '>//              system call tracing.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Server<span style='color:#0000ff; '>::</span>Insert<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> pid<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> pipeId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> ComMsg m1<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    PCIB pcib<span style='color:#0000ff; '>;</span>
+
+    pcib<span style='color:#0000ff; '>.</span>PID <span style='color:#0000ff; '>=</span> pid<span style='color:#0000ff; '>;</span>
+    pcib<span style='color:#0000ff; '>.</span>timeStamp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>time</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>memcpy</span><span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>.</span>execFile<span style='color:#0000ff; '>,</span> m1<span style='color:#0000ff; '>.</span>execName<span style='color:#0000ff; '>,</span> EXE_LENGTH<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    pcib<span style='color:#0000ff; '>.</span>pipeId <span style='color:#0000ff; '>=</span> pipeId<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m1<span style='color:#0000ff; '>.</span>option <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> LOG_OPTION<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>char</span> buff<span style='color:#0000ff; '>[</span><span style='color:#800000; '>256</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>,</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>time</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>ctime</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>pcib<span style='color:#0000ff; '>.</span>timeStamp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>.</span>logFileName<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> pid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>fstream</span> out<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>.</span>logFileName<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ios</span><span style='color:#0000ff; '>::</span>app<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Timestamp: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>time</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>Executable: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> buff<span style='color:#0000ff; '>,</span> pcib<span style='color:#0000ff; '>.</span>execFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>Process PID: </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> buff<span style='color:#0000ff; '>,</span> pcib<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>Pipe ID: </span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> buff<span style='color:#0000ff; '>,</span> pcib<span style='color:#0000ff; '>.</span>pipeId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>Semaphore Request Log...</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> buff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        out<span style='color:#0000ff; '>.</span>write<span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buff<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        out<span style='color:#0000ff; '>.</span>close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Insert<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  DisplayList(pNode)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   pNode       -- also pPCIB, a pointer to PCIB</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Displays all PCIB information in the current</span>
+<span style='color:#008000; '>//              list. If list is empty, nothing will be</span>
+<span style='color:#008000; '>//              displayed.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Server<span style='color:#0000ff; '>::</span>DisplayList<span style='color:#0000ff; '>(</span>pNode curr<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>PID</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>EXEC FILE</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>TIME STAMP</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>LOG FILE</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PID           <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>execFile      <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>timeStamp     <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\t</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>logFileName<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#000080; '>'\0'</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>logFileName   <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>N/A</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Empty.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; font-weight:bold; '>endl</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ReplyMsg SemAction(const RequestMsg)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   m2      -- request message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Determines the action (purpose) of the</span>
+<span style='color:#008000; '>//              semaphore and calls the appropriate method</span>
+<span style='color:#008000; '>//              to service it.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     m3      -- reply message</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+ReplyMsg Server<span style='color:#0000ff; '>::</span>SemAction<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> RequestMsg m2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>purpose<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>GET_SEM</span><span style='color:#e34adc; font-weight:bold; '>:</span>       <span style='color:#0000ff; '>{</span>m3 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>getSem<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     <span style='color:#0000ff; '>}</span>   <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>SIGNAL_SEM</span><span style='color:#e34adc; font-weight:bold; '>:</span>    <span style='color:#0000ff; '>{</span>m3 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>sinalSem<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>   <span style='color:#0000ff; '>}</span>   <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>WAIT_SEM</span><span style='color:#e34adc; font-weight:bold; '>:</span>      <span style='color:#0000ff; '>{</span>m3 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>waitSem<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#0000ff; '>}</span>   <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>RELEASE_SEM</span><span style='color:#e34adc; font-weight:bold; '>:</span>   <span style='color:#0000ff; '>{</span>m3 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>releaseSem<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>   <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>VS_EXIT</span><span style='color:#e34adc; font-weight:bold; '>:</span>       <span style='color:#0000ff; '>{</span>     <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>vsexit<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     <span style='color:#0000ff; '>}</span>   <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ReplyMsg getSem(const RequestMsg)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   m2      -- request message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Gets a new semaphore. If it is a new key</span>
+<span style='color:#008000; '>//              (or maybe already an existing one) and there</span>
+<span style='color:#008000; '>//              is a free semaphore. Method will issue a</span>
+<span style='color:#008000; '>//              semaphore by inserting the pcib into the</span>
+<span style='color:#008000; '>//              authorized list.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     m3      -- reply message, 0 success, -1 fail</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+ReplyMsg Server<span style='color:#0000ff; '>::</span>getSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> RequestMsg m2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> newSem <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+    m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    PCIB pcib<span style='color:#0000ff; '>;</span>
+    pcib<span style='color:#0000ff; '>.</span>PID <span style='color:#0000ff; '>=</span> m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>;</span>
+    pcib<span style='color:#0000ff; '>.</span>timeStamp <span style='color:#0000ff; '>=</span> m2<span style='color:#0000ff; '>.</span>timeStamp<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>InsertTimeStamp<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>,</span> m2<span style='color:#0000ff; '>.</span>timeStamp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>NewKey<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>semKey<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>FreeSem<span style='color:#0000ff; '>(</span>newSem<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>newSem<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semKey <span style='color:#0000ff; '>=</span> m2<span style='color:#0000ff; '>.</span>semKey<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>newSem<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue <span style='color:#0000ff; '>=</span> m2<span style='color:#0000ff; '>.</span>semInitValue<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>newSem<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Insert<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>NewKey<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>semKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        newSem <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetSemId<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>semKey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>newSem<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Insert<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    m3<span style='color:#0000ff; '>.</span>semId <span style='color:#0000ff; '>=</span> newSem<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ReplyMsg sinalSem(const RequestMsg)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   m2      -- request message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Verifies the semId and PID. If such</span>
+<span style='color:#008000; '>//              semaphore exist, increment the semValue.</span>
+<span style='color:#008000; '>//              This process may wake-up a process in</span>
+<span style='color:#008000; '>//              the waiting queue.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     m3      -- reply message, 0 success, -1 fail</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+ReplyMsg Server<span style='color:#0000ff; '>::</span>sinalSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> RequestMsg m2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+    m3<span style='color:#0000ff; '>.</span>semId <span style='color:#0000ff; '>=</span> m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>;</span>
+    m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>InsertTimeStamp<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>,</span> m2<span style='color:#0000ff; '>.</span>timeStamp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Verify<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>,</span> m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            PCIB pcib <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Dequeue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Insert<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>.</span>pipeId <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                write<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>.</span>pipeId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m3<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m3<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ReplyMsg waitSem(const RequestMsg)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   m2      -- request message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Verifies the semId and PID. If such</span>
+<span style='color:#008000; '>//              semaphore exist, decrement the semValue.</span>
+<span style='color:#008000; '>//              This process may prempt a process in</span>
+<span style='color:#008000; '>//              the active queue.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     m3      -- reply message, 0 success, -1 fail</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+ReplyMsg Server<span style='color:#0000ff; '>::</span>waitSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> RequestMsg m2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+    m3<span style='color:#0000ff; '>.</span>semId <span style='color:#0000ff; '>=</span> m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>;</span>
+    m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>InsertTimeStamp<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>,</span> m2<span style='color:#0000ff; '>.</span>timeStamp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Verify<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>,</span> m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            PCIB pcib <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Delete<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Insert<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+            m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ReplyMsg releaseSem(const RequestMsg)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   m2      -- request message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Verifies the semId and PID. If such</span>
+<span style='color:#008000; '>//              semaphore exist, delete the process from</span>
+<span style='color:#008000; '>//              the authorized list and release (cancel)</span>
+<span style='color:#008000; '>//              a semaphore.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     m3      -- reply message, 0 success, -1 fail</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+ReplyMsg Server<span style='color:#0000ff; '>::</span>releaseSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> RequestMsg m2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+    m3<span style='color:#0000ff; '>.</span>semId <span style='color:#0000ff; '>=</span> m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>;</span>
+    m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>InsertTimeStamp<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>,</span> m2<span style='color:#0000ff; '>.</span>timeStamp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Verify<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>,</span> m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>m2<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Delete<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        m3<span style='color:#0000ff; '>.</span>returnValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  vsexit(const RequestMsg)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   m2      -- request message</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Deletes the process from existence in all</span>
+<span style='color:#008000; '>//              list and semaphore. Resource is returned to</span>
+<span style='color:#008000; '>//              Server.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Server<span style='color:#0000ff; '>::</span>vsexit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> RequestMsg m2<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    PCIB pcib <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ActiveList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Delete<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    close<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>.</span>pipeId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> MAX_SEM<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        pcib <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Delete<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        close<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>.</span>pipeId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        pcib <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Sem<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Delete<span style='color:#0000ff; '>(</span>m2<span style='color:#0000ff; '>.</span>PID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        close<span style='color:#0000ff; '>(</span>pcib<span style='color:#0000ff; '>.</span>pipeId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

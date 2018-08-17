@@ -1,0 +1,539 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ComponentModel<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Diagnostics<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ServiceProcess<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MySql<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>.</span>MySqlClient<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MySql<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Configuration<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MyLog<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MapCore<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MapTrac<span style='color:#0000ff; '>.</span>CommonMap<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> MapTrac<span style='color:#0000ff; '>.</span>Common<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Xml<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> TermLocationService
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>enum</span> LOCATION_STATUS
+    <span style='color:#0000ff; '>{</span>
+        NEW_DATA <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>
+        LOCATION_OK <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span>
+        LOCATION_NOT_IN_ZONE <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span>
+        ZONE_CONTAIN_NO_BLOCKS <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>3</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>public</span> partial <span style='color:#0000ff; font-weight:bold; '>class</span> TermLocationService <span style='color:#0000ff; '>:</span> ServiceBase
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> threadCount <span style='color:#0000ff; '>=</span> Int32<span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ThreadCount</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> sleepInterval <span style='color:#0000ff; '>=</span> Int32<span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>TimerInterval</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>string</span> ConnectionString <span style='color:#0000ff; '>=</span> ConfigurationManager<span style='color:#0000ff; '>.</span>ConnectionStrings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ConnectionString</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> List<span style='color:#0000ff; '>&lt;</span>CZoneGroup<span style='color:#0000ff; '>></span> m_lsZoneGroup <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>CZoneGroup<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>ulong</span><span style='color:#0000ff; '>,</span> DataTable<span style='color:#0000ff; '>></span> m_dStackTable <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>ulong</span><span style='color:#0000ff; '>,</span> DataTable<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>bool</span> threadControl<span style='color:#0000ff; '>;</span>
+
+        List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> sublist<span style='color:#0000ff; '>;</span>
+
+        ManualResetEvent childMRE <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ManualResetEvent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        ManualResetEvent mainMRE <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ManualResetEvent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        MySqlConnection DBConnection <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> MapEngine MapEngine <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> TermLocationService<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            InitializeComponent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>void</span> OnStart<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: The service was started.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            threadControl <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            Thread mainThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> ThreadStart<span style='color:#0000ff; '>(</span>StartProcess<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            mainThread<span style='color:#0000ff; '>.</span>Name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Terminal Location Retriever</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            mainThread<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>void</span> OnStop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            threadControl <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            childMRE<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            mainMRE<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>DBConnection <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                DBConnection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: The service is stopped.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Log<span style='color:#0000ff; '>.</span>IsConsole <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>new</span> TermLocationService<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>OnStart<span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span>Timeout<span style='color:#0000ff; '>.</span>Infinite<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> GetTermDetailZones<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ulong</span> zoneId<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            MySqlConnection DBConnection <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySqlConnection<span style='color:#0000ff; '>(</span>ConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            DBConnection<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// Get Zone Points of each District</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlCommand DBCommand <span style='color:#0000ff; '>=</span> DBConnection<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SP_Client_Get_CompanyZonePointDetail</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>StoredProcedure<span style='color:#0000ff; '>;</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>szCoID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Term</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>nZoID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> zoneId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlDataReader DBReader <span style='color:#0000ff; '>=</span> DBCommand<span style='color:#0000ff; '>.</span>ExecuteReader<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        List<span style='color:#0000ff; '>&lt;</span>CZonePoint<span style='color:#0000ff; '>></span> zoneData <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>CZonePoint<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>DBReader<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#0000ff; font-weight:bold; '>int</span> nCol <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+                            zoneData<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> CZonePoint<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                ZoneID <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetUInt64<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                                CompanyID <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                                ZoneName <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                                ZoneDescription <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                                ZoneType <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>EZoneType<span style='color:#0000ff; '>)</span>DBReader<span style='color:#0000ff; '>.</span>GetByte<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                                ZonePointID <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetUInt64<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                                Latitude <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetDouble<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                                Longitude <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetDouble<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                                Radius <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetDouble<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                        m_lsZoneGroup<span style='color:#0000ff; '>.</span>AddRange<span style='color:#0000ff; '>(</span>zoneData<span style='color:#0000ff; '>.</span>ToZoneGroupList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Error: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>DBConnection <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; DBConnection<span style='color:#0000ff; '>.</span>State <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ConnectionState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    DBConnection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Refresh_GetTermZones<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            MySqlConnection DBConnection <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySqlConnection<span style='color:#0000ff; '>(</span>ConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>           
+            DBConnection<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// Get District Zone Ids</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlCommand DBCommand <span style='color:#0000ff; '>=</span> DBConnection<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SELECT DistrictZoID FROM DISTRICTCFG;</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlDataReader DBReader <span style='color:#0000ff; '>=</span> DBCommand<span style='color:#0000ff; '>.</span>ExecuteReader<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#008000; '>// clear zone cache</span>
+                        m_lsZoneGroup<span style='color:#0000ff; '>.</span>Clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>DBReader<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#0000ff; font-weight:bold; '>int</span> nCol <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; font-weight:bold; '>ulong</span> zoneId <span style='color:#0000ff; '>=</span> DBReader<span style='color:#0000ff; '>.</span>GetUInt64<span style='color:#0000ff; '>(</span>nCol<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#008000; '>// Zone detail points of all sides</span>
+                            GetTermDetailZones<span style='color:#0000ff; '>(</span>zoneId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#008000; '>// update cache blocks/stacks by zoneid</span>
+                            m_dStackTable<span style='color:#0000ff; '>[</span>zoneId<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> GetStacksByZoneId<span style='color:#0000ff; '>(</span>zoneId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Error: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>DBConnection <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; DBConnection<span style='color:#0000ff; '>.</span>State <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ConnectionState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    DBConnection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> DataTable GetStacksByZoneId<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ulong</span> zoneid<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            DataTable dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DataTable<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            MySqlConnection DBConnection <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySqlConnection<span style='color:#0000ff; '>(</span>ConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            DBConnection<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// Get District Zone Ids</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlCommand DBCommand <span style='color:#0000ff; '>=</span> DBConnection<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SP_Terminal_Get_StacksByZoneId</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>StoredProcedure<span style='color:#0000ff; '>;</span>
+                    DBCommand<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>nZoneId</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> zoneid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>MySqlDataAdapter dbAdp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySqlDataAdapter<span style='color:#0000ff; '>(</span>DBCommand<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        dbAdp<span style='color:#0000ff; '>.</span>Fill<span style='color:#0000ff; '>(</span>dt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> dt<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Error: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>DBConnection <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; DBConnection<span style='color:#0000ff; '>.</span>State <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ConnectionState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    DBConnection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> StartProcess<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> threadName <span style='color:#0000ff; '>=</span> Thread<span style='color:#0000ff; '>.</span>CurrentThread<span style='color:#0000ff; '>.</span>Name<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>TODO: Need a thread to update ZoneGroups every minute or so....</span>
+            <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>TODO: Careful since Stacks read/write in a thread, need to lock table.</span>
+            Refresh_GetTermZones<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Update the Term Address in TERMINAL_REPORT table</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> threadCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Thread thread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> ThreadStart<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> UpdateStreet<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> MySqlConnection<span style='color:#0000ff; '>(</span>ConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                thread<span style='color:#0000ff; '>.</span>Name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Terminal Location Updater </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> i<span style='color:#0000ff; '>;</span>
+                thread<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            sublist <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>[</span>threadCount<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+            MySqlConnection DBConnection <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MySqlConnection<span style='color:#0000ff; '>(</span>ConnectionString<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>threadControl<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> rowPer <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> listCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> threadCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    sublist<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>try</span>
+                <span style='color:#0000ff; '>{</span>
+                    Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Retrieving LAT/LON...</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span> lsLocation <span style='color:#0000ff; '>=</span> GetLocation<span style='color:#0000ff; '>(</span>DBConnection<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    listCount <span style='color:#0000ff; '>=</span> lsLocation<span style='color:#0000ff; '>.</span>Count<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lsLocation <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; listCount <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>=</span> threadCount<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        rowPer <span style='color:#0000ff; '>=</span> listCount <span style='color:#0000ff; '>/</span> threadCount<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    <span style='color:#008000; '>//Divide main list to sublist for child threads.</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>int</span> arrayPos <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; font-weight:bold; '>int</span> fixRowPer <span style='color:#0000ff; '>=</span> rowPer<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> listCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        sublist<span style='color:#0000ff; '>[</span>arrayPos<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>arrayPos <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> threadCount <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>i <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> rowPer<span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                rowPer <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> fixRowPer<span style='color:#0000ff; '>;</span>
+                                arrayPos<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    childMRE<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    mainMRE<span style='color:#0000ff; '>.</span>WaitOne<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    childMRE<span style='color:#0000ff; '>.</span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    mainMRE<span style='color:#0000ff; '>.</span>Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>catch</span><span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Error: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span> <span style='color:#0000ff; '>*</span> sleepInterval<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> threadName <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> stopped.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span> GetLocation<span style='color:#0000ff; '>(</span>MySqlConnection DBConnection<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span> lsLocation <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                lsLocation <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                DBConnection<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                MySqlCommand DBCommand <span style='color:#0000ff; '>=</span> DBConnection<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                DBCommand<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>CALL SP_Terminal_Location_Search</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+                MySqlDataReader DBReader <span style='color:#0000ff; '>=</span> DBCommand<span style='color:#0000ff; '>.</span>ExecuteReader<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>DBReader<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>int</span> LocID <span style='color:#0000ff; '>=</span> Int32<span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>DBReader<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>double</span> lat <span style='color:#0000ff; '>=</span> Double<span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>DBReader<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>double</span> lon <span style='color:#0000ff; '>=</span> Double<span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>DBReader<span style='color:#0000ff; '>[</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    lsLocation<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> CLocation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        LocID <span style='color:#0000ff; '>=</span> LocID<span style='color:#0000ff; '>,</span>
+                        LocLat <span style='color:#0000ff; '>=</span> lat<span style='color:#0000ff; '>,</span>
+                        LocLon <span style='color:#0000ff; '>=</span> lon
+                    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                DBReader<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                DBReader<span style='color:#0000ff; '>.</span>Dispose<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                DBConnection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Error: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> e<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>DBConnection <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; DBConnection<span style='color:#0000ff; '>.</span>State <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ConnectionState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    DBConnection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> lsLocation<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> UpdateStreet<span style='color:#0000ff; '>(</span>MySqlConnection DBConnection<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> threadName <span style='color:#0000ff; '>=</span> Thread<span style='color:#0000ff; '>.</span>CurrentThread<span style='color:#0000ff; '>.</span>Name<span style='color:#0000ff; '>;</span>
+            Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> threadName <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> started.</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>threadControl<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>try</span>
+                <span style='color:#0000ff; '>{</span>
+                    childMRE<span style='color:#0000ff; '>.</span>WaitOne<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span> lsLocation <span style='color:#0000ff; '>=</span> GetSublist<span style='color:#0000ff; '>(</span>threadName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>lsLocation <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; lsLocation<span style='color:#0000ff; '>.</span>Count <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> threadName <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Updating location.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>var</span> watch <span style='color:#0000ff; '>=</span> System<span style='color:#0000ff; '>.</span>Diagnostics<span style='color:#0000ff; '>.</span>Stopwatch<span style='color:#0000ff; '>.</span>StartNew<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>//Process data first before opening update connection.</span>
+                        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> lsLocation<span style='color:#0000ff; '>.</span>Count<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#0000ff; font-weight:bold; '>ulong</span> zoneId <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#008000; '>// check if LAT/LON belongs to a Zone</span>
+                            <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>CZoneGroup zoneGP <span style='color:#0000ff; font-weight:bold; '>in</span> m_lsZoneGroup<span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>zoneGP<span style='color:#0000ff; '>.</span>IsInZone<span style='color:#0000ff; '>(</span>lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>LocLat<span style='color:#0000ff; '>,</span> lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>LocLon<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                                <span style='color:#0000ff; '>{</span>
+                                    zoneId <span style='color:#0000ff; '>=</span> zoneGP<span style='color:#0000ff; '>.</span>ZoneID<span style='color:#0000ff; '>;</span>
+                                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; '>}</span>
+                            <span style='color:#0000ff; '>}</span>
+
+                            <span style='color:#008000; '>// Our LAT/LON is within a District ZoneId</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>zoneId <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>                               
+                                DataTable dt <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                                m_dStackTable<span style='color:#0000ff; '>.</span>TryGetValue<span style='color:#0000ff; '>(</span>zoneId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> dt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>dt <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>.</span>Count <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                                <span style='color:#0000ff; '>{</span>
+                                    <span style='color:#0000ff; font-weight:bold; '>double</span> distance <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>5000.0</span><span style='color:#0000ff; '>;</span>   <span style='color:#008000; '>// start with some large number</span>
+
+                                    <span style='color:#008000; '>// Compare LAT/LON to all Stacks in Zone</span>
+                                    DataRow dr <span style='color:#0000ff; '>=</span> GetClosestStackId<span style='color:#0000ff; '>(</span>dt<span style='color:#0000ff; '>,</span> lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>LocLat<span style='color:#0000ff; '>,</span> lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>LocLon<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ref</span> distance<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>dr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                                    <span style='color:#0000ff; '>{</span>
+                                        lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Distance <span style='color:#0000ff; '>=</span> distance <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>1000.0</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// covert to meters</span>
+                                        lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Terminal <span style='color:#0000ff; '>=</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>TerminalID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                        lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>District <span style='color:#0000ff; '>=</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DistrictID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                        lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Block <span style='color:#0000ff; '>=</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>BlockID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                        lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Stack <span style='color:#0000ff; '>=</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>StackNoName</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                        lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Status <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>short</span><span style='color:#0000ff; '>)</span>LOCATION_STATUS<span style='color:#0000ff; '>.</span>LOCATION_OK<span style='color:#0000ff; '>;</span>
+                                    <span style='color:#0000ff; '>}</span>
+                                <span style='color:#0000ff; '>}</span>
+                                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                                <span style='color:#0000ff; '>{</span>
+                                    lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Status <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>short</span><span style='color:#0000ff; '>)</span>LOCATION_STATUS<span style='color:#0000ff; '>.</span>ZONE_CONTAIN_NO_BLOCKS<span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; '>}</span>
+                            <span style='color:#0000ff; '>}</span>
+                            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                            <span style='color:#0000ff; '>{</span>
+                                lsLocation<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>Status <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>short</span><span style='color:#0000ff; '>)</span> LOCATION_STATUS<span style='color:#0000ff; '>.</span>LOCATION_NOT_IN_ZONE<span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+                        <span style='color:#0000ff; '>}</span>
+
+                        DBConnection<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        MySqlCommand CommandUpdate<span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>CLocation oLocation <span style='color:#0000ff; font-weight:bold; '>in</span> lsLocation<span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            CommandUpdate <span style='color:#0000ff; '>=</span> DBConnection<span style='color:#0000ff; '>.</span>CreateCommand<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>CommandText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SP_Terminal_Location_Update</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>CommandType <span style='color:#0000ff; '>=</span> CommandType<span style='color:#0000ff; '>.</span>StoredProcedure<span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>vLocID</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> oLocation<span style='color:#0000ff; '>.</span>LocID<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>vDistance</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> oLocation<span style='color:#0000ff; '>.</span>Distance<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>vTerminal</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> oLocation<span style='color:#0000ff; '>.</span>Terminal<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>vDistrict</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> oLocation<span style='color:#0000ff; '>.</span>District<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>vBlock</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> oLocation<span style='color:#0000ff; '>.</span>Block<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>vStack</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> oLocation<span style='color:#0000ff; '>.</span>Stack<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>Parameters<span style='color:#0000ff; '>.</span>AddWithValue<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>vStatus</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> oLocation<span style='color:#0000ff; '>.</span>Status<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            CommandUpdate<span style='color:#0000ff; '>.</span>ExecuteNonQuery<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+
+                        DBConnection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        watch<span style='color:#0000ff; '>.</span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>var</span> elapsedMs <span style='color:#0000ff; '>=</span> watch<span style='color:#0000ff; '>.</span>ElapsedMilliseconds<span style='color:#0000ff; '>;</span>
+                        Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> threadName <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Location updated. </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> elapsedMs <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ms</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    <span style='color:#008000; '>//Make sure all threads have retrieved the sublists for main thread to repopulate.</span>
+                    <span style='color:#0000ff; font-weight:bold; '>int</span> emptyList <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> threadCount<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sublist<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            emptyList<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>emptyList <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> threadCount<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>mainMRE<span style='color:#0000ff; '>.</span>WaitOne<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            mainMRE<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception e<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: Error: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> e<span style='color:#0000ff; '>.</span>InnerException<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>finally</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>DBConnection <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span> &amp;&amp; DBConnection<span style='color:#0000ff; '>.</span>State <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ConnectionState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        DBConnection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            Log<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> threadName <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> stopped.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span> GetSublist<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> threadName<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            List<span style='color:#0000ff; '>&lt;</span>CLocation<span style='color:#0000ff; '>></span> returnList <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> arrPos <span style='color:#0000ff; '>=</span> Int32<span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>threadName<span style='color:#0000ff; '>[</span>threadName<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                returnList <span style='color:#0000ff; '>=</span> sublist<span style='color:#0000ff; '>[</span>arrPos <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                sublist<span style='color:#0000ff; '>[</span>arrPos <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> returnList<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> DataRow GetClosestStackId<span style='color:#0000ff; '>(</span>DataTable dt<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>double</span> dlat<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>double</span> dlon<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ref</span> <span style='color:#0000ff; font-weight:bold; '>double</span> dtClosest<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            DataRow drClosest <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>DataRow dr <span style='color:#0000ff; font-weight:bold; '>in</span> dt<span style='color:#0000ff; '>.</span>Rows<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>double</span> lat <span style='color:#0000ff; '>=</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>LAT</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToDouble<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>double</span> lon <span style='color:#0000ff; '>=</span> dr<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>LON</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToDouble<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>TODO: Should consider the block direction, use some advanced math</span>
+                    <span style='color:#008000; '>// formula to readjust LAT/LON and recalculate distance</span>
+
+                    <span style='color:#008000; '>// calculate distance, get the closest/nearest to Stack</span>
+                    <span style='color:#0000ff; font-weight:bold; '>double</span> distance <span style='color:#0000ff; '>=</span> CMapEngine<span style='color:#0000ff; '>.</span>SharedEngine<span style='color:#0000ff; '>.</span>LatLonDif2DistKM<span style='color:#0000ff; '>(</span>dlat<span style='color:#0000ff; '>,</span> dlon<span style='color:#0000ff; '>,</span> lat<span style='color:#0000ff; '>,</span> lon<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>distance <span style='color:#0000ff; '>&lt;</span> dtClosest<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        dtClosest <span style='color:#0000ff; '>=</span> distance<span style='color:#0000ff; '>;</span>
+                        drClosest <span style='color:#0000ff; '>=</span> dr<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> drClosest<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> CLocation
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> CLocation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            LocID <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            LocLat <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0.0</span><span style='color:#0000ff; '>;</span>
+            LocLon <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0.0</span><span style='color:#0000ff; '>;</span>
+            Distance <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0.0</span><span style='color:#0000ff; '>;</span>
+            Terminal <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+            District <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+            Block <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+            Stack <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+            Status <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>short</span><span style='color:#0000ff; '>)</span>LOCATION_STATUS<span style='color:#0000ff; '>.</span>NEW_DATA<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> LocID <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>double</span> LocLat <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>double</span> LocLon <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>double</span> Distance <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> Terminal <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> District <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> Block <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> Stack <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>short</span> Status <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

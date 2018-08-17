@@ -1,0 +1,179 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/7/2011</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    HttpClient implements a simple HTTP Client using cURL.</span>
+<span style='color:#008000; '>//          Demonstrates a simple usage of the powerful cURL library to</span>
+<span style='color:#008000; '>//          do simple HTTP request.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>StdAfx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>HttpClient.h</span><span style='color:#0000e6; '>"</span>
+
+HttpClient<span style='color:#0000ff; '>::</span>HttpClient<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_initialize<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl_global_init<span style='color:#0000ff; '>(</span>CURL_GLOBAL_ALL<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CURLE_OK<span style='color:#0000ff; '>)</span>
+            m_initialize<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+HttpClient<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>HttpClient<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_initialize<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        curl_global_cleanup<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    m_initialize <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> HttpClient<span style='color:#0000ff; '>::</span>StringWriter<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>size_t</span> size<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>size_t</span> nmemb<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> <span style='color:#0000ff; '>*</span>buffer<span style='color:#0000ff; '>)</span>  
+<span style='color:#0000ff; '>{</span>  
+    <span style='color:#0000ff; font-weight:bold; '>int</span> result <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>  
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span>  
+    <span style='color:#0000ff; '>{</span>  
+        buffer<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>append<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> size <span style='color:#0000ff; '>*</span> nmemb<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+        result <span style='color:#0000ff; '>=</span> size <span style='color:#0000ff; '>*</span> nmemb<span style='color:#0000ff; '>;</span>  
+    <span style='color:#0000ff; '>}</span>  
+    <span style='color:#0000ff; font-weight:bold; '>return</span> result<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> HttpClient<span style='color:#0000ff; '>::</span>StreamWriter<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>size_t</span> size<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>size_t</span> nmemb<span style='color:#0000ff; '>,</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>ostream</span> <span style='color:#0000ff; '>*</span>fs<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> result <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span> 
+        <span style='color:#0000ff; font-weight:bold; '>string</span> buffer<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> size <span style='color:#0000ff; '>*</span> nmemb<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>fs<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> buffer<span style='color:#0000ff; '>;</span>
+        result <span style='color:#0000ff; '>=</span> size <span style='color:#0000ff; '>*</span> nmemb<span style='color:#0000ff; '>;</span>  
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> result<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>string</span> HttpClient<span style='color:#0000ff; '>::</span>PostFieldsToString<span style='color:#0000ff; '>(</span>PostFields <span style='color:#0000ff; font-weight:bold; '>const</span><span style='color:#0000ff; '>&amp;</span> params<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    CURL <span style='color:#0000ff; '>*</span>curl <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>string</span> query<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl <span style='color:#0000ff; '>=</span> curl_easy_init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>PostFields<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>const_iterator</span> iter <span style='color:#0000ff; '>=</span> params<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> params<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>enc <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> params<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> 
+            <span style='color:#0000ff; '>{</span>
+                query<span style='color:#0000ff; '>.</span>append<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>&amp;</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> key <span style='color:#0000ff; '>=</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>first<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>&amp;</span> val <span style='color:#0000ff; '>=</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>enc <span style='color:#0000ff; '>=</span> curl_easy_escape<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> val<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> val<span style='color:#0000ff; '>.</span>size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                query<span style='color:#0000ff; '>.</span>append<span style='color:#0000ff; '>(</span>key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                query<span style='color:#0000ff; '>.</span>append<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>=</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                query<span style='color:#0000ff; '>.</span>append<span style='color:#0000ff; '>(</span>enc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                curl_free<span style='color:#0000ff; '>(</span>enc<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        curl_easy_cleanup<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> query<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> HttpClient<span style='color:#0000ff; '>::</span>SetCurlEasyOpts<span style='color:#0000ff; '>(</span>CURL<span style='color:#0000ff; '>*</span> curl<span style='color:#0000ff; '>,</span> DownloadTask<span style='color:#0000ff; '>&amp;</span> task<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>char</span> err<span style='color:#0000ff; '>[</span>CURL_ERROR_SIZE<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>task<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> data <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>PostFieldsToString<span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_POST<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_COPYPOSTFIELDS<span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>request_timeout <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_TIMEOUT<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>.</span>request_timeout<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_ERRORBUFFER<span style='color:#0000ff; '>,</span> err<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_URL<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>.</span>url<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_HEADER<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_FOLLOWLOCATION<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_WRITEFUNCTION<span style='color:#0000ff; '>,</span> StringWriter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_WRITEDATA<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>task<span style='color:#0000ff; '>.</span>resp_content<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_NOSIGNAL<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_CONNECTTIMEOUT<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>.</span>connect_timeout<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_SSL_VERIFYPEER<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_SSL_VERIFYHOST<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_USERAGENT<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>.</span>agent<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_REFERER<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>.</span>referer<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_USERNAME<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>.</span>username<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_PASSWORD<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>.</span>password<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> HttpClient<span style='color:#0000ff; '>::</span>Request<span style='color:#0000ff; '>(</span> DownloadTask<span style='color:#0000ff; '>&amp;</span> task <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span>  bret <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    CURL<span style='color:#0000ff; '>*</span> curl <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl <span style='color:#0000ff; '>=</span> curl_easy_init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetCurlEasyOpts<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl_easy_perform<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CURLE_OK<span style='color:#0000ff; '>)</span> 
+            bret <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+        curl_easy_cleanup<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bret<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> HttpClient<span style='color:#0000ff; '>::</span>GetRequest<span style='color:#0000ff; '>(</span> DownloadTask<span style='color:#0000ff; '>&amp;</span> task <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span>  bret <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    CURL<span style='color:#0000ff; '>*</span> curl <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl <span style='color:#0000ff; '>=</span> curl_easy_init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        task<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetCurlEasyOpts<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl_easy_perform<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CURLE_OK<span style='color:#0000ff; '>)</span> 
+            bret <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+        curl_easy_cleanup<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bret<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> HttpClient<span style='color:#0000ff; '>::</span>PostRequest<span style='color:#0000ff; '>(</span> DownloadTask<span style='color:#0000ff; '>&amp;</span> task <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span>  bret <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    CURL<span style='color:#0000ff; '>*</span> curl <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl <span style='color:#0000ff; '>=</span> curl_easy_init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>task<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_POST<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            curl_easy_setopt<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> CURLOPT_COPYPOSTFIELDS<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SetCurlEasyOpts<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>,</span> task<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curl_easy_perform<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CURLE_OK<span style='color:#0000ff; '>)</span> 
+            bret <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+        curl_easy_cleanup<span style='color:#0000ff; '>(</span>curl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bret<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

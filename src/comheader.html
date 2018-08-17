@@ -1,0 +1,88 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/2/2008</span>
+<span style='color:#008000; '>// File:    ComExample.h</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Example COM interface file</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//          Functions can be added at the END of the file, otherwise, you </span>
+<span style='color:#008000; '>//          risk changing the vtable array. COM is very sensitive in this</span>
+<span style='color:#008000; '>//          area and it must not change the interface or things will break.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#008000; '>// ComExample.h : Declaration of the CComExample</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; font-weight:bold; '>pragma</span><span style='color:#000088; font-weight:bold; '> once</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>resource.h</span><span style='color:#0000e6; '>"</span><span style='color:#004a43; '>       </span><span style='color:#008000; '>// main symbols</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>map</span><span style='color:#0000e6; '>></span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Example.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>ExampleExports.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; font-weight:bold; '>namespace</span> std<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; font-weight:bold; '>namespace</span> COMEXAMPLE<span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>// IComExample</span>
+<span style='color:#0000ff; '>[</span>
+    object<span style='color:#0000ff; '>,</span>
+    uuid<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>E97EB728-046E-4CFA-8B65-26CF2B82EB75</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+    dual<span style='color:#0000ff; '>,</span>   helpstring<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>IComExample Interface</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+    pointer_default<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>unique</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>]</span>
+__interface IComExample <span style='color:#0000ff; '>:</span> IDispatch
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>[</span>id<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> helpstring<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>method Init</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> Init<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>[</span>in<span style='color:#0000ff; '>]</span> BSTR sLicense<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>[</span>id<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> helpstring<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>method Term</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> Term<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>[</span>id<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> helpstring<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>method ParseXmlFile</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> ParseXmlFile<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>[</span>in<span style='color:#0000ff; '>]</span> BSTR sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>[</span>id<span style='color:#0000ff; '>(</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> helpstring<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>method InvokeMethod</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> InvokeMethod<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>[</span>in<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>LONG</span> nMethodId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>[</span>in<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>LONG</span> nUpdateId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>[</span>in<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>LONG</span> nHistoryId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>[</span>in<span style='color:#0000ff; '>]</span> BSTR sXmlInput<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>[</span>out<span style='color:#0000ff; '>,</span>retval<span style='color:#0000ff; '>]</span> BSTR<span style='color:#0000ff; '>*</span> sOutput<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+
+
+<span style='color:#008000; '>// CComExample</span>
+
+<span style='color:#0000ff; '>[</span>
+    coclass<span style='color:#0000ff; '>,</span>
+    threading<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>apartment</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+    support_error_info<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>IComExample</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+    vi_progid<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ExampleCOM.ComExample</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+    progid<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ExampleCOM.ComExample.1</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+    version<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+    uuid<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>A1CE08D4-4F6A-482A-83A3-EE342CF4A64C</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+    helpstring<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ComExample Class</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>]</span>
+<span style='color:#0000ff; font-weight:bold; '>class</span> ATL_NO_VTABLE CComExample <span style='color:#0000ff; '>:</span> 
+    <span style='color:#0000ff; font-weight:bold; '>public</span> IComExample
+<span style='color:#0000ff; '>{</span>
+<span style='color:#0000ff; font-weight:bold; '>public</span><span style='color:#e34adc; '>:</span>
+    CComExample<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        g_pExCom <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    DECLARE_PROTECT_FINAL_CONSTRUCT<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> FinalConstruct<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#808080; font-weight:bold; '>S_OK</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    
+    <span style='color:#0000ff; font-weight:bold; '>void</span> FinalRelease<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> 
+    <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>public</span><span style='color:#e34adc; '>:</span>
+
+    STDMETHOD<span style='color:#0000ff; '>(</span>Init<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>BSTR sLicense<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    STDMETHOD<span style='color:#0000ff; '>(</span>Term<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    STDMETHOD<span style='color:#0000ff; '>(</span>ParseXmlFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>BSTR sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    STDMETHOD<span style='color:#0000ff; '>(</span>InvokeMethod<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LONG</span> nMethodId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LONG</span> nUpdateId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>LONG</span> nHistoryId<span style='color:#0000ff; '>,</span> BSTR sXmlInput<span style='color:#0000ff; '>,</span> BSTR<span style='color:#0000ff; '>*</span> sOutput<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>private</span><span style='color:#e34adc; '>:</span>
+
+    CExample<span style='color:#0000ff; '>*</span> g_pExCom<span style='color:#0000ff; '>;</span>
+    std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>map</span><span style='color:#0000ff; '>&lt;</span>CExample<span style='color:#0000ff; '>::</span>ReturnCode<span style='color:#0000ff; '>,</span> CComBSTR<span style='color:#0000ff; '>></span> m_ReturnCode<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+</pre>

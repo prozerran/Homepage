@@ -1,0 +1,176 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// File: Syscalls.c</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Implementation of the Syscalls system call functions.</span>
+<span style='color:#008000; '>// Theses are system calls requesting for semaphore resource</span>
+<span style='color:#008000; '>// in the Server. System calls provide means for</span>
+<span style='color:#008000; '>// synchronization of concurrent processes. Each system call</span>
+<span style='color:#008000; '>// will peform 4 specific task:</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// 1) Prepare outgoing message m2</span>
+<span style='color:#008000; '>// 2) Send message to Server via pipe 2</span>
+<span style='color:#008000; '>// 3) Wait for reply message m3</span>
+<span style='color:#008000; '>// 4) Return information to caller</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdlib.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>time.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>time.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>unistd.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Message.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Global variables</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> inPd<span style='color:#0000ff; '>;</span>       <span style='color:#008000; '>// read  in  pipe descriptor</span>
+<span style='color:#0000ff; font-weight:bold; '>int</span> outPd<span style='color:#0000ff; '>;</span>      <span style='color:#008000; '>// write out pipe descriptor</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  vsinit(int*, char*[])</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Pipe descriptors are recorded onto global</span>
+<span style='color:#008000; '>//              variables, inPd, outPd. The last two</span>
+<span style='color:#008000; '>//              entries of argv are removed and the argc</span>
+<span style='color:#008000; '>//              count is updated.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> vsinit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; '>*</span>argcPt<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>char</span> <span style='color:#0000ff; '>*</span>argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    outPd   <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>*</span>argcPt<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    inPd    <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>atoi</span><span style='color:#0000ff; '>(</span>argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>*</span>argcPt<span style='color:#0000ff; '>-</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>*</span>argcPt<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>*</span>argcPt<span style='color:#0000ff; '>-</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; '>*</span>argcPt <span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  int vsexit(void)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    PID is sent as reply message m3.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     -1 if pipe fail, 0 otherwise</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> vsexit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> retValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    RequestMsg m2<span style='color:#0000ff; '>;</span>
+
+    m2<span style='color:#0000ff; '>.</span>timeStamp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>time</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>PID <span style='color:#0000ff; '>=</span> getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>purpose <span style='color:#0000ff; '>=</span> VS_EXIT<span style='color:#0000ff; '>;</span>
+
+    retValue <span style='color:#0000ff; '>=</span> write<span style='color:#0000ff; '>(</span>outPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m2<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>RequestMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span>retValue <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span> <span style='color:#0000ff; '>?</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span> <span style='color:#0000ff; '>:</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  int getSem(int, int, int*)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    To obtain a semaphore by providing a semKey</span>
+<span style='color:#008000; '>//              and initial semaphore value. Server will</span>
+<span style='color:#008000; '>//              return a return value and semId.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     return value of m3.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> getSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> semKey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> semInitialVal<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> <span style='color:#0000ff; '>*</span>semIdPtr<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    RequestMsg m2<span style='color:#0000ff; '>;</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+
+    m2<span style='color:#0000ff; '>.</span>timeStamp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>time</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>PID <span style='color:#0000ff; '>=</span> getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>semKey <span style='color:#0000ff; '>=</span> semKey<span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>semInitValue <span style='color:#0000ff; '>=</span> semInitialVal<span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>purpose <span style='color:#0000ff; '>=</span> GET_SEM<span style='color:#0000ff; '>;</span>
+
+    write<span style='color:#0000ff; '>(</span>outPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m2<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>RequestMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    read<span style='color:#0000ff; '>(</span>inPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m3<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>ReplyMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; '>*</span>semIdPtr <span style='color:#0000ff; '>=</span> m3<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>.</span>returnValue<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  int signalSem(int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Increments the semValue of a semaphore. Server</span>
+<span style='color:#008000; '>//              will return a return value. This operation</span>
+<span style='color:#008000; '>//              may wake up a waiting process.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     return value of m3.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> signalSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> semId<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    RequestMsg m2<span style='color:#0000ff; '>;</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+
+    m2<span style='color:#0000ff; '>.</span>timeStamp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>time</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>PID <span style='color:#0000ff; '>=</span> getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>semId <span style='color:#0000ff; '>=</span> semId<span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>purpose <span style='color:#0000ff; '>=</span> SIGNAL_SEM<span style='color:#0000ff; '>;</span>
+
+    write<span style='color:#0000ff; '>(</span>outPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m2<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>RequestMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    read<span style='color:#0000ff; '>(</span>inPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m3<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>ReplyMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>.</span>returnValue<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  waitSem(int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Decrements the semValue of a semaphore. Server</span>
+<span style='color:#008000; '>//              will return a return value. A process must</span>
+<span style='color:#008000; '>//              wait if resulted semValue is &lt; 0.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     return value of m3.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> waitSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> semId<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    RequestMsg m2<span style='color:#0000ff; '>;</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+
+    m2<span style='color:#0000ff; '>.</span>timeStamp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>time</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>PID <span style='color:#0000ff; '>=</span> getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>semId <span style='color:#0000ff; '>=</span> semId<span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>purpose <span style='color:#0000ff; '>=</span> WAIT_SEM<span style='color:#0000ff; '>;</span>
+
+    write<span style='color:#0000ff; '>(</span>outPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m2<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>RequestMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    read<span style='color:#0000ff; '>(</span>inPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m3<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>ReplyMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>.</span>returnValue<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  releaseSem(int)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Cancels the right of using a semaphore.</span>
+<span style='color:#008000; '>//              Server will return a return value.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     return value of m3.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> releaseSem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> semId<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    RequestMsg m2<span style='color:#0000ff; '>;</span>
+    ReplyMsg m3<span style='color:#0000ff; '>;</span>
+
+    m2<span style='color:#0000ff; '>.</span>timeStamp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>time</span><span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>PID <span style='color:#0000ff; '>=</span> getpid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>semId <span style='color:#0000ff; '>=</span> semId<span style='color:#0000ff; '>;</span>
+    m2<span style='color:#0000ff; '>.</span>purpose <span style='color:#0000ff; '>=</span> RELEASE_SEM<span style='color:#0000ff; '>;</span>
+
+    write<span style='color:#0000ff; '>(</span>outPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m2<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>RequestMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    read<span style='color:#0000ff; '>(</span>inPd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>m3<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>ReplyMsg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m3<span style='color:#0000ff; '>.</span>returnValue<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

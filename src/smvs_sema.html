@@ -1,0 +1,92 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// File: Semaphore.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Implementation of the Semaphore class. Semaphore provides</span>
+<span style='color:#008000; '>// resource for client programs during system call. They</span>
+<span style='color:#008000; '>// organize synchronization of concurrent processes.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>stdlib.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Pcib.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>List.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Semaphore.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  Semaphore()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Semaphore default constructor. Initialize</span>
+<span style='color:#008000; '>//              all data structure and create 2 list</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+Semaphore<span style='color:#0000ff; '>::</span>Semaphore<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semKey <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  Semaphore(const Semaphore&amp;)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   &amp;s      -- a semaphore</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Semaphore copy constructor. Performs a deep</span>
+<span style='color:#008000; '>//              copy of the lists.</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+Semaphore<span style='color:#0000ff; '>::</span>Semaphore<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Semaphore <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semId <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semKey <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>semKey<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>semValue<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>s<span style='color:#0000ff; '>.</span>AuthorizedList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>s<span style='color:#0000ff; '>.</span>WaitingList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  ~Semaphore()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Semaphore destructor. Prevents memory leak</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+Semaphore<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Semaphore<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semKey <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>delete</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ===========================================================</span>
+<span style='color:#008000; '>// Identifier:  Semaphore&amp; operator=(const Semaphore&amp;)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Parameter:   &amp;s          -- a semaphore</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Comments:    Semaphore overloaded = operator. Enables</span>
+<span style='color:#008000; '>//              semaphore instances to be assigned to another</span>
+<span style='color:#008000; '>//              semaphore.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Returns:     *this   -- for concatenation</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+Semaphore<span style='color:#0000ff; '>&amp;</span> Semaphore<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Semaphore <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>&amp;</span>s<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>~</span>Semaphore<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semId <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>semId<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semKey <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>semKey<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>semValue <span style='color:#0000ff; '>=</span> s<span style='color:#0000ff; '>.</span>semValue<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AuthorizedList<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>s<span style='color:#0000ff; '>.</span>AuthorizedList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>WaitingList<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>s<span style='color:#0000ff; '>.</span>WaitingList<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

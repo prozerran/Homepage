@@ -1,0 +1,60 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>ServiceBus<span style='color:#0000ff; '>.</span>Messaging<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> ServiceBusQueue
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Program
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> _conn <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Endpoint=sb://timbus.servicebus.windows.net/;SharedAccessKeyName=MyPolicy;SharedAccessKey=/gMS187tobtyccFjaZPbQXQBjrIM+dCErwn3ahXWi0M=;EntityPath=MyQueue</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> QueueClient _client <span style='color:#0000ff; '>=</span> QueueClient<span style='color:#0000ff; '>.</span>CreateFromConnectionString<span style='color:#0000ff; '>(</span>_conn<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>////sendmessage</span>
+            <span style='color:#008000; '>//for (int i = 0; i &lt; 10; i++)</span>
+            <span style='color:#008000; '>//{</span>
+            <span style='color:#008000; '>//    string str = string.Format($"Queue {i}");</span>
+            <span style='color:#008000; '>//    SendMessage(str);</span>
+            <span style='color:#008000; '>//}</span>
+
+            <span style='color:#008000; '>// or read</span>
+            ReadMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Ok!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Console<span style='color:#0000ff; '>.</span>ReadLine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> SendMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> msg<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> message <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> BrokeredMessage<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            _client<span style='color:#0000ff; '>.</span>Send<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ReadMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> options <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> OnMessageOptions
+            <span style='color:#0000ff; '>{</span>
+                AutoComplete <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span>
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// reads ALL from queue in REAL-time</span>
+
+            _client<span style='color:#0000ff; '>.</span>OnMessage<span style='color:#0000ff; '>(</span>m <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>var</span> msg <span style='color:#0000ff; '>=</span> m<span style='color:#0000ff; '>.</span>GetBody<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#008000; '>//if (msg == "Hello World!")</span>
+                <span style='color:#0000ff; '>{</span>
+                    Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    m<span style='color:#0000ff; '>.</span>Complete<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>,</span> options<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

@@ -1,0 +1,126 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Reflection<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> log4net<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> TxtCommon
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/// &lt;summary></span>
+    <span style='color:#008000; '>/// Handles all logging related functions.</span>
+    <span style='color:#008000; '>/// &lt;/summary></span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>sealed</span> <span style='color:#0000ff; font-weight:bold; '>class</span> TxtLogger
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> TxtLogger _instance <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> TxtLogger<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> TxtLogger<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> TxtLogger<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> TxtLogger Instance <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> _instance<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>params</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            message <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            LogInfo<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>params</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            message <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            LogError<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ConsoleWriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>params</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            message <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            ConsoleWrite<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ConsoleWrite<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>params</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> msg <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> ? message <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> LogInfo<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>params</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>string</span> msg <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> ? message <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                msg <span style='color:#0000ff; '>=</span> msg<span style='color:#0000ff; '>.</span>TrimEnd<span style='color:#0000ff; '>(</span>'\<span style='color:#800000; '>0</span>'<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#<span style='color:#0000ff; font-weight:bold; '>if</span> DEBUG
+                Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#<span style='color:#0000ff; font-weight:bold; '>else</span>
+                NetLogger<span style='color:#0000ff; '>.</span>Instance<span style='color:#0000ff; '>.</span>WriteInfoLog<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#endif
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// error</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> LogError<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>params</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>string</span> msg <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> ? message <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                msg <span style='color:#0000ff; '>=</span> msg<span style='color:#0000ff; '>.</span>TrimEnd<span style='color:#0000ff; '>(</span>'\<span style='color:#800000; '>0</span>'<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#<span style='color:#0000ff; font-weight:bold; '>if</span> DEBUG
+                Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#<span style='color:#0000ff; font-weight:bold; '>else</span>
+                NetLogger<span style='color:#0000ff; '>.</span>Instance<span style='color:#0000ff; '>.</span>WriteErrorLog<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#endif
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// error</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#008000; '>/// &lt;summary></span>
+    <span style='color:#008000; '>/// Handles log when not in DEBUG.</span>
+    <span style='color:#008000; '>/// &lt;/summary></span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>sealed</span> <span style='color:#0000ff; font-weight:bold; '>class</span> NetLogger
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> ILog _log <span style='color:#0000ff; '>=</span> LogManager<span style='color:#0000ff; '>.</span>GetLogger<span style='color:#0000ff; '>(</span>MethodBase<span style='color:#0000ff; '>.</span>GetCurrentMethod<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>DeclaringType<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> NetLogger _instance <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> NetLogger<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> NetLogger<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> NetLogger<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> NetLogger Instance <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> _instance<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> WriteInfoLog<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _log<span style='color:#0000ff; '>.</span>Info<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> WriteErrorLog<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _log<span style='color:#0000ff; '>.</span>Error<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> WriteInfoLog<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>params</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                _log<span style='color:#0000ff; '>.</span>Info<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> ? message <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// error</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> WriteErrorLog<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>params</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                _log<span style='color:#0000ff; '>.</span>Error<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> ? message <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>,</span> args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// error</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

@@ -1,0 +1,248 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>.</span>Sockets<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> GeoCommon<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> SocketEngine
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/// &lt;summary></span>
+    <span style='color:#008000; '>/// Device socket related variables.</span>
+    <span style='color:#008000; '>/// &lt;/summary></span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>struct</span> stDeviceSocket
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>long</span> deviceid <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Thread thread <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> TcpClient tcpClient <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#008000; '>/// &lt;summary></span>
+    <span style='color:#008000; '>/// Implements base class &lt;see cref="ISocketListener"/> for Tcp.</span>
+    <span style='color:#008000; '>/// &lt;/summary></span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>abstract</span> <span style='color:#0000ff; font-weight:bold; '>class</span> TcpSocketListener <span style='color:#0000ff; '>:</span> ISocketListener
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> TcpListener m_server <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Number of connections.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> volatile <span style='color:#0000ff; font-weight:bold; '>int</span> m_nConnections <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Socket dictionary.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>long</span><span style='color:#0000ff; '>,</span> stDeviceSocket<span style='color:#0000ff; '>></span> m_socket_conn <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>long</span><span style='color:#0000ff; '>,</span> stDeviceSocket<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Object use for lock statement.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>object</span> _cs_mutex <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> port<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>m_server <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> TcpListener<span style='color:#0000ff; '>(</span>IPAddress<span style='color:#0000ff; '>.</span>Any<span style='color:#0000ff; '>,</span> port<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>m_server<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            _running <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            GeoLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Server start: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>m_server<span style='color:#0000ff; '>.</span>LocalEndpoint<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                    
+
+            <span style='color:#008000; '>// start listening to socket port and accept incoming device messages</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>_running<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>try</span>
+                <span style='color:#0000ff; '>{</span>
+                    TcpClient client <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>m_server<span style='color:#0000ff; '>.</span>AcceptTcpClient<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Thread t <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span>HandleDeviceThread<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>      <span style='color:#008000; '>// possibly may need to decrease stack size</span>
+                    t<span style='color:#0000ff; '>.</span>IsBackground <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                    t<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span>client<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>SocketException ex<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>_running<span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                    GeoLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SocketException Start: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    GeoLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception Start: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// listening at port ended, socket server stopped running</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>_running<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                GeoLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Server stop: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>m_server<span style='color:#0000ff; '>.</span>LocalEndpoint<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _running <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>m_server<span style='color:#0000ff; '>.</span>Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            GeoLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Server stop.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> OnRead<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> len<span style='color:#0000ff; '>,</span> NetworkStream ns<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> <span style='color:#0000ff; font-weight:bold; '>new</span> NotImplementedException<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> OnGetDeviceId<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> <span style='color:#0000ff; font-weight:bold; '>long</span> devid<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> <span style='color:#0000ff; font-weight:bold; '>new</span> NotImplementedException<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> OnGetDeviceId<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> start_idx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> length<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> <span style='color:#0000ff; font-weight:bold; '>long</span> devid<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            devid <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> str <span style='color:#0000ff; '>=</span> data<span style='color:#0000ff; '>.</span>SubBytesAsString<span style='color:#0000ff; '>(</span>start_idx<span style='color:#0000ff; '>,</span> length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>String<span style='color:#0000ff; '>.</span>IsNullOrEmpty<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>Int64<span style='color:#0000ff; '>.</span>TryParse<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> devid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> IsClientClosing<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>override</span> <span style='color:#0000ff; font-weight:bold; '>void</span> HandleDeviceThread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> obj<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span>SocketParserConstants<span style='color:#0000ff; '>.</span>MAX_SIZE_READ_PACKET_BUFFER<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+            TcpClient remclient <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>TcpClient<span style='color:#0000ff; '>)</span>obj<span style='color:#0000ff; '>;</span>
+            NetworkStream netstream <span style='color:#0000ff; '>=</span> remclient<span style='color:#0000ff; '>.</span>GetStream<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            remclient<span style='color:#0000ff; '>.</span>ReceiveTimeout <span style='color:#0000ff; '>=</span> SocketParserConstants<span style='color:#0000ff; '>.</span>READ_PACKET_TIMEOUT_SHORT<span style='color:#0000ff; '>;</span>
+            GeoLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Client Connected. Active Connections = {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>m_nConnections<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// main loop to service the client</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>netstream<span style='color:#0000ff; '>.</span>CanRead<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>try</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// clear buffer and read from network packet [blocking call]</span>
+                    Array<span style='color:#0000ff; '>.</span>Clear<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>int</span> recv <span style='color:#0000ff; '>=</span> netstream<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// close socket if nothing was received</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>recv <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        GeoLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Socket Closed.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>                    
+
+                    <span style='color:#008000; '>// now that we have received initial data from device, let's increase max time-out</span>
+                    remclient<span style='color:#0000ff; '>.</span>ReceiveTimeout <span style='color:#0000ff; '>=</span> SocketParserConstants<span style='color:#0000ff; '>.</span>READ_PACKET_TIMEOUT_LONG<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// handle data packet, log any and all data sent to server</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>OnRead<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> recv<span style='color:#0000ff; '>,</span> netstream<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span> || recv <span style='color:#0000ff; '>></span> SocketParserConstants<span style='color:#0000ff; '>.</span>MAX_SIZE_DATAGRAM<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// check if client issued a closing request, if so, close client socket and thread</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (IsClientClosing(data))</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;GeoLogger.LogInfoLine("Client Closed.");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;* */</span>
+
+                    <span style='color:#008000; '>// we'll need to replace the socket/close the old thread</span>
+                    <span style='color:#0000ff; font-weight:bold; '>long</span> devid <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>OnGetDeviceId<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> devid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        stDeviceSocket stobj <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> stDeviceSocket
+                        <span style='color:#0000ff; '>{</span>
+                            deviceid <span style='color:#0000ff; '>=</span> devid<span style='color:#0000ff; '>,</span>
+                            thread <span style='color:#0000ff; '>=</span> Thread<span style='color:#0000ff; '>.</span>CurrentThread<span style='color:#0000ff; '>,</span>
+                            tcpClient <span style='color:#0000ff; '>=</span> remclient
+                        <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>// replace socket, and insert data into tracker log</span>
+                        <span style='color:#0000ff; font-weight:bold; '>string</span> strerr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>lock</span> <span style='color:#0000ff; '>(</span>_cs_mutex<span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ReplaceSocket<span style='color:#0000ff; '>(</span>stobj<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>SocketSQL<span style='color:#0000ff; '>.</span>Instance<span style='color:#0000ff; '>.</span>InsertToTrackerLog<span style='color:#0000ff; '>(</span>_deviceModel<span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>,</span> recv<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                                <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>SocketSQL<span style='color:#0000ff; '>.</span>Instance<span style='color:#0000ff; '>.</span>InsertToTrackerLog<span style='color:#0000ff; '>(</span>_deviceModel<span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>,</span> recv<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                                <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>SocketSQL<span style='color:#0000ff; '>.</span>Instance<span style='color:#0000ff; '>.</span>InsertToTrackerLog<span style='color:#0000ff; '>(</span>_deviceModel<span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>,</span> recv<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                                <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                        <span style='color:#008000; '>// end critical section</span>
+
+                        <span style='color:#008000; '>// 3x tries and we failed to insert into TrackerLog, lets log it</span>
+                        GeoLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>MySqlInsertError: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> strerr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>IOException<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    GeoLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Socket replaced or client timed-out.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>SocketException ex<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    GeoLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HandleDeviceThread - SocketException: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    GeoLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HandleDeviceThread - Exception: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            netstream<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            remclient<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            GeoLogger<span style='color:#0000ff; '>.</span>LogInfoLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Client Disconnected. Active Connections = {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>-</span>m_nConnections<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Replaces the old socket from &lt;see cref="m_socket_conn"/></span>
+        <span style='color:#008000; '>/// with the current socket or adds it, if it does not exist.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="stNew">The current socket&lt;/param></span>
+        <span style='color:#0000ff; font-weight:bold; '>protected</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ReplaceSocket<span style='color:#0000ff; '>(</span>stDeviceSocket stNew<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_socket_conn<span style='color:#0000ff; '>.</span>ContainsKey<span style='color:#0000ff; '>(</span>stNew<span style='color:#0000ff; '>.</span>deviceid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// device not exist, lets add it</span>
+                    m_socket_conn<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>stNew<span style='color:#0000ff; '>.</span>deviceid<span style='color:#0000ff; '>,</span> stNew<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// device exist, find the old thread and kill it, and replace it</span>
+                    stDeviceSocket stOld <span style='color:#0000ff; '>=</span> m_socket_conn<span style='color:#0000ff; '>[</span>stNew<span style='color:#0000ff; '>.</span>deviceid<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// do nothing if device is comming from same thread</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>stNew<span style='color:#0000ff; '>.</span>thread<span style='color:#0000ff; '>.</span>ManagedThreadId <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> stOld<span style='color:#0000ff; '>.</span>thread<span style='color:#0000ff; '>.</span>ManagedThreadId<span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// explicitly close the client socket</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>stOld<span style='color:#0000ff; '>.</span>thread<span style='color:#0000ff; '>.</span>IsAlive &amp;&amp; stOld<span style='color:#0000ff; '>.</span>tcpClient<span style='color:#0000ff; '>.</span>Connected<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        stOld<span style='color:#0000ff; '>.</span>tcpClient<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    <span style='color:#008000; '>// replace with current thread</span>
+                    m_socket_conn<span style='color:#0000ff; '>[</span>stNew<span style='color:#0000ff; '>.</span>deviceid<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> stNew<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                GeoLogger<span style='color:#0000ff; '>.</span>LogErrorLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Exception ReplaceSocket: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>        
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

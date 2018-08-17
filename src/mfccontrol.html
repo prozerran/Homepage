@@ -1,0 +1,570 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// This file was created on March 21st 2001 by Robert Brault.</span>
+<span style='color:#008000; '>// I created this Class to be able change the Color of your Edit Box</span>
+<span style='color:#008000; '>// as well as your Edit Box Text. This is Derived from CEdit so you</span>
+<span style='color:#008000; '>// do not have all the overhead of a CRichEditCtrl.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// There are three functions available Currently:</span>
+<span style='color:#008000; '>// SetBkColor(COLORREF crColor)</span>
+<span style='color:#008000; '>// SetTextColor(COLORREF crColor)</span>
+<span style='color:#008000; '>// SetReadOnly(BOOL flag = TRUE)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// How To Use:</span>
+<span style='color:#008000; '>// Add three files to your project</span>
+<span style='color:#008000; '>// ColorEdit.cpp, ColorEdit.h and Color.h</span>
+<span style='color:#008000; '>// Color.h has (#define)'s for different colors (add any color you desire).</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Add #include "ColorEdit.h" to your Dialogs Header file.</span>
+<span style='color:#008000; '>// Declare an instance of CColorEdit for each edit box being modified.</span>
+<span style='color:#008000; '>// Ex. CColorEdit m_ebName;</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// In your OnInitDialog() add a SubclassDlgItem for each CColorEdit member variable.</span>
+<span style='color:#008000; '>// Ex. m_ebName.SubclassDlgItem(IDC_EB_NAME, this);</span>
+<span style='color:#008000; '>// In this same function initialize your color for each box unless you want the default.</span>
+
+
+<span style='color:#008000; '>// ColorEdit.cpp : implementation file</span>
+<span style='color:#008000; '>//</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>ColorControl.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#008000; '>//#include "ColorEdit.h"</span>
+<span style='color:#008000; '>//#include "Color.h" // File Holding (#define)'s for COLORREF Values</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _DEBUG</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> new DEBUG_NEW</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>undef</span><span style='color:#004a43; '> THIS_FILE</span>
+<span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>char</span> THIS_FILE<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> __FILE__<span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CColorEdit</span>
+
+CColorEdit<span style='color:#0000ff; '>::</span>CColorEdit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_crBkColor <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_3DFACE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Initializing background color to the system face color.</span>
+  m_crTextColor <span style='color:#0000ff; '>=</span> BLACK<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Initializing text color to black</span>
+  m_brBkgnd<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateSolidBrush</span><span style='color:#0000ff; '>(</span>m_crBkColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Creating the Brush Color For the Edit Box Background</span>
+<span style='color:#0000ff; '>}</span>
+
+CColorEdit<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CColorEdit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#0000ff; '>}</span>
+
+BEGIN_MESSAGE_MAP<span style='color:#0000ff; '>(</span>CColorEdit<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CEdit</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#008000; '>//{{AFX_MSG_MAP(CColorEdit)</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;ON_WM_CTLCOLOR_REFLECT()</span>
+<span style='color:#008000; '>&#xa0;&#xa0;</span><span style='color:#008000; '>//}}AFX_MSG_MAP</span>
+END_MESSAGE_MAP<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CColorEdit message handlers</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorEdit<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>SetTextColor</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> crColor<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_crTextColor <span style='color:#0000ff; '>=</span> crColor<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Passing the value passed by the dialog to the member varaible for Text Color</span>
+  <span style='color:#0000ff; font-weight:bold; '>RedrawWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorEdit<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>SetBkColor</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> crColor<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_crBkColor <span style='color:#0000ff; '>=</span> crColor<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Passing the value passed by the dialog to the member varaible for Backgound Color</span>
+  m_brBkgnd<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>DeleteObject</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Deleting any Previous Brush Colors if any existed.</span>
+  m_brBkgnd<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateSolidBrush</span><span style='color:#0000ff; '>(</span>crColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Creating the Brush Color For the Edit Box Background</span>
+  <span style='color:#0000ff; font-weight:bold; '>RedrawWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>HBRUSH</span> CColorEdit<span style='color:#0000ff; '>::</span>CtlColor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CDC</span><span style='color:#0000ff; '>*</span> pDC<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>UINT</span> nCtlColor<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>HBRUSH</span> hbr<span style='color:#0000ff; '>;</span>
+  hbr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HBRUSH</span><span style='color:#0000ff; '>)</span>m_brBkgnd<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Passing a Handle to the Brush</span>
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetBkColor</span><span style='color:#0000ff; '>(</span>m_crBkColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Setting the Color of the Text Background to the one passed by the Dialog</span>
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetTextColor</span><span style='color:#0000ff; '>(</span>m_crTextColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Setting the Text Color to the one Passed by the Dialog</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nCtlColor<span style='color:#0000ff; '>)</span>       <span style='color:#008000; '>// To get rid of compiler warning</span>
+      nCtlColor <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>return</span> hbr<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CColorEdit<span style='color:#0000ff; '>::</span>SetReadOnly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>BOOL</span> flag<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+   <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>flag <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> TRUE<span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>SetBkColor</span><span style='color:#0000ff; '>(</span>m_crBkColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+   <span style='color:#0000ff; font-weight:bold; '>else</span>
+      <span style='color:#0000ff; font-weight:bold; '>SetBkColor</span><span style='color:#0000ff; '>(</span>WHITE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+   <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>CEdit</span><span style='color:#0000ff; '>::</span>SetReadOnly<span style='color:#0000ff; '>(</span>flag<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// This file was created on March 28th 2001 by Robert Brault.</span>
+<span style='color:#008000; '>// I created this Class to be able change the Color of your Static Text.</span>
+<span style='color:#008000; '>// This is Derived from CStatic.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// There are three functions available Currently:</span>
+<span style='color:#008000; '>// SetBkColor(COLORREF crColor)</span>
+<span style='color:#008000; '>// SetTextColor(COLORREF crColor)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// How To Use:</span>
+<span style='color:#008000; '>// Add three files to your project</span>
+<span style='color:#008000; '>// ColorStatic.cpp, ColorStatic.h and Color.h</span>
+<span style='color:#008000; '>// Color.h has (#define)'s for different colors (add any color you desire).</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Add #include "ColorStatic.h" to your Dialogs Header file.</span>
+<span style='color:#008000; '>// Declare an instance of CColorStatic for each static text being modified.</span>
+<span style='color:#008000; '>// Ex. CColorStatic m_stText;</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// In your OnInitDialog() add a SubclassDlgItem for each CColorStatic member variable.</span>
+<span style='color:#008000; '>// Ex. m_stText.SubclassDlgItem(IDC_ST_TEXT, this);</span>
+<span style='color:#008000; '>// In this same function initialize your color for each piece of text unless you want the default.</span>
+
+
+<span style='color:#008000; '>// ColorStatic.cpp : implementation file</span>
+<span style='color:#008000; '>//</span>
+
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>#include "stdafx.h"</span>
+<span style='color:#008000; '>#include "ColorStatic.h"</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>#ifdef _DEBUG</span>
+<span style='color:#008000; '>#define new DEBUG_NEW</span>
+<span style='color:#008000; '>#undef THIS_FILE</span>
+<span style='color:#008000; '>static char THIS_FILE[] = __FILE__;</span>
+<span style='color:#008000; '>#endif</span>
+<span style='color:#008000; '>*/</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CColorStatic</span>
+
+CColorStatic<span style='color:#0000ff; '>::</span>CColorStatic<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_crBkColor <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_3DFACE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Initializing the Background Color to the system face color.</span>
+  m_crTextColor <span style='color:#0000ff; '>=</span> BLACK<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Initializing the text to Black</span>
+  m_brBkgnd<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateSolidBrush</span><span style='color:#0000ff; '>(</span>m_crBkColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Create the Brush Color for the Background.</span>
+<span style='color:#0000ff; '>}</span>
+
+CColorStatic<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CColorStatic<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#0000ff; '>}</span>
+
+BEGIN_MESSAGE_MAP<span style='color:#0000ff; '>(</span>CColorStatic<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CStatic</span><span style='color:#0000ff; '>)</span>
+<span style='color:#008000; '>//{{AFX_MSG_MAP(CColorStatic)</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>ON_WM_CTLCOLOR_REFLECT()</span>
+<span style='color:#008000; '>//}}AFX_MSG_MAP</span>
+END_MESSAGE_MAP<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CColorStatic message handlers</span>
+
+<span style='color:#0000ff; font-weight:bold; '>HBRUSH</span> CColorStatic<span style='color:#0000ff; '>::</span>CtlColor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CDC</span><span style='color:#0000ff; '>*</span> pDC<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>UINT</span> nCtlColor<span style='color:#0000ff; '>)</span> 
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>HBRUSH</span> hbr<span style='color:#0000ff; '>;</span>
+  hbr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>HBRUSH</span><span style='color:#0000ff; '>)</span>m_brBkgnd<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Passing a Handle to the Brush</span>
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetBkColor</span><span style='color:#0000ff; '>(</span>m_crBkColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Setting the Color of the Text Background to the one passed by the Dialog</span>
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetTextColor</span><span style='color:#0000ff; '>(</span>m_crTextColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Setting the Text Color to the one Passed by the Dialog</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>nCtlColor<span style='color:#0000ff; '>)</span>       <span style='color:#008000; '>// To get rid of compiler warning</span>
+    nCtlColor <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  
+  <span style='color:#0000ff; font-weight:bold; '>return</span> hbr<span style='color:#0000ff; '>;</span>
+  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorStatic<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>SetBkColor</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> crColor<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_crBkColor <span style='color:#0000ff; '>=</span> crColor<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Passing the value passed by the dialog to the member varaible for Backgound Color</span>
+  m_brBkgnd<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>DeleteObject</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Deleting any Previous Brush Colors if any existed.</span>
+  m_brBkgnd<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateSolidBrush</span><span style='color:#0000ff; '>(</span>crColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Creating the Brush Color For the Static Text Background</span>
+  <span style='color:#0000ff; font-weight:bold; '>RedrawWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorStatic<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>SetTextColor</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> crColor<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_crTextColor <span style='color:#0000ff; '>=</span> crColor<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Passing the value passed by the dialog to the member varaible for Text Color</span>
+  <span style='color:#0000ff; font-weight:bold; '>RedrawWindow</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ColorButton.cpp : implementation file</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Written by Marius Bancila (</span><span style='color:#7144c4; '>mbancila@yahoo.com</span><span style='color:#008000; '>)</span>
+<span style='color:#008000; '>// Copyright (c) 2004.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// This code may be used in compiled form in any way you desire. This</span>
+<span style='color:#008000; '>// file may be redistributed unmodified by any means PROVIDING it is </span>
+<span style='color:#008000; '>// not sold for profit without the authors written consent, and </span>
+<span style='color:#008000; '>// providing that this notice and the authors name is included. If </span>
+<span style='color:#008000; '>// the source code in  this file is used in any commercial application </span>
+<span style='color:#008000; '>// then acknowledgement must be made to the author of this file </span>
+<span style='color:#008000; '>// (in whatever form you wish).</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
+<span style='color:#008000; '>// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
+<span style='color:#008000; '>// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL</span>
+<span style='color:#008000; '>// THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, </span>
+<span style='color:#008000; '>// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, </span>
+<span style='color:#008000; '>// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS </span>
+<span style='color:#008000; '>// IN THE SOFTWARE.</span>
+<span style='color:#008000; '>// </span>
+<span style='color:#008000; '>// Please use and enjoy. Please let me know of any bugs/mods/improvements </span>
+<span style='color:#008000; '>// that you have found/implemented and I will </span><span style='color:#ffffff; background:#808000; '>fix/incorporate them into this</span>
+<span style='color:#008000; '>// file. </span>
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>#include "stdafx.h"</span>
+<span style='color:#008000; '>#include "ColorButton.h"</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>#include &lt;afxtempl.h></span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>#ifdef _DEBUG</span>
+<span style='color:#008000; '>#define new DEBUG_NEW</span>
+<span style='color:#008000; '>#undef THIS_FILE</span>
+<span style='color:#008000; '>static char THIS_FILE[] = __FILE__;</span>
+<span style='color:#008000; '>#endif</span>
+<span style='color:#008000; '>*/</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> clr
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> CLR_BTN_WHITE  <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RGB</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>255</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>255</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>255</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> CLR_BTN_BLACK  <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RGB</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> CLR_BTN_DGREY  <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RGB</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>128</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>128</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>128</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> CLR_BTN_GREY   <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RGB</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>192</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>192</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>192</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> CLR_BTN_LLGREY <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>RGB</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>223</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>223</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>223</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CColorButton</span>
+CColorButton<span style='color:#0000ff; '>::</span>CColorButton<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  SetColorToWindowsDefault<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CColorButton<span style='color:#0000ff; '>::</span>CColorButton<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> text<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> bkgnd<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_TextColor        <span style='color:#0000ff; '>=</span> text<span style='color:#0000ff; '>;</span>
+  m_BkgndColor      <span style='color:#0000ff; '>=</span> bkgnd<span style='color:#0000ff; '>;</span> 
+  m_DisabledBkgndColor  <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNFACE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_Light          <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_3DLIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_Highlight        <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNHIGHLIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_Shadow        <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNSHADOW<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_DarkShadow      <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_3DDKSHADOW<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+<span style='color:#0000ff; '>}</span>
+
+CColorButton<span style='color:#0000ff; '>::</span>CColorButton<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> text<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> bkgnd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> disabled<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_TextColor        <span style='color:#0000ff; '>=</span> text<span style='color:#0000ff; '>;</span>
+  m_BkgndColor      <span style='color:#0000ff; '>=</span> bkgnd<span style='color:#0000ff; '>;</span> 
+  m_DisabledBkgndColor  <span style='color:#0000ff; '>=</span> disabled<span style='color:#0000ff; '>;</span>
+  m_Light          <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_3DLIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_Highlight        <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNHIGHLIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_Shadow        <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNSHADOW<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_DarkShadow      <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_3DDKSHADOW<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+<span style='color:#0000ff; '>}</span>
+
+CColorButton<span style='color:#0000ff; '>::</span>CColorButton<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> text<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> bkgnd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> disabled<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> light<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> highlight<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> shadow<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> darkShadow<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_TextColor        <span style='color:#0000ff; '>=</span> text<span style='color:#0000ff; '>;</span>
+  m_BkgndColor      <span style='color:#0000ff; '>=</span> bkgnd<span style='color:#0000ff; '>;</span> 
+  m_DisabledBkgndColor  <span style='color:#0000ff; '>=</span> disabled<span style='color:#0000ff; '>;</span>
+  m_Light          <span style='color:#0000ff; '>=</span> light<span style='color:#0000ff; '>;</span>
+  m_Highlight        <span style='color:#0000ff; '>=</span> highlight<span style='color:#0000ff; '>;</span>
+  m_Shadow        <span style='color:#0000ff; '>=</span> shadow<span style='color:#0000ff; '>;</span>
+  m_DarkShadow      <span style='color:#0000ff; '>=</span> darkShadow<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CColorButton<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CColorButton<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+<span style='color:#0000ff; '>}</span>
+
+
+BEGIN_MESSAGE_MAP<span style='color:#0000ff; '>(</span>CColorButton<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CButton</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#008000; '>//{{AFX_MSG_MAP(CColorButton)</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;ON_WM_CREATE()</span>
+<span style='color:#008000; '>&#xa0;&#xa0;</span><span style='color:#008000; '>//}}AFX_MSG_MAP</span>
+END_MESSAGE_MAP<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+
+<span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// CColorButton message handlers</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>DrawItem<span style='color:#0000ff; '>(</span>LPDRAWITEMSTRUCT lpDrawItemStruct<span style='color:#0000ff; '>)</span> 
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CDC</span>    <span style='color:#0000ff; '>*</span>pDC<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CRect</span>  rcFocus<span style='color:#0000ff; '>,</span> rcButton<span style='color:#0000ff; '>,</span> rcText<span style='color:#0000ff; '>,</span> rcOffsetText<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>UINT</span>  state<span style='color:#0000ff; '>;</span>
+
+  pDC    <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CDC</span><span style='color:#0000ff; '>::</span>FromHandle<span style='color:#0000ff; '>(</span>lpDrawItemStruct<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hDC<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  state <span style='color:#0000ff; '>=</span> lpDrawItemStruct<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>itemState<span style='color:#0000ff; '>;</span>
+
+  rcFocus<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CopyRect</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>lpDrawItemStruct<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>rcItem<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+  rcButton<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CopyRect</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>lpDrawItemStruct<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>rcItem<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+
+  rcText <span style='color:#0000ff; '>=</span> rcButton<span style='color:#0000ff; '>;</span>
+  rcText<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>OffsetRect</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  rcOffsetText <span style='color:#0000ff; '>=</span> rcText<span style='color:#0000ff; '>;</span>
+  rcOffsetText<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>OffsetRect</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>// Set the focus rectangle to just past the border decoration</span>
+  rcFocus<span style='color:#0000ff; '>.</span>left   <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>;</span>
+  rcFocus<span style='color:#0000ff; '>.</span>right  <span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>;</span>
+  rcFocus<span style='color:#0000ff; '>.</span>top    <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>;</span>
+  rcFocus<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#008000; '>// Retrieve the button's caption</span>
+  <span style='color:#0000ff; font-weight:bold; '>CString</span> strCaption<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>GetWindowText</span><span style='color:#0000ff; '>(</span>strCaption<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> ODS_DISABLED<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    DrawFilledRect<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcButton<span style='color:#0000ff; '>,</span> m_DisabledBkgndColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    DrawFilledRect<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcButton<span style='color:#0000ff; '>,</span> m_BkgndColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> ODS_SELECTED<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span> 
+    DrawFrame<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcButton<span style='color:#0000ff; '>,</span> BUTTON_IN<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> ODS_DEFAULT<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>|</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> ODS_FOCUS<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      DrawFrame<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcButton<span style='color:#0000ff; '>,</span> BUTTON_OUT <span style='color:#0000ff; '>|</span> BUTTON_BLACK_BORDER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>      
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+      DrawFrame<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcButton<span style='color:#0000ff; '>,</span> BUTTON_OUT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> ODS_DISABLED<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    DrawButtonText<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcOffsetText<span style='color:#0000ff; '>,</span> strCaption<span style='color:#0000ff; '>,</span> clr<span style='color:#0000ff; '>::</span>CLR_BTN_WHITE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    DrawButtonText<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcText<span style='color:#0000ff; '>,</span>  strCaption<span style='color:#0000ff; '>,</span> clr<span style='color:#0000ff; '>::</span>CLR_BTN_DGREY<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> ODS_SELECTED<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      DrawButtonText<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcOffsetText<span style='color:#0000ff; '>,</span> strCaption<span style='color:#0000ff; '>,</span> m_TextColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+      DrawButtonText<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rcText<span style='color:#0000ff; '>,</span> strCaption<span style='color:#0000ff; '>,</span> m_TextColor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> ODS_FOCUS<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>DrawFocusRect</span><span style='color:#0000ff; '>(</span>lpDrawItemStruct<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>hDC<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPRECT</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>&amp;</span>rcFocus<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>DrawFrame<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CDC</span> <span style='color:#0000ff; '>*</span>pDC<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CRect</span> rc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> state<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> color<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> BUTTON_BLACK_BORDER<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    color <span style='color:#0000ff; '>=</span> clr<span style='color:#0000ff; '>::</span>CLR_BTN_BLACK<span style='color:#0000ff; '>;</span>
+
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>    color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across top</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>  rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down left</span>
+
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>      rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span>     rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across bottom</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>        rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span>     color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down right</span>
+
+    rc<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>InflateRect</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> BUTTON_OUT<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    color <span style='color:#0000ff; '>=</span> m_Highlight<span style='color:#0000ff; '>;</span>
+
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>    color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across top</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>  rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down left</span>
+
+    color <span style='color:#0000ff; '>=</span> m_DarkShadow<span style='color:#0000ff; '>;</span>
+
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>      rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span>     rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across bottom</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>        rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span>     color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down right</span>
+
+    rc<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>InflateRect</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    color <span style='color:#0000ff; '>=</span> m_Light<span style='color:#0000ff; '>;</span>
+
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>    color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across top</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>  rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down left</span>
+
+    color <span style='color:#0000ff; '>=</span> m_Shadow<span style='color:#0000ff; '>;</span>
+
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>      rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span>     rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across bottom</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>        rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span>     color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down right</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>state <span style='color:#0000ff; '>&amp;</span> BUTTON_IN<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    color <span style='color:#0000ff; '>=</span> m_DarkShadow<span style='color:#0000ff; '>;</span>
+
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>    color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across top</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>  rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down left</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>      rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span>     rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across bottom</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>        rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span>     color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down right</span>
+
+    rc<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>InflateRect</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    color <span style='color:#0000ff; '>=</span> m_Shadow<span style='color:#0000ff; '>;</span>
+
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>    color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across top</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>  rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down left</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>left<span style='color:#0000ff; '>,</span>      rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right<span style='color:#0000ff; '>,</span>     rc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Across bottom</span>
+    DrawLine<span style='color:#0000ff; '>(</span>pDC<span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>,</span>        rc<span style='color:#0000ff; '>.</span>right <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>,</span>     color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// Down right</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>DrawFilledRect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CDC</span> <span style='color:#0000ff; '>*</span>pDC<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CRect</span> rc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> color<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CBrush</span> brSolid<span style='color:#0000ff; '>;</span>
+
+  brSolid<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateSolidBrush</span><span style='color:#0000ff; '>(</span>color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>FillRect</span><span style='color:#0000ff; '>(</span>rc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>brSolid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>DrawLine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CDC</span> <span style='color:#0000ff; '>*</span>pDC<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>long</span> sx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>long</span> sy<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>long</span> ex<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>long</span> ey<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> color<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>CPen</span> newPen<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>CPen</span> <span style='color:#0000ff; '>*</span>oldPen<span style='color:#0000ff; '>;</span>
+
+  newPen<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreatePen</span><span style='color:#0000ff; '>(</span>PS_SOLID<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> color<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  oldPen <span style='color:#0000ff; '>=</span> pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SelectObject</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>newPen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>MoveTo<span style='color:#0000ff; '>(</span>sx<span style='color:#0000ff; '>,</span> sy<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>LineTo</span><span style='color:#0000ff; '>(</span>ex<span style='color:#0000ff; '>,</span> ey<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SelectObject</span><span style='color:#0000ff; '>(</span>oldPen<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  newPen<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>DeleteObject</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>DrawButtonText<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CDC</span> <span style='color:#0000ff; '>*</span>pDC<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CRect</span> rc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CString</span> strCaption<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> textcolor<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>DWORD</span> uStyle <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetWindowLong</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_hWnd<span style='color:#0000ff; '>,</span>GWL_STYLE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  CArray<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>CString</span><span style='color:#0000ff; '>></span> arLines<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>uStyle <span style='color:#0000ff; '>&amp;</span> BS_MULTILINE<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> BS_MULTILINE<span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> nIndex <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>while</span><span style='color:#0000ff; '>(</span>nIndex <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      nIndex <span style='color:#0000ff; '>=</span> strCaption<span style='color:#0000ff; '>.</span>Find<span style='color:#0000ff; '>(</span><span style='color:#000080; '>'\n'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>nIndex<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>CString</span> line <span style='color:#0000ff; '>=</span> strCaption<span style='color:#0000ff; '>.</span>Left<span style='color:#0000ff; '>(</span>nIndex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        arLines<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>line<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        strCaption<span style='color:#0000ff; '>.</span>Delete<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>nIndex<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+        arLines<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>strCaption<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    arLines<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>strCaption<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>CSize</span> sizeText <span style='color:#0000ff; '>=</span> pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetOutputTextExtent<span style='color:#0000ff; '>(</span> strCaption <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> oldColour<span style='color:#0000ff; '>;</span>
+
+  oldColour <span style='color:#0000ff; '>=</span> pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetTextColor</span><span style='color:#0000ff; '>(</span>textcolor<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetBkMode</span><span style='color:#0000ff; '>(</span>TRANSPARENT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>int</span> nStartPos <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>rc<span style='color:#0000ff; '>.</span>Height<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> arLines<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>sizeText<span style='color:#0000ff; '>.</span>cy<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>/</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>uStyle <span style='color:#0000ff; '>&amp;</span> BS_TOP<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> BS_TOP<span style='color:#0000ff; '>)</span>
+    nStartPos <span style='color:#0000ff; '>=</span> rc<span style='color:#0000ff; '>.</span>top<span style='color:#0000ff; '>+</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>uStyle <span style='color:#0000ff; '>&amp;</span> BS_BOTTOM<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> BS_BOTTOM<span style='color:#0000ff; '>)</span>
+    nStartPos <span style='color:#0000ff; '>=</span> rc<span style='color:#0000ff; '>.</span>bottom<span style='color:#0000ff; '>-</span> arLines<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>sizeText<span style='color:#0000ff; '>.</span>cy<span style='color:#0000ff; '>-</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>uStyle <span style='color:#0000ff; '>&amp;</span> BS_VCENTER<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> BS_VCENTER<span style='color:#0000ff; '>)</span>
+    nStartPos <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>rc<span style='color:#0000ff; '>.</span>Height<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> arLines<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>sizeText<span style='color:#0000ff; '>.</span>cy<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>/</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>UINT</span> uDrawStyles <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>uStyle <span style='color:#0000ff; '>&amp;</span> BS_CENTER<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> BS_CENTER<span style='color:#0000ff; '>)</span>
+    uDrawStyles <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>=</span> DT_CENTER<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; font-weight:bold; '>else</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>uStyle <span style='color:#0000ff; '>&amp;</span> BS_LEFT<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> BS_LEFT<span style='color:#0000ff; '>)</span>
+      uDrawStyles <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>=</span> DT_LEFT<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>uStyle <span style='color:#0000ff; '>&amp;</span> BS_RIGHT<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> BS_RIGHT<span style='color:#0000ff; '>)</span>
+        uDrawStyles <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>=</span> DT_RIGHT<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>uDrawStyles <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+          uDrawStyles <span style='color:#0000ff; '>=</span> DT_CENTER<span style='color:#0000ff; '>|</span>DT_VCENTER <span style='color:#0000ff; '>|</span> DT_SINGLELINE<span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>for</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>&lt;</span>arLines<span style='color:#0000ff; '>.</span>GetSize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>CRect</span> textrc <span style='color:#0000ff; '>=</span> rc<span style='color:#0000ff; '>;</span>
+    textrc<span style='color:#0000ff; '>.</span>DeflateRect<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>,</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    textrc<span style='color:#0000ff; '>.</span>top <span style='color:#0000ff; '>=</span> nStartPos <span style='color:#0000ff; '>+</span> sizeText<span style='color:#0000ff; '>.</span>cy<span style='color:#0000ff; '>*</span>i<span style='color:#0000ff; '>;</span>
+    textrc<span style='color:#0000ff; '>.</span>bottom <span style='color:#0000ff; '>=</span> nStartPos <span style='color:#0000ff; '>+</span> sizeText<span style='color:#0000ff; '>.</span>cy<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>CString</span> line <span style='color:#0000ff; '>=</span> arLines<span style='color:#0000ff; '>.</span>GetAt<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>DrawText</span><span style='color:#0000ff; '>(</span>line<span style='color:#0000ff; '>,</span> line<span style='color:#0000ff; '>.</span>GetLength<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> textrc<span style='color:#0000ff; '>,</span> uDrawStyles<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  <span style='color:#0000ff; '>}</span>
+
+  pDC<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; font-weight:bold; '>SetTextColor</span><span style='color:#0000ff; '>(</span>oldColour<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>SetColor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> text<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> bkgnd<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_TextColor        <span style='color:#0000ff; '>=</span> text<span style='color:#0000ff; '>;</span>
+  m_BkgndColor      <span style='color:#0000ff; '>=</span> bkgnd<span style='color:#0000ff; '>;</span> 
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_hWnd <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    Invalidate<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>SetColor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> text<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> bkgnd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> disabled<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_TextColor        <span style='color:#0000ff; '>=</span> text<span style='color:#0000ff; '>;</span>
+  m_BkgndColor      <span style='color:#0000ff; '>=</span> bkgnd<span style='color:#0000ff; '>;</span> 
+  m_DisabledBkgndColor  <span style='color:#0000ff; '>=</span> disabled<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_hWnd <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    Invalidate<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>SetColor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>COLORREF</span> text<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> bkgnd<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> disabled<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> light<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> highlight<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> shadow<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>COLORREF</span> darkShadow<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_TextColor        <span style='color:#0000ff; '>=</span> text<span style='color:#0000ff; '>;</span>
+  m_BkgndColor      <span style='color:#0000ff; '>=</span> bkgnd<span style='color:#0000ff; '>;</span> 
+  m_DisabledBkgndColor  <span style='color:#0000ff; '>=</span> disabled<span style='color:#0000ff; '>;</span>
+  m_Light          <span style='color:#0000ff; '>=</span> light<span style='color:#0000ff; '>;</span>
+  m_Highlight        <span style='color:#0000ff; '>=</span> highlight<span style='color:#0000ff; '>;</span>
+  m_Shadow        <span style='color:#0000ff; '>=</span> shadow<span style='color:#0000ff; '>;</span>
+  m_DarkShadow      <span style='color:#0000ff; '>=</span> darkShadow<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_hWnd <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    Invalidate<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CColorButton<span style='color:#0000ff; '>::</span>SetColorToWindowsDefault<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+  m_TextColor        <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNTEXT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_BkgndColor      <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNFACE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+  m_DisabledBkgndColor  <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNFACE<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_Light          <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_3DLIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_Highlight        <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNHIGHLIGHT<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_Shadow        <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_BTNSHADOW<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+  m_DarkShadow      <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetSysColor</span><span style='color:#0000ff; '>(</span>COLOR_3DDKSHADOW<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> CColorButton<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>OnCreate</span><span style='color:#0000ff; '>(</span>LPCREATESTRUCT lpCreateStruct<span style='color:#0000ff; '>)</span> 
+<span style='color:#0000ff; '>{</span>
+  lpCreateStruct<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>dwExStyle <span style='color:#0000ff; '>|</span><span style='color:#0000ff; '>=</span> BS_OWNERDRAW<span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>CButton</span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>OnCreate</span><span style='color:#0000ff; '>(</span>lpCreateStruct<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+  <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

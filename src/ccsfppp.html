@@ -1,0 +1,49 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#c34e00; '>; Yee Hsu</span>
+<span style='color:#c34e00; '>; Filename: ccsf.scp</span>
+<span style='color:#c34e00; '>; date:  6/21/1999 </span>
+<span style='color:#c34e00; '>;</span>
+<span style='color:#c34e00; '>; Dial-up: 415-586-7778</span>
+<span style='color:#c34e00; '>; Dial-up: 415-239-3487</span>
+<span style='color:#c34e00; '>;</span>
+<span style='color:#c34e00; '>; Primary   DNS: 130.212.10.163</span>
+<span style='color:#c34e00; '>; Secondary DNS: 130.212.10.162</span>
+<span style='color:#c34e00; '>;</span>
+<span style='color:#c34e00; '>; For use with a Win95 PPP connection with City College of San Francisco</span>
+
+proc main
+
+<span style='color:#c34e00; '>; Enable the following to delay for 3 seconds first to</span>
+<span style='color:#c34e00; '>; allow host time to send initial characters     </span>
+    delay <span style='color:#8c0000; '>3</span>
+
+<span style='color:#c34e00; '>; Wait for the host prompt before entering</span>
+<span style='color:#c34e00; '>; the host name</span>
+    waitfor <span style='color:#e60000; '>"ost:"</span> 
+    transmit <span style='color:#e60000; '>"hills"</span> 
+    transmit <span style='color:#e60000; '>"^M"</span> 
+
+<span style='color:#c34e00; '>; Wait for the login prompt before entering</span>
+<span style='color:#c34e00; '>; the user ID</span>
+    waitfor <span style='color:#e60000; '>"ogin:"</span>
+    transmit $USERID
+    transmit <span style='color:#e60000; '>"^M"</span>
+
+<span style='color:#c34e00; '>; Enter the password</span>
+    waitfor <span style='color:#e60000; '>"assword:"</span>
+    transmit $PASSWORD
+    transmit <span style='color:#e60000; '>"^M"</span>
+
+    delay <span style='color:#8c0000; '>1</span>
+
+    transmit <span style='color:#e60000; '>"^M"</span>
+    transmit <span style='color:#e60000; '>"^M"</span>
+    transmit <span style='color:#e60000; '>"^M"</span>
+    transmit <span style='color:#e60000; '>"^M"</span>
+
+<span style='color:#c34e00; '>; Enter slirp command at the shell prompt:</span>
+    waitfor <span style='color:#e60000; '>"$"</span> 
+    transmit <span style='color:#e60000; '>"slirp ppp"</span>
+    transmit <span style='color:#e60000; '>"^M"</span>
+
+endproc
+</pre>

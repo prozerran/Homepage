@@ -1,0 +1,740 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#c34e00; '>#!</span><span style='color:#007997; '>/usr/bin/python2.6</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Author:  Yee Hsu</span>
+<span style='color:#c34e00; '># Date:    6/12/2011</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Copyright 2010, __ET__ Limited.</span>
+<span style='color:#c34e00; '># All rights reserved.</span>
+
+import os
+import sys
+import SCons
+
+<span style='color:#c34e00; '># ===================================================================</span>
+<span style='color:#c34e00; '># Setup Base Environment</span>
+<span style='color:#c34e00; '># ===================================================================</span>
+base_env <span style='color:#44aadd; '>=</span> Environment<span style='color:#806030; '>(</span><span style='color:#806030; '>)</span> 
+
+<span style='color:#c34e00; '># The 'component_setup' tool should be invoked on the base environment of</span>
+<span style='color:#c34e00; '># all projects. It adds builders like ComponentProgram and ComponentLibrary.</span>
+<span style='color:#c34e00; '># It also sets up global defaults.</span>
+base_env<span style='color:#400000; font-weight:bold; '>.</span>Tool<span style='color:#806030; '>(</span><span style='color:#e60000; '>'component_setup'</span><span style='color:#806030; '>)</span>
+base_env<span style='color:#400000; font-weight:bold; '>.</span>AppendUnique<span style='color:#806030; '>(</span>
+    <span style='color:#c34e00; '># __ET__SDK</span>
+    __ET___SDK <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'__ET___SDK'</span>, <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>,
+    
+    <span style='color:#c34e00; '># APPDATA</span>
+    APPDATA <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'APPDATA'</span>, <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>,
+    
+    <span style='color:#c34e00; '># scaleform</span>
+    GFXSDK <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'GFXSDK'</span>,<span style='color:#e60000; '>'$__ET___SDK/3rdparty/GFx-4.0'</span><span style='color:#806030; '>)</span>,
+    GFXSDK_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$GFXSDK/Include',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$GFXSDK/Src', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$GFXSDK/Src/GFx', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$GFXSDK/Src/Kernel',        </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$GFXSDK/Src/Render',    </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$GFXSDK/3rdParty/glext',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    GFXSDK_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/Include',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/Src', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/Src/GFx', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/Src/Kernel', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/Src/Render',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/3rdParty/glext',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    GFXSDK_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'zlib', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libjpeg', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libpng',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libgfx', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libgfxrender_gl', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libgfxexpat',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libAS2',</span>
+<span style='color:#e60000; '>#        'libAS3',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    GFXSDK_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/3rdParty/jpeg</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>6b'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># boost 1.44.0</span>
+    BOOST_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'BOOST_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/Boost'</span><span style='color:#806030; '>)</span>,
+    BOOST_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$BOOST_HOME/include/boost</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>1_44'</span><span style='color:#806030; '>]</span>,
+    BOOST_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$BOOST_HOME/lib'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># botan</span>
+    BOTAN_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'BOTAN_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/Botan'</span><span style='color:#806030; '>)</span>,
+    BOTAN_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$BOTAN_HOME/include'</span><span style='color:#806030; '>]</span>,
+    BOTAN_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$BOTAN_HOME/lib/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    BOTAN_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'botan'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># devIL</span>
+    DEVIL_HOME <span style='color:#44aadd; '>=</span>  os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'DEVIL_SDK'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/devil'</span><span style='color:#806030; '>)</span>,
+    DEVIL_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$DEVIL_HOME/include'</span><span style='color:#806030; '>]</span>,
+    DEVIL_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$DEVIL_HOME/lib'</span><span style='color:#806030; '>]</span>,
+    DEVIL_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'DevIL', 'ILU', 'ILUT'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># expat</span>
+    EXPAT_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'EXPAT_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/expat-2.0.1'</span><span style='color:#806030; '>)</span>,
+    EXPAT_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$EXPAT_HOME/include'</span><span style='color:#806030; '>]</span>,
+    EXPAT_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$EXPAT_HOME/lib/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    EXPAT_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'expat'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># taglib</span>
+    TAG_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'TAG_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/taglib-1.7rc1'</span><span style='color:#806030; '>)</span>,
+    TAG_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$TAG_HOME/include/taglib'</span><span style='color:#806030; '>]</span>,
+    TAG_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$TAG_HOME/lib/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    TAG_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'tag'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># ffmpeg</span>
+    FFMPEG_SDK <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'FFMPEG_SDK'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/ffmpeg'</span><span style='color:#806030; '>)</span>,
+    FFMPEG_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$FFMPEG_SDK/include'</span><span style='color:#806030; '>]</span>,
+    FFMPEG_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$FFMPEG_SDK/include'</span><span style='color:#806030; '>]</span>,
+    FFMPEG_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$FFMPEG_SDK/lib'</span><span style='color:#806030; '>]</span>,
+    FFMPEG_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'avcodec</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>52', 'avformat</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>52', 'avutil</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>50', 'swscale</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>0'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># amplifind libofa</span>
+<span style='color:#c34e00; '>#    AMPLIFIND_ROOT = '$SOURCE_ROOT/libs/libofa',</span>
+<span style='color:#c34e00; '>#    AMPLIFIND_CPPPATH = ['$AMPLIFIND_ROOT/include'],        </span>
+<span style='color:#c34e00; '>#    AMPLIFIND_LIBS = ['ofa', 'fftw3'],    </span>
+
+    <span style='color:#c34e00; '># gtest</span>
+    GTEST_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'GTEST_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/gtest'</span><span style='color:#806030; '>)</span>,
+    GTEST_ROOT <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$GTEST_HOME'</span>,
+    GTEST_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$GTEST_HOME/include'</span><span style='color:#806030; '>]</span>,
+    GTEST_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$GTEST_HOME/include'</span><span style='color:#806030; '>]</span>,
+    GTEST_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$GTEST_HOME/lib'</span><span style='color:#806030; '>]</span>,
+    GTEST_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'gtest'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># platinum</span>
+    PLATINUM_SDK <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'PLATINUM_SDK'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/Platinum'</span><span style='color:#806030; '>)</span>,
+    PLATINUM_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span>        
+        <span style='color:#e60000; '>'-I$PLATINUM_SDK/Neptune/Source/Core'</span>,
+        <span style='color:#e60000; '>'-I$PLATINUM_SDK/Platinum/Source/Core'</span>,
+        <span style='color:#e60000; '>'-I$PLATINUM_SDK/Platinum/Source/Devices'</span>,
+        <span style='color:#e60000; '>'-I$PLATINUM_SDK/Platinum/Source/Platinum'</span>,
+        <span style='color:#e60000; '>'-I$PLATINUM_SDK/Platinum/Source/Devices/MediaConnect'</span>,
+        <span style='color:#e60000; '>'-I$PLATINUM_SDK/Platinum/Source/Devices/MediaServer'</span>,
+    <span style='color:#806030; '>]</span>,
+    PLATINUM_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$PLATINUM_SDK/Neptune/Source/Core',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$PLATINUM_SDK/Platinum/Source/Core',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$PLATINUM_SDK/Platinum/Source/Devices',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$PLATINUM_SDK/Platinum/Source/Platinum',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$PLATINUM_SDK/Platinum/Source/Devices/MediaConnect',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$PLATINUM_SDK/Platinum/Source/Devices/MediaServer',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    PLATINUM_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$PLATINUM_SDK/lib/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    PLATINUM_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'QUPnP'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># sqlite3</span>
+    SQLITE3_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'SQLITE3_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/sqlite3'</span><span style='color:#806030; '>)</span>,
+    SQLITE3_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$SQLITE3_HOME/include'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    SQLITE3_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$SQLITE3_HOME/lib'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    SQLITE3_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'sqlite3'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># Magick++</span>
+    IMAGEMAGICK_SDK <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'IMAGEMAGICK_SDK'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/ImageMagick-6.6.5'</span><span style='color:#806030; '>)</span>,
+    IMAGEMAGICK_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$IMAGEMAGICK_SDK', '</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$IMAGEMAGICK_SDK/Magick++/lib'</span><span style='color:#806030; '>]</span>,
+    IMAGEMAGICK_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$IMAGEMAGICK_SDK/include/ImageMagick','$IMAGEMAGICK_SDK/include/ImageMagick/Magick++/lib'</span><span style='color:#806030; '>]</span>,
+    IMAGEMAGICK_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$IMAGEMAGICK_SDK/lib'</span><span style='color:#806030; '>]</span>,
+    IMAGEMAGICK_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'Magick++'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># json-c</span>
+    JSONC_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'JSONC_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/json-c-0.2'</span><span style='color:#806030; '>)</span>,
+    JSONC_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$JSONC_HOME/include'</span><span style='color:#806030; '>]</span>,
+    JSONC_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$JSONC_HOME/lib/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    JSONC_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'json'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># mongoose</span>
+    MONGOOSE_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'MONGOOSE_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/mongoose-2.11'</span><span style='color:#806030; '>)</span>,
+    MONGOOSE_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$MONGOOSE_HOME/include'</span><span style='color:#806030; '>]</span>,
+    MONGOOSE_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$MONGOOSE_HOME/lib/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    MONGOOSE_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'mongoose'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># libcurl</span>
+    LIBCURL_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'LIBCURL_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/libcurl-7.21.2'</span><span style='color:#806030; '>)</span>,
+    LIBCURL_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'$LIBCURL_HOME/include'</span> <span style='color:#806030; '>]</span>,
+    LIBCURL_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'$LIBCURL_HOME/lib/$ConfigurationName'</span> <span style='color:#806030; '>]</span>,
+    LIBCURL_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'curl'</span> <span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># curlpp</span>
+    CURLPP_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'CURLPP_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/curlpp'</span><span style='color:#806030; '>)</span>,
+    CURLPP_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'$CURLPP_HOME/include'</span> <span style='color:#806030; '>]</span>,
+    CURLPP_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'$CURLPP_HOME/lib'</span> <span style='color:#806030; '>]</span>,
+    CURLPP_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'curlpp'</span> <span style='color:#806030; '>]</span>,    
+
+    <span style='color:#c34e00; '># libdvdid</span>
+    LIBDVDID_HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'LIBDVDID_HOME'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/libdvdid'</span><span style='color:#806030; '>)</span>,
+    LIBDVDID_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$LIBDVDID_HOME/include'</span><span style='color:#806030; '>]</span>,
+    LIBDVDID_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$LIBDVDID_HOME/lib/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    LIBDVDID_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'dvdid'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># alut</span>
+    ALUT_SDK <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'ALUT_SDK'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/freealut-1.1.0'</span><span style='color:#806030; '>)</span>,
+    ALUT_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$ALUT_SDK/include'</span><span style='color:#806030; '>]</span>,
+    ALUT_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$ALUT_SDK/include'</span><span style='color:#806030; '>]</span>,
+    ALUT_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$ALUT_SDK/lib'</span><span style='color:#806030; '>]</span>,
+    ALUT_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'alut'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># openal</span>
+    OPENAL_SDK <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'OPENAL_SDK'</span>, <span style='color:#e60000; '>'$__ET___SDK/3rdparty/OpenAL_1_1'</span><span style='color:#806030; '>)</span>,
+    OPENAL_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$OPENAL_SDK/include'</span><span style='color:#806030; '>]</span>,
+    OPENAL_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$OPENAL_SDK/include'</span><span style='color:#806030; '>]</span>,
+    OPENAL_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$OPENAL_SDK/lib'</span><span style='color:#806030; '>]</span>,
+    OPENAL_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'OpenAL32'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># The list of components common to all platforms (cross/build.scons).</span>
+    BUILD_SCONSCRIPTS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> 
+        <span style='color:#e60000; '>'src/QPlayer'</span>,
+        <span style='color:#e60000; '>'src/QMediaPlayer'</span>,
+        <span style='color:#e60000; '>'src/SimpleHttpLogServer'</span>,
+        <span style='color:#e60000; '>'src/QCloudManager'</span>,
+        <span style='color:#e60000; '>'src/QLibraryManager'</span>,
+        <span style='color:#e60000; '>'src/QPatternManager'</span>,
+        <span style='color:#e60000; '>'src/QWatchFolder'</span>,
+        <span style='color:#e60000; '>'src/QSocialManager'</span>,        
+        <span style='color:#e60000; '>'src/QSync'</span>,
+        <span style='color:#e60000; '>'src/Common'</span>,
+        <span style='color:#e60000; '>'src/QMediaLibrary'</span>,
+        <span style='color:#e60000; '>'src/Tools'</span>
+    <span style='color:#806030; '>]</span>
+<span style='color:#806030; '>)</span>
+base_env<span style='color:#400000; font-weight:bold; '>.</span>Replace<span style='color:#806030; '>(</span>
+    __ET___OUTPUT <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'__ET___OUTPUT'</span>, <span style='color:#e60000; '>'$DESTINATION_ROOT'</span><span style='color:#806030; '>)</span>,
+    DESTINATION_ROOT <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___OUTPUT/scons-out$HOST_PLATFORM_SUFFIX'</span>,
+    SOURCE_ROOT <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$MAIN_DIR'</span>,
+    STAGING_DIR <span style='color:#44aadd; '>=</span>  <span style='color:#e60000; '>'$__ET___OUTPUT/bin/$BUILD_TYPE'</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '># Note that we use sys.platform here rather than HOST_PLATFORM, since we need</span>
+ <span style='color:#c34e00; '># different sconsign databases for cygwin vs. win32.</span>
+sconsign_dir <span style='color:#44aadd; '>=</span> base_env<span style='color:#400000; font-weight:bold; '>.</span>Dir<span style='color:#806030; '>(</span><span style='color:#e60000; '>'$DESTINATION_ROOT'</span><span style='color:#806030; '>)</span><span style='color:#400000; font-weight:bold; '>.</span>abspath
+sconsign_filename <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$DESTINATION_ROOT/.sconsign_%s'</span> % sys<span style='color:#400000; font-weight:bold; '>.</span>platform
+sconsign_file <span style='color:#44aadd; '>=</span> base_env<span style='color:#400000; font-weight:bold; '>.</span>File<span style='color:#806030; '>(</span>sconsign_filename<span style='color:#806030; '>)</span><span style='color:#400000; font-weight:bold; '>.</span>abspath
+<span style='color:#c34e00; '># SConsignFile() doesn't seem to like it if the destination directory</span>
+<span style='color:#c34e00; '># doesn't already exist, so make sure it exists.</span>
+<span style='color:#c34e00; '># </span><span style='color:#ffffff; background:#808000; '>TODO: Remove once SCons has fixed this bug.</span>
+<span style='color:#400000; font-weight:bold; '>if</span> not os<span style='color:#400000; font-weight:bold; '>.</span>path<span style='color:#400000; font-weight:bold; '>.</span>isdir<span style='color:#806030; '>(</span>sconsign_dir<span style='color:#806030; '>)</span><span style='color:#806030; '>:</span>
+    os<span style='color:#400000; font-weight:bold; '>.</span>makedirs<span style='color:#806030; '>(</span>sconsign_dir<span style='color:#806030; '>)</span>
+SCons<span style='color:#400000; font-weight:bold; '>.</span>Script<span style='color:#400000; font-weight:bold; '>.</span>SConsignFile<span style='color:#806030; '>(</span>sconsign_file<span style='color:#806030; '>)</span>
+
+base_env<span style='color:#400000; font-weight:bold; '>.</span>AppendUnique<span style='color:#806030; '>(</span>
+    <span style='color:#c34e00; '># All includes are relative to the main project directory.</span>
+    CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> 
+        <span style='color:#e60000; '>'-I$__ET___SDK/include'</span>,
+        <span style='color:#e60000; '>'-I$SOURCE_ROOT/sdk/src/QCore'</span>,
+        <span style='color:#e60000; '>'-I$SOURCE_ROOT/sdk/src/QService'</span>,
+        <span style='color:#e60000; '>'-I$SOURCE_ROOT/sdk/src/QNetwork'</span>,
+        <span style='color:#e60000; '>'-I$SOURCE_ROOT/sdk/src/QDownloadManager'</span>,
+        <span style='color:#e60000; '>'-I$SOURCE_ROOT/sdk/src/QFtpManager'</span>,        
+        <span style='color:#e60000; '>'-I$SOURCE_ROOT/sdk/src/QS3Manager'</span>,            
+
+        <span style='color:#c34e00; '># QCore</span>
+        <span style='color:#e60000; '>'-I$BOOST_CPPPATH'</span>,
+        <span style='color:#e60000; '>'-I$EXPAT_CPPPATH'</span>,
+        <span style='color:#e60000; '>'-I$JSONC_CPPPATH'</span>,
+
+        <span style='color:#c34e00; '># QNetwork</span>
+        <span style='color:#e60000; '>'-I$LIBCURL_CPPPATH'</span>,
+        <span style='color:#e60000; '>'-I$CURLPP_CPPPATH'</span>,        
+
+        <span style='color:#e60000; '>'-DBOOST_SYSTEM_STATIC_LINK=1'</span>,
+        <span style='color:#e60000; '>'-DBOOST_THREAD_USE_LIB=1'</span>,
+    <span style='color:#806030; '>]</span>,
+    QCORE_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$BOOST_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$EXPAT_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$JSONC_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    QCORE_LIBS =<span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$BOOST_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$EXPAT_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$JSONC_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'QCore',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># QNetwork</span>
+    QNETWORK_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    QNETWORK_LIBPATH =<span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$LIBCURL_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$MONGOOSE_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    QNETWORK_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$LIBCURL_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$MONGOOSE_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'QNetwork'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># QDownloadManager    </span>
+    QDOWNLOADMANAGER_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'QDownloadManager'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># QFtpManager    </span>
+    QFTPMANAGER_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'QFtpManager'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,    
+    
+    <span style='color:#c34e00; '># QS3Manager</span>
+    QS3MANAGER_LIBPATH =<span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$CURLPP_LIBPATH',    </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    QS3MANAGER_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$CURLPP_LIBS',    </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'QS3Manager'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,    
+    
+    <span style='color:#c34e00; '># QMediaManager</span>
+    QMEDIAMANAGER_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    QMEDIAMANAGER_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$FFMPEG_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$TAG_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$LIBDVDID_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$IMAGEMAGICK_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    QMEDIAMANAGER_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$FFMPEG_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$TAG_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$LIBDVDID_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$IMAGEMAGICK_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>
+<span style='color:#806030; '>)</span>
+
+
+<span style='color:#c34e00; '># -------------------------------------------------------------------</span>
+<span style='color:#c34e00; '># base_env.Tool('sdl')</span>
+<span style='color:#c34e00; '># -------------------------------------------------------------------</span>
+
+<span style='color:#c34e00; '># ===================================================================</span>
+<span style='color:#c34e00; '># Setup Windows Environment</span>
+<span style='color:#c34e00; '># ===================================================================</span>
+win_env <span style='color:#44aadd; '>=</span> base_env<span style='color:#400000; font-weight:bold; '>.</span>Clone<span style='color:#806030; '>(</span>
+    <span style='color:#c34e00; '># implicit linking boost libs</span>
+    BOOST_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>],</span>
+<span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# gtest</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;GTEST_LIBPATH = ['$GTEST_HOME/msvc/gtest</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>md/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># libcurl</span>
+    <span style='color:#c34e00; '>#LIBCURL_HOME = os.environ.get('LIBCURL_HOME', '$__ET___SDK/3rdparty/libcurl-7.19.3-win32-ssl-msvc'),</span>
+    <span style='color:#c34e00; '>#LIBCURL_CPPPATH = [ '$LIBCURL_HOME/include' ],</span>
+    <span style='color:#c34e00; '>#LIBCURL_LIBPATH = [ '$LIBCURL_HOME/lib/$ConfigurationName' ],</span>
+    LIBCURL_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libcurl',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'4758cca',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'gmp',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'aep',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'atalla',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'capi',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'chil',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'gdi32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'cswift',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'nuron',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libeay32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'padlock',        </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'ssleay32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'sureware',    </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'ubsec',    </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,    
+
+    <span style='color:#c34e00; '># taglib</span>
+    <span style='color:#c34e00; '>#TAG_LIBS = ['tag'],</span>
+
+    <span style='color:#c34e00; '># alut</span>
+    <span style='color:#c34e00; '>#ALUT_SDK = os.environ.get('ALUT_SDK', ''),</span>
+    <span style='color:#c34e00; '>#ALUT_CPPPATH = ['$ALUT_SDK/include'],</span>
+    <span style='color:#c34e00; '>#ALUT_LIBPATH = ['$ALUT_SDK/lib'],</span>
+    <span style='color:#c34e00; '>#ALUT_LIBS = ['alut'],</span>
+
+    <span style='color:#c34e00; '># openal</span>
+    <span style='color:#c34e00; '>#OPENAL_SDK = os.environ.get('OPENAL_SDK', '$__ET___SDK/3rdparty/OpenAL_1_1'),</span>
+    <span style='color:#c34e00; '>#OPENAL_CPPPATH = ['$OPENAL_SDK/include'],</span>
+    OPENAL_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$OPENAL_SDK/libs/Win32'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># scaleform</span>
+    GFXSDK_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/Lib/Win32/Msvc90/$ConfigurationName',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/3rdParty/zlib</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>1.2.5/Lib/Win32/Msvc90/$ConfigurationName',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/3rdParty/jpeg</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>6b/lib/Win32/Msvc90/$ConfigurationName',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/3rdParty/libpng/Lib/Win32/Msvc90/$ConfigurationName'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># ImageMagick</span>
+    IMAGEMAGICK_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$IMAGEMAGICK_SDK/VisualMagick/lib'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    IMAGEMAGICK_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_Magick++_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_magick_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_bzlib_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_coders_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_filters_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_jbig_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_jp2_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_jpeg_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_lcms_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_libxml_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_png_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_tiff_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_ttf_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_wmf_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_wand_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_xlib_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_RL_zlib_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'ole32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'oleaut32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># AmpliFind</span>
+<span style='color:#c34e00; '>#    AMPLIFIND_LIBPATH = ['$AMPLIFIND_ROOT/win32/lib'],    </span>
+<span style='color:#c34e00; '>#    AMPLIFIND_LIBS = ['libofa', 'libfftw3-3'],    </span>
+
+    QSOCIAL_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'QSocial'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    
+    QSOCIALMANAGER_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'QSocialManager'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,    
+
+    QWATCHFOLDER_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'QWatchFolder',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'JNotify'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>
+<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+win_env<span style='color:#400000; font-weight:bold; '>.</span>Tool<span style='color:#806030; '>(</span><span style='color:#e60000; '>"target_platform_windows"</span><span style='color:#806030; '>)</span>
+win_env<span style='color:#400000; font-weight:bold; '>.</span>AppendUnique<span style='color:#806030; '>(</span>
+    <span style='color:#c34e00; '># extra windows specifice components</span>
+    BUILD_SCONSCRIPTS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'src/QDebugger',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'src/QWatchFolder/Windows',            </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    
+    CPPDEFINES <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span>    
+        <span style='color:#e60000; '>'NOMINMAX'</span>,
+        <span style='color:#e60000; '>'WIN32'</span>, 
+<span style='color:#c34e00; '>#        'WIN32_LEAN_AND_MEAN',</span>
+        <span style='color:#e60000; '>'_WINDOWS'</span>, 
+<span style='color:#c34e00; '>#        '_CRT_SECURE_NO_WARNINGS',                # disable warning C4996</span>
+<span style='color:#c34e00; '>#        '_SCL_SECURE_NO_WARNINGS',</span>
+        <span style='color:#e60000; '>'CURL_STATICLIB'</span>,
+        <span style='color:#e60000; '>'ENABLE_PROFILING'</span>,
+    <span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># extra flags</span>
+    CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/EHsc',                                # enable c++ exception</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/wd4251',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/wd4996',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/wd4068',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    LINKFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    <span style='color:#c34e00; '>#CPPPATH = [],</span>
+    <span style='color:#c34e00; '>#LIBPATH = [],</span>
+    
+    <span style='color:#c34e00; '># extra link libraries</span>
+    LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'user32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'gdi32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'ws2_32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'wldap32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    QCORE_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$BOTAN_LIBPATH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    QCORE_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$BOTAN_LIBS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '># -------------------------------------------------------------------</span>
+<span style='color:#c34e00; '># Windows Debug Environment</span>
+<span style='color:#c34e00; '># -------------------------------------------------------------------</span>
+win_debug_env <span style='color:#44aadd; '>=</span> win_env<span style='color:#400000; font-weight:bold; '>.</span>Clone<span style='color:#806030; '>(</span>
+    BUILD_TYPE <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'debug-win'</span>,
+    BUILD_TYPE_DESCRIPTION <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'Windows Debug Build'</span>,
+    ConfigurationName <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'Debug'</span>,
+    STAGING_DIR <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___OUTPUT/bin/$ConfigurationName'</span>,
+
+    <span style='color:#c34e00; '># gtest</span>
+    GTEST_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'gtestd'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># soci</span>
+    SOCI_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libsoci_core</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>vc100</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>d</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>3_0', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libsoci_sqlite3</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>vc100</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>d</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>3_0'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># imagemagick</span>
+    IMAGEMAGICK_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_Magick++_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_magick_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_bzlib_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_coders_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_filters_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_jbig_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_jp2_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_jpeg_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_lcms_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_libxml_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_png_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_tiff_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_ttf_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_wmf_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_wand_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_xlib_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'CORE_DB_zlib_',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'ole32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'oleaut32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    
+    LIBCURL_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libcurld',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'4758cca',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'gmp',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'aep',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'atalla',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'capi',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'chil',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'gdi32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'cswift',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'nuron',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libeay32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'padlock',        </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'ssleay32',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'sureware',    </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'ubsec',    </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,    
+
+    TAG_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'tagd'</span><span style='color:#806030; '>]</span>
+<span style='color:#806030; '>)</span>
+win_debug_env<span style='color:#400000; font-weight:bold; '>.</span>Tool<span style='color:#806030; '>(</span><span style='color:#e60000; '>'target_debug'</span><span style='color:#806030; '>)</span>
+win_debug_env<span style='color:#400000; font-weight:bold; '>.</span>Append<span style='color:#806030; '>(</span>
+    BUILD_GROUPS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'default'</span><span style='color:#806030; '>]</span>,
+    CPPDEFINES <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'_DEBUG'</span><span style='color:#806030; '>]</span>,
+    CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/MDd',                            # Multi</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>threaded Debug DLL</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/RTC1',                        # Performs basic runtime check</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/GS',                            # Buffer Security Check</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/Gd',                            # Calling Convention (_cdecl)</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/nologo',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/W3',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/WX</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/Od',                            # Optimization (Disabled)</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/Oy</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>',                            # Omit Frame Pointers (No)</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '># -------------------------------------------------------------------</span>
+<span style='color:#c34e00; '># Windows Release Environment</span>
+<span style='color:#c34e00; '># -------------------------------------------------------------------</span>
+win_release_env <span style='color:#44aadd; '>=</span> win_env<span style='color:#400000; font-weight:bold; '>.</span>Clone<span style='color:#806030; '>(</span>
+    BUILD_TYPE <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'release-win'</span>,
+    BUILD_TYPE_DESCRIPTION <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'Windows Release Build'</span>,
+    ConfigurationName <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'Release'</span>,
+    STAGING_DIR <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___OUTPUT/bin/Release'</span>,
+
+    <span style='color:#c34e00; '># soci</span>
+    SOCI_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libsoci_core</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>vc100</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>3_0', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'libsoci_sqlite3</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>vc100</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>3_0'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+<span style='color:#806030; '>)</span>
+<span style='color:#c34e00; '>#win_release_env.Replace(</span>
+<span style='color:#c34e00; '>#    LINKFLAGS_OPTIMIZED = []</span>
+<span style='color:#c34e00; '>#)</span>
+win_release_env<span style='color:#400000; font-weight:bold; '>.</span>Tool<span style='color:#806030; '>(</span><span style='color:#e60000; '>'target_optimized'</span><span style='color:#806030; '>)</span>
+win_release_env<span style='color:#400000; font-weight:bold; '>.</span>AppendUnique<span style='color:#806030; '>(</span>
+    CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'/MD'                            # Multi</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>threaded DLL</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '># ===================================================================</span>
+<span style='color:#c34e00; '># Setup Mac OS X Environment</span>
+<span style='color:#c34e00; '># ===================================================================</span>
+mac_env <span style='color:#44aadd; '>=</span> base_env<span style='color:#400000; font-weight:bold; '>.</span>Clone<span style='color:#806030; '>(</span>
+    PLATFORM <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'MacOS'</span>,
+
+    <span style='color:#c34e00; '># APPDATA</span>
+    HOME <span style='color:#44aadd; '>=</span> os<span style='color:#400000; font-weight:bold; '>.</span>environ<span style='color:#400000; font-weight:bold; '>.</span>get<span style='color:#806030; '>(</span><span style='color:#e60000; '>'HOME'</span>, <span style='color:#e60000; '>''</span><span style='color:#806030; '>)</span>,
+    APPDATA <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$HOME/Library'</span>,
+
+    <span style='color:#c34e00; '>#</span>
+    ALUT_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>],</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# boost</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;BOOST_HOME = '$__ET___SDK',</span>
+<span style='color:#e60000; '>#    BOOST_CCFLAGS = [ '</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>DBOOST_THREAD_USE_LIB' </span><span style='color:#806030; '>]</span>,
+    BOOST_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'$BOOST_HOME/include'</span> <span style='color:#806030; '>]</span>,
+    BOOST_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'$BOOST_HOME/lib'</span> <span style='color:#806030; '>]</span>,
+    BOOST_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span>  
+<span style='color:#c34e00; '>#        File('/Users/tom/Projects/__ET___sdk/lib/libboost_system.a'), </span>
+<span style='color:#c34e00; '>#        File('/Users/tom/Projects/__ET___sdk/lib/libboost_filesystem.a'), </span>
+<span style='color:#c34e00; '>#        File('/Users/tom/Projects/__ET___sdk/lib/libboost_thread.a'),</span>
+<span style='color:#c34e00; '>#        File('/Users/tom/Projects/__ET___sdk/lib/libboost_regex.a'),</span>
+        <span style='color:#e60000; '>'boost_system-mt'</span>,
+        <span style='color:#e60000; '>'boost_filesystem-mt'</span>,
+        <span style='color:#e60000; '>'boost_thread-mt'</span>,
+        <span style='color:#e60000; '>'boost_regex-mt'</span>
+    <span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># botan</span>
+    BOTAN_HOME <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___SDK'</span>,
+    BOTAN_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$BOTAN_HOME/lib'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># libcurl</span>
+    LIBCURL_HOME <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'/usr'</span>,
+    LIBCURL_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$LIBCURL_HOME/include'</span><span style='color:#806030; '>]</span>,
+    LIBCURL_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$LIBCURL_HOME/lib'</span><span style='color:#806030; '>]</span>,
+    LIBCURL_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'curl'</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># scaleform</span>
+    GFXSDK_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/Lib/$PLATFORM</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>$ARCH',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/Lib/$PLATFORM</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>$ARCH/$ConfigurationName',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$GFXSDK/3rdParty/jpeg</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>6b'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># taglib</span>
+    TAG_HOME <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___SDK/3rdparty/taglib-1.7'</span>,
+    TAG_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$TAG_HOME',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$TAG_HOME/include/'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    TAG_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$TAG_HOME/taglib/$ConfigurationName'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># expat</span>
+    EXPAT_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>],</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# mongoose</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;MONGOOSE_LIBPATH = [],</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# dvdid</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;LIBDVDID_HOME = '$__ET___SDK',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# json</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>c</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;JSONC_CPPPATH = [ '$__ET___SDK/include' </span><span style='color:#806030; '>]</span>,
+    JSONC_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'$__ET___SDK/lib'</span> <span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># sqlite3</span>
+    SQLITE3_HOME <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span> <span style='color:#e60000; '>'$__ET___SDK'</span> <span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># ImageMagick</span>
+    IMAGEMAGICK_SDK <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___SDK'</span>,  <span style='color:#c34e00; '>#'/opt/local',</span>
+    IMAGEMAGICK_CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>I$IMAGEMAGICK_SDK/include/ImageMagick'</span><span style='color:#806030; '>]</span>,
+    IMAGEMAGICK_CPPPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$IMAGEMAGICK_SDK/include/ImageMagick'</span><span style='color:#806030; '>]</span>,
+    IMAGEMAGICK_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'$IMAGEMAGICK_SDK/lib'</span><span style='color:#806030; '>]</span>,
+    <span style='color:#c34e00; '>#IMAGEMAGICK_LIBS = ['$IMAGEMAGICK_SDK/lib/libMagick++.a', '$IMAGEMAGICK_SDK/lib/libMagickCore.a', '$IMAGEMAGICK_SDK/lib/libMagickWand.a'],</span>
+    IMAGEMAGICK_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'MagickWand', 'MagickCore', 'Magick++'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># UPnP</span>
+    PLATINUM_SDK <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___SDK/3rdparty/Platinum-SRC-0-6-4_690'</span>,
+    PLATINUM_LIBPATH <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$PLATINUM_SDK/Neptune/Build/Targets/universal</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>apple</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>macosx/build/$ConfigurationName',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;'$PLATINUM_SDK/Platinum/Build/Targets/universal</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>apple</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>macosx/build/$ConfigurationName'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    PLATINUM_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'Neptune', 'axTLS', 'Platinum'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># ffmpeg</span>
+    FFMPEG_SDK <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___SDK'</span>,
+    FFMPEG_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'avcodec', 'avformat', 'avutil', 'swscale', 'mp3lame', 'z', 'bz2', 'theora'</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># openal</span>
+    OPENAL_LIBS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>],</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# gtest</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;GTEST_HOME = '$__ET___SDK',</span>
+<span style='color:#e60000; '>)</span>
+<span style='color:#e60000; '></span>
+<span style='color:#e60000; '>mac_env.Tool("target_platform_mac")</span>
+<span style='color:#e60000; '>mac_env.Tool("__ET__")</span>
+<span style='color:#e60000; '></span>
+<span style='color:#e60000; '>mac_env.Append(</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;CPPDEFINES = [</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'__MACOSX__',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'OSX',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'ENABLE_PROFILING',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'_FILE_OFFSET_BITS=64',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'_LARGEFILE64_SOURCE',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+  CCFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>fasm</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>blocks',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>Wno</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>system</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>headers',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>Wall',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>fexceptions',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>W',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;#'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>Wshadow',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>Wno</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>unused',                # to surpress warnings from boost</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>pthreads',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>fvisibility=default',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>fpermissive'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+  LINKFLAGS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;#'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>Wl,</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>search_paths_first',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# This flag makes all members of a static library be included in the</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# final exe </span><span style='color:#806030; '>-</span><span style='color:#e60000; '> that increases the size of the exe, but without it</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# Obj</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>C categories aren't properly included in the exe.</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;# TODO: consider only defining for libs that actually have objc.</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;#'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>ObjC',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>L$__ET___SDK/lib/$ConfigurationName', </span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>L$__ET___SDK/lib/$ARCHS',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'</span><span style='color:#806030; '>-</span><span style='color:#e60000; '>L$__ET___SDK/lib'</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+  FRAMEWORKS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'OpenGL',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'Cocoa',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'SystemConfiguration',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;'IOKit',</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+    
+    <span style='color:#c34e00; '># extra mac specifice components</span>
+    BUILD_SCONSCRIPTS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#806030; '>]</span>,
+
+    <span style='color:#c34e00; '># </span>
+    <span style='color:#c34e00; '>#QCORE_LIBS = [</span>
+    <span style='color:#c34e00; '>#    'charsetdetect',</span>
+    <span style='color:#c34e00; '>#]</span>
+<span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '># Mac Debug Environment</span>
+mac_debug_env <span style='color:#44aadd; '>=</span> mac_env<span style='color:#400000; font-weight:bold; '>.</span>Clone<span style='color:#806030; '>(</span>
+    BUILD_TYPE <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'debug-mac'</span>,
+    BUILD_TYPE_DESCRIPTION <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'MacOS Debug Build'</span>,
+    ConfigurationName <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'Debug'</span>,
+    STAGING_DIR <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___OUTPUT/bin/$ConfigurationName'</span>,
+<span style='color:#806030; '>)</span>
+mac_debug_env<span style='color:#400000; font-weight:bold; '>.</span>Tool<span style='color:#806030; '>(</span><span style='color:#e60000; '>'target_debug'</span><span style='color:#806030; '>)</span>
+mac_debug_env<span style='color:#400000; font-weight:bold; '>.</span>Append<span style='color:#806030; '>(</span>BUILD_GROUPS <span style='color:#44aadd; '>=</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>'default'</span><span style='color:#806030; '>]</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '># Mac Release Environment</span>
+mac_release_env <span style='color:#44aadd; '>=</span> mac_env<span style='color:#400000; font-weight:bold; '>.</span>Clone<span style='color:#806030; '>(</span>
+    BUILD_TYPE <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'release-mac'</span>,
+    BUILD_TYPE_DESCRIPTION <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'MacOS Release Build'</span>,
+    ConfigurationName <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'Release'</span>,
+    STAGING_DIR <span style='color:#44aadd; '>=</span> <span style='color:#e60000; '>'$__ET___OUTPUT/bin/$ConfigurationName'</span>,
+<span style='color:#806030; '>)</span>
+mac_release_env<span style='color:#400000; font-weight:bold; '>.</span>Tool<span style='color:#806030; '>(</span><span style='color:#e60000; '>'target_optimized'</span><span style='color:#806030; '>)</span>
+
+<span style='color:#c34e00; '># ----------------------------------------------------------</span>
+<span style='color:#c34e00; '># Build the variants listed above.</span>
+<span style='color:#c34e00; '># This step will call each of the SConscripts (build.scons) listed,</span>
+<span style='color:#c34e00; '># once for each variant currently being built.</span>
+BuildComponents<span style='color:#806030; '>(</span><span style='color:#806030; '>[</span><span style='color:#e60000; '></span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;mac_debug_env,</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;mac_release_env,</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;win_debug_env,</span>
+<span style='color:#e60000; '>&#xa0;&#xa0;&#xa0;&#xa0;win_release_env,</span>
+<span style='color:#806030; '>]</span><span style='color:#806030; '>)</span>
+</pre>

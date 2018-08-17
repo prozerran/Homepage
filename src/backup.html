@@ -1,0 +1,87 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#c34e00; '>#!</span><span style='color:#007997; '>/bin/ksh</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Yee Hsu</span>
+<span style='color:#c34e00; '># 05/07/2000</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># backup will backup all directories and sub-directories with all their</span>
+<span style='color:#c34e00; '># contents into the folder ./backup</span>
+<span style='color:#c34e00; '># it will create a compressed TAR file for each directory in the parent</span>
+<span style='color:#c34e00; '># this backup algorithm saves much space as files are compressed</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"Performing full backup on </span><span style='color:#e60000; '>$HOME</span><span style='color:#e60000; '>"</span>
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"Do not interrupt."</span>
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>""</span>
+
+<span style='color:#bb7977; font-weight:bold; '>cd</span> $HOME
+rm -rf $HOME<span style='color:#40015a; '>/mail/sent-mail</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"removing old backups..."</span>
+chmod -R +w <span style='color:#400000; font-weight:bold; '>.</span><span style='color:#40015a; '>/backup</span>
+rm -rf $HOME<span style='color:#40015a; '>/backup</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"copying and backing up all files..."</span>
+mkdir <span style='color:#44aadd; '>-p</span> $HOME<span style='color:#40015a; '>/backup</span>
+cp <span style='color:#44aadd; '>-f</span> <span style='color:#44aadd; '>-p</span> $HOME<span style='color:#40015a; '>/</span><span style='color:#400000; font-weight:bold; '>.</span>cshrc $HOME<span style='color:#40015a; '>/backup</span>
+cp <span style='color:#44aadd; '>-f</span> <span style='color:#44aadd; '>-p</span> $HOME<span style='color:#40015a; '>/</span><span style='color:#400000; font-weight:bold; '>.</span>login $HOME<span style='color:#40015a; '>/backup</span>
+
+FILES<span style='color:#806030; '>=</span><span style='color:#000000; background:#ffffe8; '>`</span><span style='color:#40015a; background:#ffffe8; '>/bin/ls</span><span style='color:#000000; background:#ffffe8; '>`</span>
+
+<span style='color:#400000; font-weight:bold; '>for</span> file <span style='color:#400000; font-weight:bold; '>in</span> ${FILES<span style='color:#806030; '>[</span><span style='color:#e60000; '>@</span><span style='color:#806030; '>]</span>} <span style='color:#806030; '>;</span> <span style='color:#400000; font-weight:bold; '>do</span>
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>[</span> $file <span style='color:#44aadd; '>!=</span> <span style='color:#e60000; '>"backup"</span> <span style='color:#44aadd; '>-a</span> <span style='color:#44aadd; '>-d</span> $file <span style='color:#806030; '>]</span> <span style='color:#806030; '>;</span> <span style='color:#400000; font-weight:bold; '>then</span>
+                <span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"backing up </span><span style='color:#e60000; '>$file</span><span style='color:#40015a; '>/</span><span style='color:#e60000; '> as </span><span style='color:#e60000; '>$file.tar.gz</span><span style='color:#e60000; '>"</span>
+                tar -zcf $HOME<span style='color:#40015a; '>/backup</span><span style='color:#40015a; '>/</span>$file.tar.gz $file
+        <span style='color:#400000; font-weight:bold; '>fi</span>
+<span style='color:#400000; font-weight:bold; '>done</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"creating </span><span style='color:#40015a; '>/tmp/yeehsu.tar</span><span style='color:#e60000; '> file for ftp backup..."</span>
+tar cf <span style='color:#40015a; '>/tmp/yeehsu.tar</span> <span style='color:#400000; font-weight:bold; '>.</span><span style='color:#40015a; '>/backup</span>
+chmod <span style='color:#c00000; '>600</span> <span style='color:#40015a; '>/tmp/yeehsu.tar</span>
+ln <span style='color:#44aadd; '>-s</span> <span style='color:#40015a; '>/tmp/yeehsu.tar</span> <span style='color:#400000; font-weight:bold; '>.</span><span style='color:#40015a; '>/backup/yeehsu.tar</span>
+
+chmod -R <span style='color:#44aadd; '>-w</span> $HOME<span style='color:#40015a; '>/backup</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"done."</span>
+
+<span style='color:#bb7977; font-weight:bold; '>exit</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>;</span>
+
+<span style='color:#c34e00; '># ========================================================================</span>
+<span style='color:#c34e00; '># ::::::::::  BELOW THIS LINE IS OLD BACKUP ROUTINE ::::::::::::::::::::::</span>
+<span style='color:#c34e00; '># ========================================================================</span>
+<span style='color:#c34e00; '># backup will backup all directories and sub-directories with all their</span>
+<span style='color:#c34e00; '># contents into the folder ./backup</span>
+<span style='color:#c34e00; '># Backups should be made at least once a month to insure file</span>
+<span style='color:#c34e00; '># integrety and anew.</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"Performing full backup on </span><span style='color:#e60000; '>$HOME</span><span style='color:#e60000; '>"</span>
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"Do not interrupt."</span>
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>""</span>
+
+<span style='color:#bb7977; font-weight:bold; '>cd</span> $HOME
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"removing old backups..."</span>
+chmod -R +w <span style='color:#400000; font-weight:bold; '>.</span><span style='color:#40015a; '>/backup</span>
+rm -rf $HOME<span style='color:#40015a; '>/backup</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"copying and backing up all files..."</span>
+mkdir <span style='color:#44aadd; '>-p</span> $HOME<span style='color:#40015a; '>/backup</span>
+
+FILES<span style='color:#806030; '>=</span><span style='color:#000000; background:#ffffe8; '>`</span><span style='color:#40015a; background:#ffffe8; '>/bin/ls</span><span style='color:#000000; background:#ffffe8; '> -A`</span>
+
+<span style='color:#400000; font-weight:bold; '>for</span> file <span style='color:#400000; font-weight:bold; '>in</span> ${FILES<span style='color:#806030; '>[</span><span style='color:#e60000; '>@</span><span style='color:#806030; '>]</span>} <span style='color:#806030; '>;</span> <span style='color:#400000; font-weight:bold; '>do</span>
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>[ $file != "backup" </span><span style='color:#806030; '>]</span>] <span style='color:#806030; '>;</span> <span style='color:#400000; font-weight:bold; '>then</span>
+                cp -R <span style='color:#44aadd; '>-f</span> <span style='color:#44aadd; '>-p</span> $file backup
+        <span style='color:#400000; font-weight:bold; '>fi</span>
+<span style='color:#400000; font-weight:bold; '>done</span>
+
+rm -rf $HOME<span style='color:#40015a; '>/backup/mail/sent-mail</span>
+chmod -R <span style='color:#44aadd; '>-w</span> <span style='color:#400000; font-weight:bold; '>.</span><span style='color:#40015a; '>/backup</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"creating </span><span style='color:#40015a; '>/tmp/yeehsu.tar</span><span style='color:#e60000; '> file for ftp backup..."</span>
+mkdir <span style='color:#40015a; '>/tmp/yeehsu</span>
+tar cf <span style='color:#40015a; '>/tmp/yeehsu/yeehsu.tar</span> <span style='color:#400000; font-weight:bold; '>.</span><span style='color:#40015a; '>/backup</span>
+chmod <span style='color:#c00000; '>600</span> <span style='color:#40015a; '>/tmp/yeehsu/yeehsu.tar</span>
+
+<span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"done."</span>
+
+<span style='color:#bb7977; font-weight:bold; '>exit</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>;</span>
+</pre>

@@ -1,0 +1,70 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#c34e00; '>#!</span><span style='color:#007997; '>/bin/bash</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Author:  Yee Hsu</span>
+<span style='color:#c34e00; '># Date:    6/10/2010</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Watchdog bash script to determine if a particular process is running.</span>
+<span style='color:#c34e00; '># If not, it will start up the process. Ideal for monitoring services</span>
+<span style='color:#c34e00; '># that must be running 24x7.</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Should schedule a cron job to periodically execute this script</span>
+<span style='color:#c34e00; '># to check service uptime.</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Enter an entry in crontab to run, example every minute...</span>
+<span style='color:#c34e00; '># $ crontab -l</span>
+<span style='color:#c34e00; '># $ crontab -e</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Add the line...</span>
+<span style='color:#c34e00; '># */1 * * * * /home/user/watchdog.sh</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># (Use to post in the top of your crontab)</span>
+<span style='color:#c34e00; '># ------------- minute (0 - 59)</span>
+<span style='color:#c34e00; '># | ----------- hour (0 - 23)</span>
+<span style='color:#c34e00; '># | | --------- day of month (1 - 31)</span>
+<span style='color:#c34e00; '># | | | ------- month (1 - 12)</span>
+<span style='color:#c34e00; '># | | | | ----- day of week (0 - 6) (Sunday=0)</span>
+<span style='color:#c34e00; '># | | | | |</span>
+<span style='color:#c34e00; '># * * * * * command to be executed</span>
+<span style='color:#c34e00; '>#</span>
+<span style='color:#c34e00; '># Copyright (c) Tim Hsu 2009. All rights reserved.</span>
+<span style='color:#c34e00; '># ===========================================================================</span>
+
+<span style='color:#c34e00; '># some global variables</span>
+SERVER<span style='color:#806030; '>=</span><span style='color:#e60000; '>"Linux Server"</span>
+EMAILF<span style='color:#806030; '>=</span><span style='color:#e60000; '>"daemon@domain.com.hk"</span>
+EMAILT<span style='color:#806030; '>=</span><span style='color:#e60000; '>"sysconsole@domain.com.hk"</span>
+
+<span style='color:#c34e00; '># void CheckProcess(ProcessName, ProcessExecPath)</span>
+<span style='color:#400000; font-weight:bold; '>function</span> CheckProcess
+<span style='color:#806030; '>{</span>
+    PROCNAME<span style='color:#806030; '>=</span>$1
+    PROCPATH<span style='color:#806030; '>=</span>$2
+    
+    RUNNING<span style='color:#806030; '>=</span><span style='color:#000000; background:#ffffe8; '>`ps </span><span style='color:#44aadd; background:#ffffe8; '>-e</span><span style='color:#000000; background:#ffffe8; '> </span><span style='color:#e34adc; background:#ffffe8; '>|</span><span style='color:#000000; background:#ffffe8; '> grep </span><span style='color:#000000; background:#ffffe8; '>$PROCNAME</span><span style='color:#000000; background:#ffffe8; '> </span><span style='color:#e34adc; background:#ffffe8; '>|</span><span style='color:#000000; background:#ffffe8; '> wc -l`</span>
+
+   <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>[ $RUNNING </span><span style='color:#806030; '>-</span><span style='color:#e60000; '>eq 0 </span><span style='color:#806030; '>]</span>] <span style='color:#806030; '>;</span> <span style='color:#400000; font-weight:bold; '>then</span>
+        <span style='color:#bb7977; font-weight:bold; '>echo</span> <span style='color:#e60000; '>"</span><span style='color:#e60000; '>$PROCNAME</span><span style='color:#e60000; '> stopped, attempting to restart..."</span>    
+        <span style='color:#40015a; '>/bin/mail</span> $EMAILT <span style='color:#44aadd; '>-r</span> $EMAILF <span style='color:#44aadd; '>-s</span> <span style='color:#e60000; '>"Service [</span><span style='color:#e60000; '>$PROCNAME</span><span style='color:#e60000; '>] Down on [</span><span style='color:#e60000; '>$SERVER</span><span style='color:#e60000; '>]. Restarting."</span> <span style='color:#e34adc; '>&lt;</span> <span style='color:#40015a; '>/dev/null</span>        
+
+        <span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>[</span><span style='color:#e60000; '>[ </span><span style='color:#806030; '>-</span><span style='color:#e60000; '>f $PROCPATH </span><span style='color:#806030; '>]</span>] <span style='color:#806030; '>;</span> <span style='color:#400000; font-weight:bold; '>then</span>
+            <span style='color:#bb7977; font-weight:bold; '>ulimit</span> <span style='color:#44aadd; '>-n</span> <span style='color:#c00000; '>8192</span>                      <span style='color:#c34e00; '># increase fd</span>
+            <span style='color:#bb7977; font-weight:bold; '>ulimit</span> <span style='color:#44aadd; '>-s</span> <span style='color:#c00000; '>2048</span>                      <span style='color:#c34e00; '># decrease stack size</span>
+            $PROCPATH <span style='color:#806030; '>&amp;</span>                         <span style='color:#c34e00; '># run process in background</span>
+        <span style='color:#400000; font-weight:bold; '>else</span>                
+            <span style='color:#40015a; '>/sbin/service</span> $PROCPATH restart     <span style='color:#c34e00; '># start service</span>
+        <span style='color:#400000; font-weight:bold; '>fi</span> 
+    <span style='color:#400000; font-weight:bold; '>fi</span>
+<span style='color:#806030; '>}</span>
+
+<span style='color:#400000; font-weight:bold; '>function</span> main
+<span style='color:#806030; '>{</span>
+    <span style='color:#c34e00; '># checks the service to see if it is running, if not, start it</span>
+    CheckProcess mysqld  mysql
+
+    <span style='color:#c34e00; '># checks the process to see if it is running, if not, start it</span>
+    CheckProcess procname    <span style='color:#e60000; '>"</span><span style='color:#40015a; '>/home/bin/main/src/procname</span><span style='color:#e60000; '>"</span>    
+<span style='color:#806030; '>}</span>
+
+main<span style='color:#806030; '>;</span>
+<span style='color:#bb7977; font-weight:bold; '>exit</span><span style='color:#806030; '>;</span>
+</pre>

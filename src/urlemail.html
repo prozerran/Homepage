@@ -1,0 +1,536 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    9/3/2013</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    URL and Email Extractor! Extracts URLs or Email address just by</span>
+<span style='color:#008000; '>//          giving the intial URL. The program will crawl the web and look</span>
+<span style='color:#008000; '>//          through links it has spidered and extract any URL or Email it</span>
+<span style='color:#008000; '>//          can find on the way.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ComponentModel<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Drawing<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>.</span>RegularExpressions<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> CommonLib<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Xml<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Diagnostics<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Extractor
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> partial <span style='color:#0000ff; font-weight:bold; '>class</span> Extractor <span style='color:#0000ff; '>:</span> Form
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> iuTotal <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> iuIgnored <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> iuFiltered <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> iuSkipped <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> ieTotal <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> ieIgnored <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> ieFiltered <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> ieSkipped <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Thread uThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Thread eThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Thread mThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Dictionary<span style='color:#0000ff; '>&lt;</span>String<span style='color:#0000ff; '>,</span> Boolean<span style='color:#0000ff; '>></span> dUrl <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Dictionary<span style='color:#0000ff; '>&lt;</span>String<span style='color:#0000ff; '>,</span> Boolean<span style='color:#0000ff; '>></span> dEmail <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Dictionary<span style='color:#0000ff; '>&lt;</span>String<span style='color:#0000ff; '>,</span> Boolean<span style='color:#0000ff; '>></span> qEmail <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Extractor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            InitializeComponent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Form1_Load<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button2<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button3<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> InitUrl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>iuFiltered <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>iuIgnored <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>iuSkipped <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>iuTotal <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>uThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dUrl <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button2<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox2<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox7<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Extracting URLs</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox7<span style='color:#0000ff; '>.</span>BackColor <span style='color:#0000ff; '>=</span> Color<span style='color:#0000ff; '>.</span>LightGreen<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> InitEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ieFiltered <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ieIgnored <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ieSkipped <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ieTotal <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>eThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>mThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dEmail <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>qEmail <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button4<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button3<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox14<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox4<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox3<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox8<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Extracting Emails</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox8<span style='color:#0000ff; '>.</span>BackColor <span style='color:#0000ff; '>=</span> Color<span style='color:#0000ff; '>.</span>LightGreen<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> TermUrl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button2<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox2<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox7<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>All Done.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox7<span style='color:#0000ff; '>.</span>BackColor <span style='color:#0000ff; '>=</span> SystemColors<span style='color:#0000ff; '>.</span>Control<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> TermEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button3<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button4<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox14<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox3<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox4<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox8<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>All Done.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox8<span style='color:#0000ff; '>.</span>BackColor <span style='color:#0000ff; '>=</span> SystemColors<span style='color:#0000ff; '>.</span>Control<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> button1_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox1<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>InitUrl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    uThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span>ExecuteUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    uThread<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span>              
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> button4_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox14<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>.</span>Length <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>InitEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    eThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span>ExecuteEmail<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    eThread<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    mThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Thread<span style='color:#0000ff; '>(</span>ExecuteExtractEmail<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    mThread<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span>
+            <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> button2_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>uThread <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>uThread<span style='color:#0000ff; '>.</span>IsAlive<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    uThread<span style='color:#0000ff; '>.</span>Abort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    uThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>TermUrl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> button3_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>eThread <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>eThread<span style='color:#0000ff; '>.</span>IsAlive<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    eThread<span style='color:#0000ff; '>.</span>Abort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    eThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>mThread <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>mThread<span style='color:#0000ff; '>.</span>IsAlive<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    mThread<span style='color:#0000ff; '>.</span>Abort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    mThread <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>TermEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ExecuteUrl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ExtractUrls<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox1<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>TermUrl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>System<span style='color:#0000ff; '>.</span>Exception e<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>              
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ExecuteEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ExtractEmails<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox14<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>TermEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>System<span style='color:#0000ff; '>.</span>Exception e<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ExecuteExtractEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>mThread <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    LoopThroughListAndExtractEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> LoopThroughListAndExtractEmail<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>KeyValuePair<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>></span> kv <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dEmail<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>kv<span style='color:#0000ff; '>.</span>Value <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        HttpWebRequest hwr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>HttpWebRequest<span style='color:#0000ff; '>)</span>WebRequest<span style='color:#0000ff; '>.</span>Create<span style='color:#0000ff; '>(</span>kv<span style='color:#0000ff; '>.</span>Key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        hwr<span style='color:#0000ff; '>.</span>Timeout <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>3000</span><span style='color:#0000ff; '>;</span>
+
+                        HttpWebResponse wr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>HttpWebResponse<span style='color:#0000ff; '>)</span>hwr<span style='color:#0000ff; '>.</span>GetResponse<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        StreamReader sr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> StreamReader<span style='color:#0000ff; '>(</span>wr<span style='color:#0000ff; '>.</span>GetResponseStream<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        String<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> sEmails <span style='color:#0000ff; '>=</span> Common<span style='color:#0000ff; '>.</span>ExtractEmails<span style='color:#0000ff; '>(</span>sr<span style='color:#0000ff; '>.</span>ReadToEnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>String sEmail <span style='color:#0000ff; font-weight:bold; '>in</span> sEmails<span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>qEmail<span style='color:#0000ff; '>.</span>ContainsKey<span style='color:#0000ff; '>(</span>sEmail<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>qEmail<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>sEmail<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox2<span style='color:#0000ff; '>.</span>AppendText<span style='color:#0000ff; '>(</span>sEmail<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox2<span style='color:#0000ff; '>.</span>AppendText<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox2<span style='color:#0000ff; '>.</span>Focus<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox2<span style='color:#0000ff; '>.</span>ScrollToCaret<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox10<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>ieTotal<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox4<span style='color:#0000ff; '>.</span>Checked<span style='color:#0000ff; '>)</span>
+                                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>AppendToTxtFileEmail<span style='color:#0000ff; '>(</span>sEmail<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox3<span style='color:#0000ff; '>.</span>Checked<span style='color:#0000ff; '>)</span>
+                                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>AppendToXmlFileEmail<span style='color:#0000ff; '>(</span>sEmail<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+                        <span style='color:#0000ff; '>}</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dEmail<span style='color:#0000ff; '>[</span>kv<span style='color:#0000ff; '>.</span>Key<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span> 
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ExtractUrls<span style='color:#0000ff; '>(</span>String sUrl<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>sUrl<span style='color:#0000ff; '>.</span>StartsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>http</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dUrl<span style='color:#0000ff; '>.</span>ContainsKey<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox4<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iuFiltered<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>iuTotal <span style='color:#0000ff; '>></span> <span style='color:#800000; '>50</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    Random r <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Random<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>r<span style='color:#0000ff; '>.</span>Next<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox3<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iuIgnored<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dUrl<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox2<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> sUrl<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox1<span style='color:#0000ff; '>.</span>AppendText<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox1<span style='color:#0000ff; '>.</span>AppendText<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox1<span style='color:#0000ff; '>.</span>Focus<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox1<span style='color:#0000ff; '>.</span>ScrollToCaret<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox5<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iuTotal<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox1<span style='color:#0000ff; '>.</span>Checked<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>AppendToTxtFileUrl<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>checkBox2<span style='color:#0000ff; '>.</span>Checked<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>AppendToXmlFileUrl<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                HttpWebRequest hwr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>HttpWebRequest<span style='color:#0000ff; '>)</span>WebRequest<span style='color:#0000ff; '>.</span>Create<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                hwr<span style='color:#0000ff; '>.</span>Timeout <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>10000</span><span style='color:#0000ff; '>;</span>
+
+                HttpWebResponse wr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>HttpWebResponse<span style='color:#0000ff; '>)</span> hwr<span style='color:#0000ff; '>.</span>GetResponse<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                StreamReader sr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> StreamReader<span style='color:#0000ff; '>(</span>wr<span style='color:#0000ff; '>.</span>GetResponseStream<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                String<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> sUrls <span style='color:#0000ff; '>=</span> Common<span style='color:#0000ff; '>.</span>ExtractURLs<span style='color:#0000ff; '>(</span>sr<span style='color:#0000ff; '>.</span>ReadToEnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>String surl <span style='color:#0000ff; font-weight:bold; '>in</span> sUrls<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>CanIgnoreUrl<span style='color:#0000ff; '>(</span>surl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox3<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iuIgnored<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>else</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ExtractUrls<span style='color:#0000ff; '>(</span>surl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>System<span style='color:#0000ff; '>.</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox6<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iuSkipped<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>              
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ExtractEmails<span style='color:#0000ff; '>(</span>String sUrl<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>sUrl<span style='color:#0000ff; '>.</span>StartsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>http</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dEmail<span style='color:#0000ff; '>.</span>ContainsKey<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox11<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>ieFiltered<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ieTotal <span style='color:#0000ff; '>></span> <span style='color:#800000; '>50</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    Random r <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Random<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>r<span style='color:#0000ff; '>.</span>Next<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox12<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>ieIgnored<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dEmail<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox13<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> sUrl<span style='color:#0000ff; '>;</span>
+
+                HttpWebRequest hwr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>HttpWebRequest<span style='color:#0000ff; '>)</span>WebRequest<span style='color:#0000ff; '>.</span>Create<span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                hwr<span style='color:#0000ff; '>.</span>Timeout <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>10000</span><span style='color:#0000ff; '>;</span>
+
+                HttpWebResponse wr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>HttpWebResponse<span style='color:#0000ff; '>)</span>hwr<span style='color:#0000ff; '>.</span>GetResponse<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                StreamReader sr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> StreamReader<span style='color:#0000ff; '>(</span>wr<span style='color:#0000ff; '>.</span>GetResponseStream<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                String<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> sUrls <span style='color:#0000ff; '>=</span> Common<span style='color:#0000ff; '>.</span>ExtractURLs<span style='color:#0000ff; '>(</span>sr<span style='color:#0000ff; '>.</span>ReadToEnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>String surl <span style='color:#0000ff; font-weight:bold; '>in</span> sUrls<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>CanIgnoreUrl<span style='color:#0000ff; '>(</span>surl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox12<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>ieIgnored<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>else</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>ExtractEmails<span style='color:#0000ff; '>(</span>surl<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>System<span style='color:#0000ff; '>.</span>Exception e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox9<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>ieSkipped<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> CanIgnoreUrl<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> sUrl<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.exe</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> || 
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.bin</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> || 
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.tar</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> ||
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.mp3</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> ||
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.avi</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> ||
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.gif</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> ||
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.doc</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> ||
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.pdf</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> ||
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.jpg</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> ||
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.mpeg</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> ||
+                sUrl<span style='color:#0000ff; '>.</span>EndsWith<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.gz</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Form1_FormClosing<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> FormClosingEventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button2_Click<span style='color:#0000ff; '>(</span>sender<span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>button3_Click<span style='color:#0000ff; '>(</span>sender<span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> saveFileToolStripMenuItem_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>saveFileDialog1<span style='color:#0000ff; '>.</span>ShowDialog<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> exitToolStripMenuItem_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Application<span style='color:#0000ff; '>.</span>Exit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> saveFileDialog1_FileOk<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> CancelEventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>tabControl1<span style='color:#0000ff; '>.</span>SelectedIndex <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>TextWriter tw <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> StreamWriter<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>saveFileDialog1<span style='color:#0000ff; '>.</span>FileName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>KeyValuePair<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>></span> kv <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>dUrl<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        tw<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>kv<span style='color:#0000ff; '>.</span>Key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    tw<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>TextWriter tw <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> StreamWriter<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>saveFileDialog1<span style='color:#0000ff; '>.</span>FileName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>KeyValuePair<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>></span> kv <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>qEmail<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        tw<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>kv<span style='color:#0000ff; '>.</span>Key<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    tw<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> AppendToTxtFileUrl<span style='color:#0000ff; '>(</span>String str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            String sFile <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0}ExtractURL_{1}.txt</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> Common<span style='color:#0000ff; '>.</span>GetCurrentDirectory<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> Common<span style='color:#0000ff; '>.</span>GetNow_YYYYMMDD<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>TextWriter tw <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> StreamWriter<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                tw<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                tw<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> AppendToTxtFileEmail<span style='color:#0000ff; '>(</span>String str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            String sFile <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0}ExtractEmail_{1}.txt</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> Common<span style='color:#0000ff; '>.</span>GetCurrentDirectory<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> Common<span style='color:#0000ff; '>.</span>GetNow_YYYYMMDD<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>TextWriter tw <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> StreamWriter<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                tw<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                tw<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> AppendToXmlFileUrl<span style='color:#0000ff; '>(</span>String str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            String sFile <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0}ExtractURL_{1}.xml</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> Common<span style='color:#0000ff; '>.</span>GetCurrentDirectory<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> Common<span style='color:#0000ff; '>.</span>GetNow_YYYYMMDD<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>File<span style='color:#0000ff; '>.</span>Exists<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                XmlTextWriter xw <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> XmlTextWriter<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>,</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>.</span>Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>Formatting <span style='color:#0000ff; '>=</span> Formatting<span style='color:#0000ff; '>.</span>Indented<span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>WriteProcessingInstruction<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>xml</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>version='1.0' encoding='UTF-8'</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>WriteComment<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Epic Extractor - XML Version 5.0</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>WriteStartElement<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ExtractedData</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>WriteFullEndElement<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                 
+            <span style='color:#0000ff; '>}</span>
+ 
+            XmlDocument xd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> XmlDocument<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xd<span style='color:#0000ff; '>.</span>Load<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            XmlElement xRoot <span style='color:#0000ff; '>=</span> xd<span style='color:#0000ff; '>.</span>DocumentElement<span style='color:#0000ff; '>;</span>
+            XmlElement xElem <span style='color:#0000ff; '>=</span> xd<span style='color:#0000ff; '>.</span>CreateElement<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Url</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            XmlText xText <span style='color:#0000ff; '>=</span> xd<span style='color:#0000ff; '>.</span>CreateTextNode<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xRoot<span style='color:#0000ff; '>.</span>AppendChild<span style='color:#0000ff; '>(</span>xElem<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xRoot<span style='color:#0000ff; '>.</span>LastChild<span style='color:#0000ff; '>.</span>AppendChild<span style='color:#0000ff; '>(</span>xText<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xd<span style='color:#0000ff; '>.</span>Save<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>         
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> AppendToXmlFileEmail<span style='color:#0000ff; '>(</span>String str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            String sFile <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0}ExtractEmail_{1}.xml</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> Common<span style='color:#0000ff; '>.</span>GetCurrentDirectory<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> Common<span style='color:#0000ff; '>.</span>GetNow_YYYYMMDD<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>File<span style='color:#0000ff; '>.</span>Exists<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                XmlTextWriter xw <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> XmlTextWriter<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>,</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>.</span>Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>Formatting <span style='color:#0000ff; '>=</span> Formatting<span style='color:#0000ff; '>.</span>Indented<span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>WriteProcessingInstruction<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>xml</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>version='1.0' encoding='UTF-8'</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>WriteComment<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Epic Extractor - XML Version 5.0</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>WriteStartElement<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ExtractedData</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>WriteFullEndElement<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                xw<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            XmlDocument xd <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> XmlDocument<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xd<span style='color:#0000ff; '>.</span>Load<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            XmlElement xRoot <span style='color:#0000ff; '>=</span> xd<span style='color:#0000ff; '>.</span>DocumentElement<span style='color:#0000ff; '>;</span>
+            XmlElement xElem <span style='color:#0000ff; '>=</span> xd<span style='color:#0000ff; '>.</span>CreateElement<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Email</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            XmlText xText <span style='color:#0000ff; '>=</span> xd<span style='color:#0000ff; '>.</span>CreateTextNode<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xRoot<span style='color:#0000ff; '>.</span>AppendChild<span style='color:#0000ff; '>(</span>xElem<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xRoot<span style='color:#0000ff; '>.</span>LastChild<span style='color:#0000ff; '>.</span>AppendChild<span style='color:#0000ff; '>(</span>xText<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            xd<span style='color:#0000ff; '>.</span>Save<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> aboutToolStripMenuItem_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            About a <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> About<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            a<span style='color:#0000ff; '>.</span>Show<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> pictureBox1_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Process<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>http://www.yahoo.com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> pictureBox2_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Process<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>http://www.yahoo.com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

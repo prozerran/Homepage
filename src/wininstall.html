@@ -1,0 +1,42 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#806030; '>@</span><span style='color:#400000; font-weight:bold; '>REM</span><span style='color:#c34e00; '> BATCH </span><span style='color:#400000; font-weight:bold; '>FILE</span>
+<span style='color:#806030; '>@</span><span style='color:#400000; font-weight:bold; '>ECHO off</span>
+
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>=========================================================</span>
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>Declare global variables here.</span>
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>=========================================================</span>
+
+<span style='color:#400000; font-weight:bold; '>set</span> INSTALL_EXE<span style='color:#806030; '>=</span>C<span style='color:#806030; '>:</span><span style='color:#806030; '>\</span>Windows<span style='color:#806030; '>\</span>Microsoft.<span style='color:#400000; font-weight:bold; '>NET</span><span style='color:#806030; '>\</span>Framework<span style='color:#806030; '>\</span>v2.<span style='color:#8c0000; '>0</span>.<span style='color:#8c0000; '>50727</span>
+<span style='color:#400000; font-weight:bold; '>set</span> SERVICE_EXE<span style='color:#806030; '>=</span><span style='color:#e60000; '>"Prog.exe"</span>
+<span style='color:#400000; font-weight:bold; '>set</span> SERVICE_SID<span style='color:#806030; '>=</span><span style='color:#e60000; '>"Prog"</span>
+
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>=========================================================</span>
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>Install / Uninstall Windows Service</span>
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>=========================================================</span>
+
+<span style='color:#400000; font-weight:bold; '>echo</span><span style='color:#e60000; '> Checking system service: [%SERVICE_SID%]</span>
+sc query %SERVICE_SID% <span style='color:#806030; '>|</span> <span style='color:#400000; font-weight:bold; '>findstr</span> <span style='color:#806030; '>/</span>c<span style='color:#806030; '>:</span><span style='color:#e60000; '>"RUNNING"</span> <span style='color:#806030; '>/</span>c<span style='color:#806030; '>:</span><span style='color:#e60000; '>"STOPPED"</span>
+<span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#e60000; '>"%ERRORLEVEL%"</span><span style='color:#806030; '>=</span><span style='color:#806030; '>=</span><span style='color:#e60000; '>"0"</span> <span style='color:#400000; font-weight:bold; '>goto </span><span style='color:#e34adc; '>UninstallPrompt</span>
+
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>====== Install Service ===========================</span>
+<span style='color:#400000; font-weight:bold; '>echo</span><span style='color:#e60000; '> Service not installed. Install and start service?</span>
+<span style='color:#400000; font-weight:bold; '>set</span> <span style='color:#806030; '>/</span>P c<span style='color:#806030; '>=</span>Answer <span style='color:#806030; '>[</span>y<span style='color:#806030; '>/</span>n<span style='color:#806030; '>]</span><span style='color:#806030; '>?</span> 
+<span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>/</span>I <span style='color:#e60000; '>"%c%"</span> <span style='color:#400000; font-weight:bold; '>EQU</span> <span style='color:#e60000; '>"Y"</span> <span style='color:#400000; font-weight:bold; '>goto</span> <span style='color:#806030; '>:</span><span style='color:#400000; font-weight:bold; '>Install</span>
+<span style='color:#400000; font-weight:bold; '>goto</span><span style='color:#806030; '>:</span><span style='color:#400000; font-weight:bold; '>eof</span>
+
+<span style='color:#e34adc; '>:Install</span>
+%INSTALL_EXE%<span style='color:#806030; '>\</span>InstallUtil.exe %SERVICE_EXE%
+<span style='color:#400000; font-weight:bold; '>net</span> <span style='color:#400000; font-weight:bold; '>start</span> %SERVICE_SID%
+<span style='color:#400000; font-weight:bold; '>goto</span><span style='color:#806030; '>:</span><span style='color:#400000; font-weight:bold; '>eof</span>
+
+<span style='color:#400000; font-weight:bold; '>rem </span><span style='color:#c34e00; '>====== Uninstall Service ========================</span>
+<span style='color:#e34adc; '>:UninstallPrompt</span>
+<span style='color:#400000; font-weight:bold; '>echo</span><span style='color:#e60000; '> Service installed. Stop and uninstall service?</span>
+<span style='color:#400000; font-weight:bold; '>set</span> <span style='color:#806030; '>/</span>P c<span style='color:#806030; '>=</span>Answer <span style='color:#806030; '>[</span>y<span style='color:#806030; '>/</span>n<span style='color:#806030; '>]</span><span style='color:#806030; '>?</span> 
+<span style='color:#400000; font-weight:bold; '>if</span> <span style='color:#806030; '>/</span>I <span style='color:#e60000; '>"%c%"</span> <span style='color:#400000; font-weight:bold; '>EQU</span> <span style='color:#e60000; '>"Y"</span> <span style='color:#400000; font-weight:bold; '>goto</span> <span style='color:#806030; '>:</span>Uninstall
+<span style='color:#400000; font-weight:bold; '>goto</span><span style='color:#806030; '>:</span><span style='color:#400000; font-weight:bold; '>eof</span>
+
+<span style='color:#e34adc; '>:Uninstall</span>
+<span style='color:#400000; font-weight:bold; '>net</span> <span style='color:#400000; font-weight:bold; '>stop</span> %SERVICE_SID%
+%INSTALL_EXE%<span style='color:#806030; '>\</span>InstallUtil.exe <span style='color:#806030; '>-</span>u %SERVICE_EXE%
+<span style='color:#400000; font-weight:bold; '>goto</span><span style='color:#806030; '>:</span><span style='color:#400000; font-weight:bold; '>eof</span>
+</pre>

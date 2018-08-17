@@ -1,0 +1,312 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Globalization<span style='color:#0000ff; '>;</span>
+<span style='color:#008000; '>/// &lt;summary> </span>
+<span style='color:#008000; '>/// Package for all common classes.</span>
+<span style='color:#008000; '>/// Used by Project StdSocket and Project StdParser.</span>
+<span style='color:#008000; '>/// &lt;/summary></span>
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> StdCommon
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/// &lt;summary></span>
+    <span style='color:#008000; '>/// Handles byte and hex manipulation and calculations.</span>
+    <span style='color:#008000; '>/// &lt;/summary></span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>class</span> StdUtil
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// 4-bit - 0001 : Represent Least Significant Bit</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>int</span> CHECK_BIT_1 <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0x3</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// 4-bit - 0010</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>int</span> CHECK_BIT_2 <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0x2</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// 4-bit - 0100</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>int</span> CHECK_BIT_3 <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0x1</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// 4-bit - 1000 : Represent Most Significant Bit</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>int</span> CHECK_BIT_4 <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0x0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Swaps the value of the two parameters.</span>
+        <span style='color:#008000; '>/// &lt;code></span>
+        <span style='color:#008000; '>/// T t = y;</span>
+        <span style='color:#008000; '>/// y = x;</span>
+        <span style='color:#008000; '>/// x = t;</span>
+        <span style='color:#008000; '>/// &lt;/code></span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;typeparam name="T"></span>
+        <span style='color:#008000; '>/// The element type of the passed parameters</span>
+        <span style='color:#008000; '>/// &lt;/typeparam></span>
+        <span style='color:#008000; '>/// &lt;param name="x">&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="y">&lt;/param></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Swap<span style='color:#0000ff; '>&lt;</span>T<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> T x<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>ref</span> T y<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            T t <span style='color:#0000ff; '>=</span> y<span style='color:#0000ff; '>;</span>
+            y <span style='color:#0000ff; '>=</span> x<span style='color:#0000ff; '>;</span>
+            x <span style='color:#0000ff; '>=</span> t<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Method overloading. &lt;c>ByteArrayToHexString&lt;/c></span>
+        <span style='color:#008000; '>/// for 1 parameter.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="data">Data from device&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns></span>
+        <span style='color:#008000; '>/// &lt;c>ByteArrayToHexString(byte[] data, int start_idx, int length, bool hyphen)&lt;/c></span>
+        <span style='color:#008000; '>/// &lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> ByteArrayToHexString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> StdUtil<span style='color:#0000ff; '>.</span>ByteArrayToHexString<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Converts byte array from device to hex string.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="data">Data from device&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="start_idx">The starting position within value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="length">Length of data from device&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="hyphen"></span>
+        <span style='color:#008000; '>/// If data from device has hyphen format</span>
+        <span style='color:#008000; '>/// &lt;example></span>
+        <span style='color:#008000; '>/// Example: </span>
+        <span style='color:#008000; '>/// &lt;c>true&lt;/c> if data is "7E-01-00-64" ; </span>
+        <span style='color:#008000; '>/// &lt;c>false&lt;/c> if data is "7E010064";</span>
+        <span style='color:#008000; '>/// &lt;/example></span>
+        <span style='color:#008000; '>/// &lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Hex string&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> ByteArrayToHexString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> start_idx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> length<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> hyphen<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>hyphen<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> BitConverter<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> start_idx<span style='color:#0000ff; '>,</span> length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> BitConverter<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> start_idx<span style='color:#0000ff; '>,</span> length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Replace<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>-</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Method overloading. &lt;c>HexStringToByteArray&lt;/c></span>
+        <span style='color:#008000; '>/// for 1 parameter.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="hex">Hex string&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns></span>
+        <span style='color:#008000; '>/// &lt;c>HexStringToByteArray(string hex, int start_idx, int length)&lt;/c></span>
+        <span style='color:#008000; '>/// &lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> HexStringToByteArray<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> hex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> StdUtil<span style='color:#0000ff; '>.</span>HexStringToByteArray<span style='color:#0000ff; '>(</span>hex<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> hex<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Converts Hex string to byte array</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="hex">Hex string&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="start_idx">The starting position within value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="length">Length of value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>byte[]&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> HexStringToByteArray<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> hex<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> start_idx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> length<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> Enumerable<span style='color:#0000ff; '>.</span>Range<span style='color:#0000ff; '>(</span>start_idx<span style='color:#0000ff; '>,</span> length<span style='color:#0000ff; '>)</span>
+                             <span style='color:#0000ff; '>.</span>Where<span style='color:#0000ff; '>(</span>x <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> x <span style='color:#0000ff; '>%</span> <span style='color:#800000; '>2</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                             <span style='color:#0000ff; '>.</span>Select<span style='color:#0000ff; '>(</span>x <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> Convert<span style='color:#0000ff; '>.</span>ToByte<span style='color:#0000ff; '>(</span>hex<span style='color:#0000ff; '>.</span>Substring<span style='color:#0000ff; '>(</span>x<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>16</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                             <span style='color:#0000ff; '>.</span>ToArray<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Calculates data by XORing.</span>
+        <span style='color:#008000; '>/// &lt;c>0x00 ^= byte&lt;/c></span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="data">Byte array data&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="start_idx">The starting position within value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="length">Length of value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns 0x00 in exception ; Returns XORed byte&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>byte</span> CalculateXorCheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> start_idx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> length<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>byte</span> chksum <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0x00</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> start_idx<span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> length<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    chksum ^<span style='color:#0000ff; '>=</span> data<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> chksum<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0x00</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Calculates string data by XORing.</span>
+        <span style='color:#008000; '>/// Uses &lt;see cref="CalculateXorCheckSum(byte[] data, int start_idx, int length)"/>.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="data">String data&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="start_idx">The starting position within value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="length">Length of value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns empty string in exception ; Returns XORed string &lt;paramref name="data"/>&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> CalculateXorCheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> start_idx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> length<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> bytes <span style='color:#0000ff; '>=</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>.</span>GetBytes<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>byte</span> b <span style='color:#0000ff; '>=</span> CalculateXorCheckSum<span style='color:#0000ff; '>(</span>bytes<span style='color:#0000ff; '>,</span> start_idx<span style='color:#0000ff; '>,</span> length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>16</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>PadLeft<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>'0'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToUpper<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> String<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Analyses hex character as bit. Check if hex character is 0 or 1.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="cHexChar">Hex character&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="nCheckBit"></span>
+        <span style='color:#008000; '>/// &lt;see cref="StdUtil.CHECK_BIT_1"/> ; </span>
+        <span style='color:#008000; '>/// &lt;see cref="StdUtil.CHECK_BIT_2"/> ; </span>
+        <span style='color:#008000; '>/// &lt;see cref="StdUtil.CHECK_BIT_3"/> ; </span>
+        <span style='color:#008000; '>/// &lt;see cref="StdUtil.CHECK_BIT_4"/></span>
+        <span style='color:#008000; '>/// &lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns 0 or 1&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>short</span> AnalyzeHexCharAsBit<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> cHexChar<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nCheckBit<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                SByte digit <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToSByte<span style='color:#0000ff; '>(</span>cHexChar<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>16</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// to base 16. Sample = A</span>
+                <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> array <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>digit<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>PadLeft<span style='color:#0000ff; '>(</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>'0'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToArray<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// to 4bit binary. Sample = 1010</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>short</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>array<span style='color:#0000ff; '>[</span>nCheckBit<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>'1'</span> ? <span style='color:#800000; '>1</span> <span style='color:#0000ff; '>:</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// check which bit value</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>throw</span> <span style='color:#0000ff; font-weight:bold; '>new</span> FormatException<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Same as &lt;see cref="AnalyzeHexCharAsBit(char cHexChar, int nCheckBit)"/></span>
+        <span style='color:#008000; '>/// but inverted. 1 is 0 and 0 is 1.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="cHexChar">Hex character&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="nCheckBit"></span>
+        <span style='color:#008000; '>/// &lt;see cref="StdUtil.CHECK_BIT_1"/> ; </span>
+        <span style='color:#008000; '>/// &lt;see cref="StdUtil.CHECK_BIT_2"/> ; </span>
+        <span style='color:#008000; '>/// &lt;see cref="StdUtil.CHECK_BIT_3"/> ; </span>
+        <span style='color:#008000; '>/// &lt;see cref="StdUtil.CHECK_BIT_4"/></span>
+        <span style='color:#008000; '>/// &lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns 0 or 1&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>short</span> AnalyzeHexCharAsBitInvert<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> cHexChar<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nCheckBit<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// Below method written by Ahamed to Invert the result(eg: LowBat) @ 22012016</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                SByte digit <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToSByte<span style='color:#0000ff; '>(</span>cHexChar<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>16</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// to base 16. Sample = A</span>
+                <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> array <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>digit<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>PadLeft<span style='color:#0000ff; '>(</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>'0'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToArray<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// to 4bit binary. Sample = 1010</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>short</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>array<span style='color:#0000ff; '>[</span>nCheckBit<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>'1'</span> ? <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>:</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// check which bit value</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>throw</span> <span style='color:#0000ff; font-weight:bold; '>new</span> FormatException<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Converts hex character to a</span>
+        <span style='color:#008000; '>/// 16 base 16 bit signed integer.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="cHexChar">Hex character&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns Int16&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>short</span> GetShortHexValue<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>char</span> cHexChar<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Convert<span style='color:#0000ff; '>.</span>ToInt16<span style='color:#0000ff; '>(</span>cHexChar<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>16</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>throw</span> <span style='color:#0000ff; font-weight:bold; '>new</span> FormatException<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Encodes byte array to ASCII string.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="data">Byte array data&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="start_idx">The starting position within value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="length">Length of value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns string&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> SubBytesAsString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> start_idx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> length<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Encoding<span style='color:#0000ff; '>.</span>ASCII<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> start_idx<span style='color:#0000ff; '>,</span> length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Converts string DateTime to a specific format.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="date">String DateTime to be formatted&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="src_format">Current format of string DateTime&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="target_format">Target format of string DateTime&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns string DateTime using &lt;paramref name="target_format"/> format.&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> ReFormatToDateTime<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> date<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> src_format<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> target_format<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> DateTime<span style='color:#0000ff; '>.</span>ParseExact<span style='color:#0000ff; '>(</span>date<span style='color:#0000ff; '>,</span> src_format<span style='color:#0000ff; '>,</span> CultureInfo<span style='color:#0000ff; '>.</span>InvariantCulture<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>target_format<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Parses byte array data to UInt16 structure.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="bytes">Byte array data&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="start_idx">The starting position within value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="length">Length of value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns ushort type data, converted from &lt;paramref name="bytes"/>&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>ushort</span> CalculateCrc16_CCITT_CheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> bytes<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> start_idx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> length<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>ushort</span> poly <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>4129</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>ushort</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> table <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>ushort</span><span style='color:#0000ff; '>[</span><span style='color:#800000; '>256</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>ushort</span> initialValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0xffff</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>ushort</span> temp<span style='color:#0000ff; '>,</span> a<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>ushort</span> crc <span style='color:#0000ff; '>=</span> initialValue<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> table<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>i<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    temp <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+                    a <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ushort</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>i <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>8</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>8</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>j<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>temp ^ a<span style='color:#0000ff; '>)</span> &amp; <span style='color:#800000; '>0x8000</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                            temp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ushort</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>temp <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> ^ poly<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>else</span>
+                            temp <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+                        a <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    table<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> start_idx<span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> length<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>i<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    crc <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ushort</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>crc <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>8</span><span style='color:#0000ff; '>)</span> ^ table<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>crc <span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span> <span style='color:#800000; '>8</span><span style='color:#0000ff; '>)</span> ^ <span style='color:#0000ff; '>(</span><span style='color:#800000; '>0xff</span> &amp; bytes<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> crc<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>/// &lt;summary></span>
+        <span style='color:#008000; '>/// Parses hex string data to a string with UInt16 structure.</span>
+        <span style='color:#008000; '>/// &lt;/summary></span>
+        <span style='color:#008000; '>/// &lt;param name="hex_str">Hex string data&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="start_idx">The starting position within value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;param name="length">Length of value&lt;/param></span>
+        <span style='color:#008000; '>/// &lt;returns>Returns string&lt;/returns></span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> CalculateCrc16_CCITT_CheckSum<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> hex_str<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> start_idx<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> length<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> data <span style='color:#0000ff; '>=</span> StdUtil<span style='color:#0000ff; '>.</span>HexStringToByteArray<span style='color:#0000ff; '>(</span>hex_str<span style='color:#0000ff; '>,</span> start_idx<span style='color:#0000ff; '>,</span> length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> StdUtil<span style='color:#0000ff; '>.</span>CalculateCrc16_CCITT_CheckSum<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>X2</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> String<span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span> 
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

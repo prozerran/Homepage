@@ -1,0 +1,189 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/3/2012</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Duplicate File Remover. Demostrate usage of Background worker</span>
+<span style='color:#008000; '>//          with delegate callback. This program removes duplicate files</span>
+<span style='color:#008000; '>//          base on same hash of the file and removes it from the system.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ComponentModel<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Drawing<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> DupFileRemover
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>struct</span> DupData
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sFullName <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sScanned <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sScannedNum <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sMd5 <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sRemove <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sRemoveNum <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>public</span> partial <span style='color:#0000ff; font-weight:bold; '>class</span> Form1 <span style='color:#0000ff; '>:</span> Form
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Form1<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            InitializeComponent<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Form1_Load<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> button1_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>folderBrowserDialog1<span style='color:#0000ff; '>.</span>ShowDialog<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox1<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>folderBrowserDialog1<span style='color:#0000ff; '>.</span>SelectedPath<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> button2_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>backgroundWorker1<span style='color:#0000ff; '>.</span>IsBusy <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                DupData data <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DupData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>backgroundWorker1<span style='color:#0000ff; '>.</span>RunWorkerAsync<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Form1_FormClosing<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> FormClosingEventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>backgroundWorker1<span style='color:#0000ff; '>.</span>WorkerSupportsCancellation <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                backgroundWorker1<span style='color:#0000ff; '>.</span>CancelAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>.</span>FileStream GetFileStream<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> pathName<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>.</span>FileStream<span style='color:#0000ff; '>(</span>pathName<span style='color:#0000ff; '>,</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>.</span>FileMode<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>,</span>
+                    System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>.</span>FileAccess<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>,</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>.</span>FileShare<span style='color:#0000ff; '>.</span>ReadWrite<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> GetSHA1Hash<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> pathName<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> strResult <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> strHashData <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> arrbytHashValue<span style='color:#0000ff; '>;</span>
+            System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>.</span>FileStream oFileStream <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+            System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>.</span>Cryptography<span style='color:#0000ff; '>.</span>SHA1CryptoServiceProvider oSHA1Hasher<span style='color:#0000ff; '>=</span>
+                        <span style='color:#0000ff; font-weight:bold; '>new</span> System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>.</span>Cryptography<span style='color:#0000ff; '>.</span>SHA1CryptoServiceProvider<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                oFileStream <span style='color:#0000ff; '>=</span> GetFileStream<span style='color:#0000ff; '>(</span>pathName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                arrbytHashValue <span style='color:#0000ff; '>=</span> oSHA1Hasher<span style='color:#0000ff; '>.</span>ComputeHash<span style='color:#0000ff; '>(</span>oFileStream<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                oFileStream<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                strHashData <span style='color:#0000ff; '>=</span> System<span style='color:#0000ff; '>.</span>BitConverter<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>arrbytHashValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                strHashData <span style='color:#0000ff; '>=</span> strHashData<span style='color:#0000ff; '>.</span>Replace<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>-</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                strResult <span style='color:#0000ff; '>=</span> strHashData<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span><span style='color:#0000ff; '>(</span>System<span style='color:#0000ff; '>.</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>.</span>MessageBox<span style='color:#0000ff; '>.</span>Show<span style='color:#0000ff; '>(</span>ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+                            System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>.</span>MessageBoxButtons<span style='color:#0000ff; '>.</span>OK<span style='color:#0000ff; '>,</span> 
+                            System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>.</span>MessageBoxIcon<span style='color:#0000ff; '>.</span>Error<span style='color:#0000ff; '>,</span> 
+                            System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>.</span>MessageBoxDefaultButton<span style='color:#0000ff; '>.</span>Button1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>(</span>strResult<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> GetMD5Hash<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> pathName<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>string</span> strResult <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>string</span> strHashData <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> arrbytHashValue<span style='color:#0000ff; '>;</span>
+        System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>.</span>FileStream oFileStream <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>.</span>Cryptography<span style='color:#0000ff; '>.</span>MD5CryptoServiceProvider oMD5Hasher<span style='color:#0000ff; '>=</span>
+                    <span style='color:#0000ff; font-weight:bold; '>new</span> System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>.</span>Cryptography<span style='color:#0000ff; '>.</span>MD5CryptoServiceProvider<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+        oFileStream <span style='color:#0000ff; '>=</span> GetFileStream<span style='color:#0000ff; '>(</span>pathName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        arrbytHashValue <span style='color:#0000ff; '>=</span> oMD5Hasher<span style='color:#0000ff; '>.</span>ComputeHash<span style='color:#0000ff; '>(</span>oFileStream<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        oFileStream<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        strHashData <span style='color:#0000ff; '>=</span> System<span style='color:#0000ff; '>.</span>BitConverter<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>arrbytHashValue<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        strHashData <span style='color:#0000ff; '>=</span> strHashData<span style='color:#0000ff; '>.</span>Replace<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>-</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        strResult <span style='color:#0000ff; '>=</span> strHashData<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span><span style='color:#0000ff; '>(</span>System<span style='color:#0000ff; '>.</span>Exception ex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+        System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>.</span>MessageBox<span style='color:#0000ff; '>.</span>Show<span style='color:#0000ff; '>(</span>ex<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+                    System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>.</span>MessageBoxButtons<span style='color:#0000ff; '>.</span>OK<span style='color:#0000ff; '>,</span> 
+                    System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>.</span>MessageBoxIcon<span style='color:#0000ff; '>.</span>Error<span style='color:#0000ff; '>,</span> 
+                    System<span style='color:#0000ff; '>.</span>Windows<span style='color:#0000ff; '>.</span>Forms<span style='color:#0000ff; '>.</span>MessageBoxDefaultButton<span style='color:#0000ff; '>.</span>Button1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>(</span>strResult<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> backgroundWorker1_DoWork<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> DoWorkEventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> path <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox1<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+            DupData argumentData <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>DupData<span style='color:#0000ff; '>)</span> e<span style='color:#0000ff; '>.</span>Argument<span style='color:#0000ff; '>;</span>
+            DirectoryInfo dir <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> DirectoryInfo<span style='color:#0000ff; '>(</span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>long</span> scanNum <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>long</span> removeNum <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+            Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> dic <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>FileInfo f <span style='color:#0000ff; font-weight:bold; '>in</span> dir<span style='color:#0000ff; '>.</span>GetFiles<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>*.*</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                e<span style='color:#0000ff; '>.</span>Result <span style='color:#0000ff; '>=</span> argumentData<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>Invoke<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>MethodInvoker<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>delegate</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// currently scan full path file</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox2<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>argumentData<span style='color:#0000ff; '>.</span>sFullName <span style='color:#0000ff; '>=</span> f<span style='color:#0000ff; '>.</span>FullName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#008000; '>// set md5</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> md5 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox3<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> GetMD5Hash<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox2<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>dic<span style='color:#0000ff; '>.</span>ContainsKey<span style='color:#0000ff; '>(</span>md5<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#008000; '>// add to map</span>
+                        dic<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>md5<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>// update scanned list</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox1<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>argumentData<span style='color:#0000ff; '>.</span>sScanned <span style='color:#0000ff; '>=</span> f<span style='color:#0000ff; '>.</span>Name <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox1<span style='color:#0000ff; '>.</span>SelectionStart <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox1<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox1<span style='color:#0000ff; '>.</span>ScrollToCaret<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>// update scanned num</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>groupBox2<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>File Scanned: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>scanNum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>else</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#008000; '>// update remove list</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox2<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span>argumentData<span style='color:#0000ff; '>.</span>sRemove <span style='color:#0000ff; '>=</span> f<span style='color:#0000ff; '>.</span>Name <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox2<span style='color:#0000ff; '>.</span>SelectionStart <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox2<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>richTextBox2<span style='color:#0000ff; '>.</span>ScrollToCaret<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>// update scanned num</span>
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>groupBox3<span style='color:#0000ff; '>.</span>Text <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>File Removed: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>removeNum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#008000; '>// delete the duplicate file!</span>
+                        File<span style='color:#0000ff; '>.</span>Delete<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>textBox2<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>Update<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

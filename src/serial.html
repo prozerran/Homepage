@@ -1,0 +1,238 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/11/2010</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Serial Port Connector. Connects to Serial Port COM#</span>
+<span style='color:#008000; '>//          Allows communication between serial port and device.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#008000; '>// SerialPort.cpp: implementation of the CSerialPort class.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>SerialPort.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> _DEBUG</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>undef</span><span style='color:#004a43; '> THIS_FILE</span>
+<span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>char</span> THIS_FILE<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>=</span>__FILE__<span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> new DEBUG_NEW</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+<span style='color:#008000; '>// Construction/Destruction</span>
+<span style='color:#008000; '>//////////////////////////////////////////////////////////////////////</span>
+
+CSerialPort<span style='color:#0000ff; '>::</span>CSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    m_portHandle<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+CSerialPort<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>CSerialPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>IsOpen<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        ClosePort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CSerialPort<span style='color:#0000ff; '>::</span>monitor_data<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>DWORD</span> thread_id<span style='color:#0000ff; '>;</span>
+    monitor_data_thread_handle <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> CSerialPort<span style='color:#0000ff; '>::</span>monitor_data_thread<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>thread_id<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>DWORD</span> <span style='color:#0000ff; font-weight:bold; '>WINAPI</span> CSerialPort<span style='color:#0000ff; '>::</span>monitor_data_thread<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>LPVOID</span> <span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    CSerialPort    <span style='color:#0000ff; '>*</span>pSerialPort<span style='color:#0000ff; '>;</span>
+    pSerialPort <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>CSerialPort <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>arg</span><span style='color:#0000ff; '>;</span>
+    pSerialPort<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>monitor_data_thread_terminate <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> done<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>BOOL</span> success<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>DWORD</span> bytes<span style='color:#0000ff; '>;</span>
+    byte buf<span style='color:#0000ff; '>[</span>TMP_BUFFER_1024<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>pSerialPort<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>monitor_data_thread_terminate<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        success <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>ReadFile</span> <span style='color:#0000ff; '>(</span>pSerialPort<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_portHandle<span style='color:#0000ff; '>,</span> buf<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>bytes<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        done <span style='color:#0000ff; '>=</span> success <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>done<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>DWORD</span> rxgle <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetLastError</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            ASSERT <span style='color:#0000ff; '>(</span>rxgle <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ERROR_IO_PENDING<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pSerialPort<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>CallBackFunc_Data_Func <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; '>!</span>pSerialPort<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>monitor_data_thread_terminate<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                pSerialPort<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>CallBackFunc_Data_Func<span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>,</span> bytes<span style='color:#0000ff; '>,</span> pSerialPort<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data_func_context<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>long</span> CSerialPort<span style='color:#0000ff; '>::</span>WriteData<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> pbyte data<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> dwLength<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> done<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>BOOL</span> success<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>DWORD</span> bytes<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>dwLength <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span> <span style='color:#008000; '>/* Be pessimistic and assume WriteFile would choke on zero length */</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        success <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>WriteFile</span><span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>,</span> dwLength<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>bytes<span style='color:#0000ff; '>,</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        done <span style='color:#0000ff; '>=</span> success <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>done<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>DWORD</span> txgle <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>GetLastError</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            ASSERT <span style='color:#0000ff; '>(</span>txgle <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> ERROR_IO_PENDING<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> bytes<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CSerialPort<span style='color:#0000ff; '>::</span>OpenPort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nPort<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nBaudRate<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>DCB</span> dcb<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>BOOL</span> success<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>COMMTIMEOUTS</span> timeouts<span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>TODO: Add your dispatch handler code here</span>
+    <span style='color:#0000ff; font-weight:bold; '>CString</span> portName<span style='color:#0000ff; '>;</span>
+    portName<span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>COM</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>:</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> nPort<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    m_portHandle <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>CreateFile</span> <span style='color:#0000ff; '>(</span>portName<span style='color:#0000ff; '>,</span>
+        <span style='color:#808080; font-weight:bold; '>GENERIC_READ</span> <span style='color:#0000ff; '>|</span> <span style='color:#808080; font-weight:bold; '>GENERIC_WRITE</span><span style='color:#0000ff; '>,</span>
+        WIN32_NO_SHARING<span style='color:#0000ff; '>,</span> <span style='color:#008000; '>// mandatory</span>
+        <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span>
+        <span style='color:#808080; font-weight:bold; '>OPEN_EXISTING</span><span style='color:#0000ff; '>,</span> <span style='color:#008000; '>// mandatory</span>
+        <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span><span style='color:#008000; '>//FILE_FLAG_OVERLAPPED,</span>
+        WIN32_NO_TEMPLATE_FILE <span style='color:#008000; '>// mandatory</span>
+        <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_portHandle <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//CString msg;</span>
+        <span style='color:#008000; '>//msg.Format(_T("Error %d"),GetLastError());</span>
+        <span style='color:#008000; '>//MessageBox(msg);</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>memset</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&amp;</span>dcb<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DCB</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    dcb<span style='color:#0000ff; '>.</span>DCBlength <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>DCB</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>//success = BuildCommDCB (cfgStr, &amp;dcb); /* Note BuildCommDCB() turns off both hardware and software flow control */</span>
+    dcb<span style='color:#0000ff; '>.</span>BaudRate<span style='color:#0000ff; '>=</span>nBaudRate<span style='color:#0000ff; '>;</span>
+    dcb<span style='color:#0000ff; '>.</span>fParity <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+    dcb<span style='color:#0000ff; '>.</span>fNull <span style='color:#0000ff; '>=</span> FALSE<span style='color:#0000ff; '>;</span>
+    dcb<span style='color:#0000ff; '>.</span>StopBits <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>ONESTOPBIT</span><span style='color:#0000ff; '>;</span>
+    dcb<span style='color:#0000ff; '>.</span>Parity <span style='color:#0000ff; '>=</span> NOPARITY<span style='color:#0000ff; '>;</span>
+    dcb<span style='color:#0000ff; '>.</span>ByteSize <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>8</span><span style='color:#0000ff; '>;</span>
+
+    success <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>SetCommState</span> <span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>dcb<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    ASSERT <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SetCommState</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> success<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>success<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>CloseHandle</span> <span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        m_portHandle<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>//MessageBox(_T("SetCommState Error"));</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;timeouts.ReadIntervalTimeout = WIN32_NO_TIMEOUT;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;timeouts.ReadTotalTimeoutMultiplier = WIN32_NO_TIMEOUT;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;timeouts.ReadTotalTimeoutConstant = WIN32_NO_TIMEOUT;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;timeouts.WriteTotalTimeoutMultiplier = WIN32_NO_TIMEOUT;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;timeouts.WriteTotalTimeoutConstant = WIN32_NO_TIMEOUT;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    timeouts<span style='color:#0000ff; '>.</span>ReadIntervalTimeout <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>3</span><span style='color:#0000ff; '>;</span>
+    timeouts<span style='color:#0000ff; '>.</span>ReadTotalTimeoutMultiplier <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>3</span><span style='color:#0000ff; '>;</span>
+    timeouts<span style='color:#0000ff; '>.</span>ReadTotalTimeoutConstant <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+    timeouts<span style='color:#0000ff; '>.</span>WriteTotalTimeoutMultiplier <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>3</span><span style='color:#0000ff; '>;</span>
+    timeouts<span style='color:#0000ff; '>.</span>WriteTotalTimeoutConstant <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span>
+
+    success <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>SetCommTimeouts</span> <span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>&amp;</span>timeouts<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    ASSERT <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>_T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SetCommTimeouts</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> success<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>success<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>CloseHandle</span> <span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        m_portHandle<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#008000; '>//MessageBox(_T("SetCommTimeouts Error"));</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    monitor_data<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//SystemParametersInfo(SPI_GETBATTERYIDLETIMEOUT,0,&amp;m_batteryPowerTimeout,SPIF_UPDATEINIFILE);</span>
+    <span style='color:#008000; '>//SystemParametersInfo(SPI_GETEXTERNALIDLETIMEOUT,0,&amp;m_acPowerTimeout,SPIF_UPDATEINIFILE);</span>
+    <span style='color:#008000; '>//SystemParametersInfo(SPI_SETBATTERYIDLETIMEOUT,0,NULL,SPIF_UPDATEINIFILE);</span>
+    <span style='color:#008000; '>//SystemParametersInfo(SPI_SETEXTERNALIDLETIMEOUT,0,NULL,SPIF_UPDATEINIFILE);</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> CSerialPort<span style='color:#0000ff; '>::</span>Set_Data_Callback<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>CallBackFunctionName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>long</span><span style='color:#0000ff; '>,</span><span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>void</span> <span style='color:#0000ff; '>*</span>context<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>CallBackFunctionName<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        CallBackFunc_Data_Func<span style='color:#0000ff; '>=</span>CallBackFunctionName<span style='color:#0000ff; '>;</span>
+        data_func_context<span style='color:#0000ff; '>=</span>context<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CSerialPort<span style='color:#0000ff; '>::</span>ClosePort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>monitor_data_thread_handle <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>)</span>        
+    <span style='color:#0000ff; '>{</span>
+        monitor_data_thread_terminate <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_portHandle <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>CloseHandle</span> <span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    m_portHandle <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#008000; '>//SystemParametersInfo(SPI_SETBATTERYIDLETIMEOUT,m_batteryPowerTimeout,NULL,SPIF_UPDATEINIFILE);</span>
+    <span style='color:#008000; '>//SystemParametersInfo(SPI_SETEXTERNALIDLETIMEOUT,m_acPowerTimeout,NULL,SPIF_UPDATEINIFILE);</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CSerialPort<span style='color:#0000ff; '>::</span>IsOpen<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> m_portHandle<span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#0000ff; font-weight:bold; '>BOOL</span> CSerialPort<span style='color:#0000ff; '>::</span>SetDTR<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>BOOL</span> bEnable<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>DCB</span> dcb<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>INVALID_HANDLE_VALUE</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>GetCommState</span><span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>dcb<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>bEnable<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>//  dcb.fDtrControl=DTR_CONTROL_ENABLE;</span>
+        dcb<span style='color:#0000ff; '>.</span>fRtsControl<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>RTS_CONTROL_ENABLE</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>//  dcb.fDtrControl=DTR_CONTROL_DISABLE;</span>
+        dcb<span style='color:#0000ff; '>.</span>fRtsControl<span style='color:#0000ff; '>=</span><span style='color:#808080; font-weight:bold; '>RTS_CONTROL_DISABLE</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>SetCommState</span><span style='color:#0000ff; '>(</span>m_portHandle<span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>&amp;</span>dcb<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span>FALSE<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> FALSE<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> TRUE<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

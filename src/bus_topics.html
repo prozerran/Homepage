@@ -1,0 +1,51 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>ServiceBus<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>ServiceBus<span style='color:#0000ff; '>.</span>Messaging<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> ServiceBusTopic
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Program
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>//private static string _conn = "Endpoint=sb://&lt;namespace>.servicebus.windows.net/;SharedAccessKeyName=&lt;policy name>;SharedAccessKey=&lt;key>";</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> _conn <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Endpoint=sb://timbus.servicebus.windows.net/;SharedAccessKeyName=MyPolicy;SharedAccessKey=/gMS187tobtyccFjaZPbQXQBjrIM+dCErwn3ahXWi0M=</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> _topic <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>MyTopic</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>string</span> _subscription_name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ConsoleApp</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>////sendmessage</span>
+            <span style='color:#008000; '>//for (int i = 0; i &lt; 10; i++)</span>
+            <span style='color:#008000; '>//{</span>
+            <span style='color:#008000; '>//    string str = string.Format($"Topic {i}");</span>
+            <span style='color:#008000; '>//    SendMessage(str);</span>
+            <span style='color:#008000; '>//}</span>
+
+            <span style='color:#008000; '>// or read</span>
+            ReadMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Ok!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Console<span style='color:#0000ff; '>.</span>ReadLine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> SendMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> message<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> topicClient <span style='color:#0000ff; '>=</span> TopicClient<span style='color:#0000ff; '>.</span>CreateFromConnectionString<span style='color:#0000ff; '>(</span>_conn<span style='color:#0000ff; '>,</span> _topic<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> msg <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> BrokeredMessage<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            topicClient<span style='color:#0000ff; '>.</span>Send<span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ReadMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> subClient <span style='color:#0000ff; '>=</span> SubscriptionClient<span style='color:#0000ff; '>.</span>CreateFromConnectionString<span style='color:#0000ff; '>(</span>_conn<span style='color:#0000ff; '>,</span> _topic<span style='color:#0000ff; '>,</span> _subscription_name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            subClient<span style='color:#0000ff; '>.</span>OnMessage<span style='color:#0000ff; '>(</span>m <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+            <span style='color:#0000ff; '>{</span>
+                Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>m<span style='color:#0000ff; '>.</span>GetBody<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

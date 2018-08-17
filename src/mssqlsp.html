@@ -1,0 +1,543 @@
+<pre style='color:#000000;background:#f1f0f0;'><span style='color:#400000; font-weight:bold; '>USE</span> <span style='color:#806030; '>[</span>Database_TestDB<span style='color:#806030; '>]</span>
+<span style='color:#400000; font-weight:bold; '>GO</span>
+<span style='color:#c34e00; '>/****** Object:  StoredProcedure [dbo].[gtsp_interface_sap_sp]    Script Date: 8/1/2018 12:14:29 PM ******/</span>
+<span style='color:#400000; font-weight:bold; '>SET</span> ANSI_NULLS <span style='color:#400000; font-weight:bold; '>ON</span>
+<span style='color:#400000; font-weight:bold; '>GO</span>
+<span style='color:#400000; font-weight:bold; '>SET</span> QUOTED_IDENTIFIER <span style='color:#400000; font-weight:bold; '>ON</span>
+<span style='color:#400000; font-weight:bold; '>GO</span>
+
+<span style='color:#c34e00; '>/*</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;Store Procedure for calculating Revenue</span>
+<span style='color:#c34e00; '></span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;Accepts as parameters:</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;GalaxyRule          - Rules application</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;BusinessDateTime    - the date we wish to impersonate as (calculate value as if on that day)</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;OverrideExisting    - 0:No, Show current/new if not exist, 1:Yes, always recalculate and override</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;DebugFlag           - reserved only for development</span>
+<span style='color:#c34e00; '></span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;Sample</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;DECLARE @dt datetime = getdate();</span>
+<span style='color:#c34e00; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;EXEC gtsp_interface_sap_sp 0, @dt, 0, 0     -- all, save only if not exist</span>
+<span style='color:#c34e00; '>*/</span>
+
+<span style='color:#c34e00; '>-- ============================================================================================================================</span>
+<span style='color:#c34e00; '>-- Author:      Tim Hsu</span>
+<span style='color:#c34e00; '>-- Create date: June 2018</span>
+<span style='color:#c34e00; '>-- Description: Calculates all Revenue</span>
+<span style='color:#c34e00; '>-- ============================================================================================================================</span>
+
+<span style='color:#400000; font-weight:bold; '>ALTER</span> <span style='color:#400000; font-weight:bold; '>PROCEDURE</span> <span style='color:#806030; '>[</span>dbo<span style='color:#806030; '>]</span><span style='color:#806030; '>.</span><span style='color:#806030; '>[</span>gtsp_interface_sap_sp<span style='color:#806030; '>]</span> 
+        <span style='color:#c34e00; '>-- Add the parameters for the stored procedure here</span>
+        @GalaxyRule         <span style='color:#400000; font-weight:bold; '>INT</span><span style='color:#806030; '>,</span>        <span style='color:#c34e00; '>-- Run for only rule#</span>
+        @BusinessDateTime   DATETIME<span style='color:#806030; '>,</span>   <span style='color:#c34e00; '>-- Impersonate date, run as if calculation was base on this date</span>
+        @OverrideExisting   <span style='color:#400000; font-weight:bold; '>INT</span><span style='color:#806030; '>,</span>        <span style='color:#c34e00; '>-- 0:No, 1:Yes</span>
+        @DebugFlag          <span style='color:#400000; font-weight:bold; '>INT</span>         <span style='color:#c34e00; '>-- Show debug info: 0-No show, 1-Show</span>
+<span style='color:#400000; font-weight:bold; '>AS</span>
+<span style='color:#400000; font-weight:bold; '>BEGIN</span>
+        <span style='color:#c34e00; '>-- Globals</span>
+        <span style='color:#400000; font-weight:bold; '>DECLARE</span> @idx                <span style='color:#400000; font-weight:bold; '>BIGINT</span>
+        <span style='color:#400000; font-weight:bold; '>DECLARE</span> @max                <span style='color:#400000; font-weight:bold; '>BIGINT</span>
+
+        <span style='color:#400000; font-weight:bold; '>DECLARE</span> @ExpirationDate     DATETIME
+        <span style='color:#400000; font-weight:bold; '>DECLARE</span> @CutoffDateTime     DATETIME
+
+        <span style='color:#400000; font-weight:bold; '>SET</span> @ExpirationDate <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> @BusinessDateTime<span style='color:#806030; '>)</span>
+        <span style='color:#400000; font-weight:bold; '>SET</span> @ExpirationDate <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>DATEADD</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SECOND</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>86399</span><span style='color:#806030; '>,</span> @ExpirationDate<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>          <span style='color:#c34e00; '>-- -1 second before next day</span>
+        <span style='color:#400000; font-weight:bold; '>SET</span> @CutoffDateTime <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>DATEADD</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>MINUTE</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>1440</span> <span style='color:#806030; '>+</span> <span style='color:#c00000; '>110</span><span style='color:#806030; '>,</span> @BusinessDateTime<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>   <span style='color:#c34e00; '>-- cut off time</span>
+
+        <span style='color:#c34e00; '>-- Define ATS data exclusion</span>
+        <span style='color:#400000; font-weight:bold; '>DECLARE</span> @excludeNodes <span style='color:#400000; font-weight:bold; '>TABLE</span> <span style='color:#806030; '>(</span>NodeNo <span style='color:#400000; font-weight:bold; '>INT</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>INSERT</span> <span style='color:#400000; font-weight:bold; '>INTO</span> @excludeNodes <span style='color:#400000; font-weight:bold; '>VALUES</span> <span style='color:#806030; '>(</span><span style='color:#c00000; '>50</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>52</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>54</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>DECLARE</span> @excludeUsers <span style='color:#400000; font-weight:bold; '>TABLE</span> <span style='color:#806030; '>(</span>UserId <span style='color:#400000; font-weight:bold; '>INT</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>INSERT</span> <span style='color:#400000; font-weight:bold; '>INTO</span> @excludeUsers <span style='color:#400000; font-weight:bold; '>VALUES</span> <span style='color:#806030; '>(</span><span style='color:#c00000; '>999</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- SET NOCOUNT ON added to prevent extra result sets from</span>
+        <span style='color:#c34e00; '>-- interfering with SELECT statements.</span>
+        <span style='color:#400000; font-weight:bold; '>SET</span> NOCOUNT <span style='color:#400000; font-weight:bold; '>ON</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'Started: '</span> <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>32</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>121</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  initial declaration values: '</span> 
+            <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>4</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> @GalaxyRule<span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#e60000; '>', '</span> 
+            <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>40</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> @BusinessDateTime<span style='color:#806030; '>,</span> <span style='color:#c00000; '>121</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#e60000; '>', '</span> 
+            <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>40</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> @ExpirationDate<span style='color:#806030; '>,</span> <span style='color:#c00000; '>121</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#e60000; '>', '</span> 
+            <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>40</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> @CutoffDateTime<span style='color:#806030; '>,</span> <span style='color:#c00000; '>121</span><span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#e60000; '>', '</span> 
+            <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>4</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> @OverrideExisting<span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#e60000; '>', '</span> 
+            <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>4</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> @DebugFlag<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- Check if we have data in history table</span>
+        <span style='color:#400000; font-weight:bold; '>DECLARE</span> @count <span style='color:#400000; font-weight:bold; '>INT</span> <span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#bb7977; font-weight:bold; '>COUNT</span><span style='color:#806030; '>(</span><span style='color:#806030; '>*</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsd_FI_sap_export_hist
+            <span style='color:#400000; font-weight:bold; '>WHERE</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> BusinessDate<span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> @BusinessDateTime<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>IF</span> @count <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span>
+        <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+            <span style='color:#400000; font-weight:bold; '>IF</span> @OverrideExisting <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span>        <span style='color:#c34e00; '>-- data exist, retrieve and return it</span>
+            <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+                <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  returning result set to caller'</span><span style='color:#806030; '>;</span>
+                <span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#806030; '>*</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsd_FI_sap_export_hist <span style='color:#400000; font-weight:bold; '>WHERE</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> BusinessDate<span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> @BusinessDateTime<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>             
+                <span style='color:#400000; font-weight:bold; '>GOTO</span> Finalize<span style='color:#806030; '>;</span>      
+            <span style='color:#400000; font-weight:bold; '>END</span>
+            <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @OverrideExisting <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span>   <span style='color:#c34e00; '>-- data exist, erase it and regenerate</span>
+                <span style='color:#400000; font-weight:bold; '>DELETE</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsd_FI_sap_export_hist <span style='color:#400000; font-weight:bold; '>WHERE</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> BusinessDate<span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> @BusinessDateTime<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>END</span>
+
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  cerating temporary item views'</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- Temporary view for later searching</span>
+        <span style='color:#400000; font-weight:bold; '>CREATE</span> <span style='color:#400000; font-weight:bold; '>TABLE</span> <span style='color:#806030; '>#</span>temp_item_view_FI
+        <span style='color:#806030; '>(</span>
+            <span style='color:#400000; font-weight:bold; '>ID</span>                          <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span> <span style='color:#400000; font-weight:bold; '>IDENTITY</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>1</span><span style='color:#806030; '>,</span><span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>PRIMARY</span> <span style='color:#400000; font-weight:bold; '>KEY</span><span style='color:#806030; '>,</span>
+            ItemID                      <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            PLU                         NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>20</span><span style='color:#806030; '>)</span>        <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            Descr                       NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>60</span><span style='color:#806030; '>)</span>        <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            AccessCode                  <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            Name                        NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>30</span><span style='color:#806030; '>)</span>        <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            ReportGroup                 NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>12</span><span style='color:#806030; '>)</span>        <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            CalendarID                  <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            AttributeValueGroupID       <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            RevRule                     NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>256</span><span style='color:#806030; '>)</span>       <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- for attribute CodeTableID = 35</span>
+            RevNumVisits                NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>256</span><span style='color:#806030; '>)</span>       <span style='color:#400000; font-weight:bold; '>NULL</span>        <span style='color:#c34e00; '>-- for attribute CodeTableID = 36</span>
+        <span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- Populate our view item table</span>
+        <span style='color:#400000; font-weight:bold; '>INSERT</span>
+            <span style='color:#806030; '>#</span>temp_item_view_FI
+        <span style='color:#400000; font-weight:bold; '>SELECT</span>
+            ItemID<span style='color:#806030; '>,</span>
+            PLU<span style='color:#806030; '>,</span>
+            Descr<span style='color:#806030; '>,</span>
+            AccessCode<span style='color:#806030; '>,</span>
+            Name<span style='color:#806030; '>,</span>
+            ReportGroup<span style='color:#806030; '>,</span>
+            CalendarID<span style='color:#806030; '>,</span>
+            AttributeValueGroupID<span style='color:#806030; '>,</span>
+            RevRule <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>
+            RevNumVisits <span style='color:#806030; '>=</span> <span style='color:#400000; font-weight:bold; '>NULL</span>
+        <span style='color:#400000; font-weight:bold; '>FROM</span>
+            gtsv_interface_sap_item_FI<span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- update revrule and numofvisits</span>
+        <span style='color:#400000; font-weight:bold; '>UPDATE</span>
+            iv
+        <span style='color:#400000; font-weight:bold; '>SET</span>
+            RevRule <span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#400000; font-weight:bold; '>Value</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsv_interface_sap_attr_FI <span style='color:#400000; font-weight:bold; '>WHERE</span> PLU <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>PLU <span style='color:#400000; font-weight:bold; '>AND</span> CodeTableID <span style='color:#806030; '>=</span> <span style='color:#c00000; '>35</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+            RevNumVisits <span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#400000; font-weight:bold; '>Value</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsv_interface_sap_attr_FI <span style='color:#400000; font-weight:bold; '>WHERE</span> PLU <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>PLU <span style='color:#400000; font-weight:bold; '>AND</span> CodeTableID <span style='color:#806030; '>=</span> <span style='color:#c00000; '>36</span><span style='color:#806030; '>)</span>
+        <span style='color:#400000; font-weight:bold; '>FROM</span>
+            <span style='color:#806030; '>#</span>temp_item_view_FI iv
+
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  recreating [gtsd_FI_sap_export_logs] table'</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- Recreate Permanent Revenue Recognition Table</span>
+        <span style='color:#400000; font-weight:bold; '>DROP</span> <span style='color:#400000; font-weight:bold; '>TABLE</span> <span style='color:#400000; font-weight:bold; '>IF</span> <span style='color:#400000; font-weight:bold; '>EXISTS</span> gtsd_FI_sap_export_logs<span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>CREATE</span> <span style='color:#400000; font-weight:bold; '>TABLE</span> gtsd_FI_sap_export_logs
+        <span style='color:#806030; '>(</span>
+            ExportDate      <span style='color:#400000; font-weight:bold; '>DATE</span>                <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- date record was generated</span>
+            ExportTime      NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>8</span><span style='color:#806030; '>)</span>         <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- time record was generated</span>
+            BusinessDate    DATETIME            <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- impersonate date</span>
+            VisualID        NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>40</span><span style='color:#806030; '>)</span>        <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- barcode</span>
+            AccessCode      <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- item type</span>
+            ValidFrom       DATETIME            <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- real adjusted valid/start date</span>
+            ValidTo         DATETIME            <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- real adjusted expiration date</span>
+            RevRule         NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>256</span><span style='color:#806030; '>)</span>       <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- from attribute CodeTableID = 35</span>
+            GalaxyRule      <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- galaxy rule</span>
+            Channel         <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- 0:company, 1:wholesaler</span>
+            RemValue        <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- remaining value</span>
+            Price           MONEY               <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- item sold price</span>
+            PLU             NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>20</span><span style='color:#806030; '>)</span>        <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- PLU</span>
+            DefRevenue      MONEY               <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- deferred revenue</span>
+            <span style='color:#400000; font-weight:bold; '>INDEX</span> IXBusinessDate <span style='color:#806030; '>(</span>BusinessDate<span style='color:#806030; '>)</span>                 <span style='color:#c34e00; '>-- index on datetime for easy searching</span>
+        <span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- Temporary table for tickets, passes, packages, etc</span>
+        <span style='color:#400000; font-weight:bold; '>CREATE</span> <span style='color:#400000; font-weight:bold; '>TABLE</span> <span style='color:#806030; '>#</span>temp_item_FI
+        <span style='color:#806030; '>(</span>
+            <span style='color:#400000; font-weight:bold; '>ID</span>              <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span> <span style='color:#400000; font-weight:bold; '>IDENTITY</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>1</span><span style='color:#806030; '>,</span><span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>PRIMARY</span> <span style='color:#400000; font-weight:bold; '>KEY</span><span style='color:#806030; '>,</span>
+            ExportDate      <span style='color:#400000; font-weight:bold; '>DATE</span>                <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- date record was generated</span>
+            ExportTime      NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>8</span><span style='color:#806030; '>)</span>         <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- time record was generated</span>
+            BusinessDate    DATETIME            <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- impersonate date run on/as</span>
+            TransDate       DATETIME            <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- transaction start date time</span>
+            ItemID          <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- TicketID, PassNO, etc</span>
+            NodeNo          <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- Node number</span>
+            UserId          <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- User</span>
+            VisualID        NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>40</span><span style='color:#806030; '>)</span>        <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- barcode</span>
+            AccessCode      <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- item type</span>
+            IssueDate       DATETIME            <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- system issue date</span>
+            Status          <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- validity flag</span>
+            Price           MONEY               <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- sold price</span>
+            PLU             NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>20</span><span style='color:#806030; '>)</span>        <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- PLU</span>
+            CustomerID      <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- client id</span>
+            ValidFromDate   DATETIME            <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- productdef start date</span>
+            ValidToDate     DATETIME            <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- productdef expire date</span>
+            RevRule         NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>256</span><span style='color:#806030; '>)</span>       <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- from attribute CodeTableID = 35</span>
+            GalaxyRule      <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- galaxy rule</span>
+            RevNumVisits    NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>256</span><span style='color:#806030; '>)</span>       <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- from attribute CodeTableID = 36</span>
+            MaxNumUsage     <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- entitlement</span>
+            NumUsage        <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- total number usage</span>
+            Channel         <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- 0:company, 1:wholesaler</span>
+            RemValue        <span style='color:#400000; font-weight:bold; '>INT</span>                 <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>       <span style='color:#c34e00; '>-- remaining value</span>
+            ValidFrom       DATETIME            <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- real adjusted valid/start date</span>
+            ValidTo         DATETIME            <span style='color:#400000; font-weight:bold; '>NULL</span><span style='color:#806030; '>,</span>           <span style='color:#c34e00; '>-- real adjusted expiration date</span>
+            DefRevenue      MONEY               <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>NULL</span>        <span style='color:#c34e00; '>-- deferred revenue</span>
+        <span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  populating temp table with Tickets'</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- Insert all valid tickets in our temp table</span>
+        <span style='color:#400000; font-weight:bold; '>INSERT</span>
+            <span style='color:#806030; '>#</span>temp_item_FI
+        <span style='color:#400000; font-weight:bold; '>SELECT</span>
+            <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+            <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span>NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>8</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>108</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+            BusinessDate <span style='color:#806030; '>=</span> @BusinessDateTime<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>DateSold<span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>Ticketid<span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>NodeNo<span style='color:#806030; '>,</span>
+            UserId <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>VisualID<span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>AccessCode<span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>DateSold<span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>Status<span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>Price<span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>PLU<span style='color:#806030; '>,</span>
+            tk<span style='color:#806030; '>.</span>CustomerID<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>ValidFromDate<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>ValidToDate<span style='color:#806030; '>,</span>
+            RevRule <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>RevRule<span style='color:#806030; '>,</span>
+            GalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            RevNumVisits <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>RevNumVisits<span style='color:#806030; '>,</span>
+            MaxNumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>,</span>
+            NumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            Channel <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            RemValue <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            ValidFrom <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>ValidFromDate<span style='color:#806030; '>,</span>
+            ValidTo <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>ValidToDate<span style='color:#806030; '>,</span>
+            DefRevenue <span style='color:#806030; '>=</span> <span style='color:#800000; '>0.00</span>
+        <span style='color:#400000; font-weight:bold; '>FROM</span>
+            Tickets tk
+        <span style='color:#400000; font-weight:bold; '>JOIN</span>
+            GTS_MS_TBL_ProductDeferment pd <span style='color:#400000; font-weight:bold; '>ON</span> tk<span style='color:#806030; '>.</span>VisualID <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>VisualID
+        <span style='color:#400000; font-weight:bold; '>LEFT</span> <span style='color:#400000; font-weight:bold; '>JOIN</span>
+            <span style='color:#806030; '>#</span>temp_item_view_FI iv <span style='color:#400000; font-weight:bold; '>ON</span> tk<span style='color:#806030; '>.</span>PLU <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>PLU        
+        <span style='color:#400000; font-weight:bold; '>WHERE</span>
+            tk<span style='color:#806030; '>.</span>Status <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> tk<span style='color:#806030; '>.</span>NodeNo <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>IN</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> NodeNo <span style='color:#400000; font-weight:bold; '>FROM</span> @excludeNodes<span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> tk<span style='color:#806030; '>.</span>AccessCode <span style='color:#400000; font-weight:bold; '>BETWEEN</span> <span style='color:#c00000; '>10000</span> <span style='color:#400000; font-weight:bold; '>AND</span> <span style='color:#c00000; '>30002</span>
+
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  populating temp table with Passes'</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- Insert all valid passes in our temp table</span>
+        <span style='color:#400000; font-weight:bold; '>INSERT</span>
+            <span style='color:#806030; '>#</span>temp_item_FI
+        <span style='color:#400000; font-weight:bold; '>SELECT</span>
+            <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+            <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span>NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>8</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>108</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+            BusinessDate <span style='color:#806030; '>=</span> @BusinessDateTime<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>DateSold<span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>PassNo<span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>NodeNo<span style='color:#806030; '>,</span>
+            UserId <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>VisualID<span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>AccessCode<span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>ValidFrom<span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>Status<span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>Price<span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>PLU<span style='color:#806030; '>,</span>
+            pa<span style='color:#806030; '>.</span>Company<span style='color:#806030; '>,</span>     <span style='color:#c34e00; '>-- maybe?</span>
+            pd<span style='color:#806030; '>.</span>ValidFromDate<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>ValidToDate<span style='color:#806030; '>,</span>
+            RevRule <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>RevRule<span style='color:#806030; '>,</span>
+            GalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            RevNumVisits <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>RevNumVisits<span style='color:#806030; '>,</span>
+            MaxNumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>,</span>
+            NumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            Channel <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            RemValue <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            ValidFrom <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>ValidFromDate<span style='color:#806030; '>,</span>
+            ValidTo <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>ValidToDate<span style='color:#806030; '>,</span>
+            DefRevenue <span style='color:#806030; '>=</span> <span style='color:#800000; '>0.00</span>
+        <span style='color:#400000; font-weight:bold; '>FROM</span>
+            Passes pa
+        <span style='color:#400000; font-weight:bold; '>JOIN</span>
+            GTS_MS_TBL_ProductDeferment pd <span style='color:#400000; font-weight:bold; '>ON</span> pa<span style='color:#806030; '>.</span>VisualID <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>VisualID
+        <span style='color:#400000; font-weight:bold; '>LEFT</span> <span style='color:#400000; font-weight:bold; '>JOIN</span>
+            <span style='color:#806030; '>#</span>temp_item_view_FI iv <span style='color:#400000; font-weight:bold; '>ON</span> pa<span style='color:#806030; '>.</span>PLU <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>PLU        
+        <span style='color:#400000; font-weight:bold; '>WHERE</span>
+            pa<span style='color:#806030; '>.</span>Status <span style='color:#400000; font-weight:bold; '>IN</span> <span style='color:#806030; '>(</span><span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span>                     <span style='color:#c34e00; '>-- voided passes may be unvoided</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> pa<span style='color:#806030; '>.</span>NodeNo <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>IN</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> NodeNo <span style='color:#400000; font-weight:bold; '>FROM</span> @excludeNodes<span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> pa<span style='color:#806030; '>.</span>AccessCode <span style='color:#400000; font-weight:bold; '>BETWEEN</span> <span style='color:#c00000; '>20000</span> <span style='color:#400000; font-weight:bold; '>AND</span> <span style='color:#c00000; '>90000</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> USER02 <span style='color:#806030; '>=</span> <span style='color:#e60000; '>''</span> <span style='color:#400000; font-weight:bold; '>AND</span> USER10 <span style='color:#806030; '>=</span> <span style='color:#e60000; '>''</span>         <span style='color:#c34e00; '>-- recommended by Victor to filter this way</span>
+
+        <span style='color:#c34e00; '>-- Insert miscellaneous passes in our temp table, such as renewed, reissue, replaced, etc</span>
+        <span style='color:#400000; font-weight:bold; '>INSERT</span>
+            <span style='color:#806030; '>#</span>temp_item_FI
+        <span style='color:#400000; font-weight:bold; '>SELECT</span>
+            <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DATE</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+            <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span>NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>8</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>108</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span>
+            BusinessDate <span style='color:#806030; '>=</span> @BusinessDateTime<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>DateSold<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>JnlTicketID<span style='color:#806030; '>,</span>
+            jt<span style='color:#806030; '>.</span>NodeNo<span style='color:#806030; '>,</span>
+            UserId <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            jt<span style='color:#806030; '>.</span>VisualID<span style='color:#806030; '>,</span>
+            jt<span style='color:#806030; '>.</span>AccessCode<span style='color:#806030; '>,</span>
+            jt<span style='color:#806030; '>.</span>DateSold<span style='color:#806030; '>,</span>
+            jt<span style='color:#806030; '>.</span>Status<span style='color:#806030; '>,</span>
+            jt<span style='color:#806030; '>.</span>Price<span style='color:#806030; '>,</span>
+            jt<span style='color:#806030; '>.</span>PLU<span style='color:#806030; '>,</span>
+            jt<span style='color:#806030; '>.</span>CustomerID<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>ValidFromDate<span style='color:#806030; '>,</span>
+            pd<span style='color:#806030; '>.</span>ValidToDate<span style='color:#806030; '>,</span>
+            RevRule <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>RevRule<span style='color:#806030; '>,</span>
+            GalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            RevNumVisits <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>RevNumVisits<span style='color:#806030; '>,</span>
+            MaxNumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>,</span>
+            NumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            Channel <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            RemValue <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span>
+            ValidFrom <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>ValidFromDate<span style='color:#806030; '>,</span>
+            ValidTo <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>ValidToDate<span style='color:#806030; '>,</span>
+            DefRevenue <span style='color:#806030; '>=</span> <span style='color:#800000; '>0.00</span>
+        <span style='color:#400000; font-weight:bold; '>FROM</span>
+            SuperTickets st
+        <span style='color:#400000; font-weight:bold; '>JOIN</span>
+            <span style='color:#806030; '>#</span>temp_item_FI it <span style='color:#400000; font-weight:bold; '>ON</span> st<span style='color:#806030; '>.</span>VisualID <span style='color:#806030; '>=</span> it<span style='color:#806030; '>.</span>VisualID
+        <span style='color:#400000; font-weight:bold; '>JOIN</span> 
+            JnlTickets jt <span style='color:#400000; font-weight:bold; '>ON</span> st<span style='color:#806030; '>.</span>VisualID <span style='color:#806030; '>=</span> jt<span style='color:#806030; '>.</span>VisualID
+        <span style='color:#400000; font-weight:bold; '>JOIN</span> 
+            GTS_MS_TBL_ProductDeferment pd <span style='color:#400000; font-weight:bold; '>ON</span> st<span style='color:#806030; '>.</span>VisualID <span style='color:#806030; '>=</span> pd<span style='color:#806030; '>.</span>VisualID
+        <span style='color:#400000; font-weight:bold; '>LEFT</span> <span style='color:#400000; font-weight:bold; '>JOIN</span> 
+            <span style='color:#806030; '>#</span>temp_item_view_FI iv <span style='color:#400000; font-weight:bold; '>ON</span> jt<span style='color:#806030; '>.</span>PLU <span style='color:#806030; '>=</span> iv<span style='color:#806030; '>.</span>PLU    
+        <span style='color:#400000; font-weight:bold; '>WHERE</span> 
+            it<span style='color:#806030; '>.</span>VisualID <span style='color:#400000; font-weight:bold; '>IS</span> <span style='color:#400000; font-weight:bold; '>NULL</span>                             <span style='color:#c34e00; '>-- query only NOT exist in tickets/passes table</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> jt<span style='color:#806030; '>.</span>Status <span style='color:#400000; font-weight:bold; '>IN</span> <span style='color:#806030; '>(</span><span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span>                         <span style='color:#c34e00; '>-- valid/voided</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> jt<span style='color:#806030; '>.</span>Qty <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span>                                  <span style='color:#c34e00; '>-- current</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> jt<span style='color:#806030; '>.</span>AccessCode <span style='color:#400000; font-weight:bold; '>BETWEEN</span> <span style='color:#c00000; '>80000</span> <span style='color:#400000; font-weight:bold; '>AND</span> <span style='color:#c00000; '>90000</span>       <span style='color:#c34e00; '>-- only passes</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> jt<span style='color:#806030; '>.</span>NodeNo <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>IN</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> NodeNo <span style='color:#400000; font-weight:bold; '>FROM</span> @excludeNodes<span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> jt<span style='color:#806030; '>.</span>TktCode <span style='color:#806030; '>&lt;</span> <span style='color:#c00000; '>40000</span>                          <span style='color:#c34e00; '>-- non lost/reissue</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> st<span style='color:#806030; '>.</span>NextID <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span> <span style='color:#400000; font-weight:bold; '>AND</span> st<span style='color:#806030; '>.</span>Status <span style='color:#806030; '>=</span> <span style='color:#c00000; '>3</span> <span style='color:#400000; font-weight:bold; '>AND</span> st<span style='color:#806030; '>.</span>TicketType <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span> <span style='color:#400000; font-weight:bold; '>AND</span> st<span style='color:#806030; '>.</span>CurrentRecord <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>;</span>     <span style='color:#c34e00; '>-- old but valid ticket</span>
+
+        <span style='color:#c34e00; '>-- Loop through all items and adjust usage, rules, dates, revenue, etc</span>
+        <span style='color:#400000; font-weight:bold; '>SET</span> @idx <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>SET</span> @max <span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#bb7977; font-weight:bold; '>MAX</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>ID</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>FROM</span> <span style='color:#806030; '>#</span>temp_item_FI<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  found ('</span> <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>16</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> @max<span style='color:#806030; '>)</span> <span style='color:#806030; '>+</span> <span style='color:#e60000; '>') items'</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  looping through and calculating Revenue...'</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>WHILE</span> @idx <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>=</span> @max
+        <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iVisualID          NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>40</span><span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iUserID            <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iCustomerID        <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iIsWholeSaler      <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iGalaxyRule        <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iMaxNumUsage       <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iNumUsage          <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iChannel           <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iRemValue          <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iAccessCode        <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iPLU               NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>20</span><span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iRevRule           NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>256</span><span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iRevNumVisits      NVARCHAR<span style='color:#806030; '>(</span><span style='color:#c00000; '>256</span><span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iTransDate         DATETIME
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iIssueDate         DATETIME
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iValidFrom         DATETIME
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iValidTo           DATETIME
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iPrice             <span style='color:#400000; font-weight:bold; '>DECIMAL</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>18</span><span style='color:#806030; '>,</span><span style='color:#c00000; '>10</span><span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iDefRevenue        <span style='color:#400000; font-weight:bold; '>DECIMAL</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>18</span><span style='color:#806030; '>,</span><span style='color:#c00000; '>10</span><span style='color:#806030; '>)</span>
+            
+            <span style='color:#c34e00; '>-- loop and take each record from tmp table</span>
+            <span style='color:#400000; font-weight:bold; '>SELECT</span>
+                @iVisualID <span style='color:#806030; '>=</span> VisualID<span style='color:#806030; '>,</span>
+                @iAccessCode <span style='color:#806030; '>=</span> AccessCode<span style='color:#806030; '>,</span>
+                @iCustomerID <span style='color:#806030; '>=</span> CustomerID<span style='color:#806030; '>,</span>
+                @iIssueDate <span style='color:#806030; '>=</span> IssueDate<span style='color:#806030; '>,</span>
+                @iPrice <span style='color:#806030; '>=</span> Price<span style='color:#806030; '>,</span>
+                @iRevRule <span style='color:#806030; '>=</span> RevRule<span style='color:#806030; '>,</span>
+                @iRevNumVisits <span style='color:#806030; '>=</span> RevNumVisits<span style='color:#806030; '>,</span>
+                @iValidFrom <span style='color:#806030; '>=</span> ValidFrom<span style='color:#806030; '>,</span>
+                @iValidTo <span style='color:#806030; '>=</span> ValidTo         
+            <span style='color:#400000; font-weight:bold; '>FROM</span> <span style='color:#806030; '>#</span>temp_item_FI <span style='color:#400000; font-weight:bold; '>WHERE</span> <span style='color:#400000; font-weight:bold; '>ID</span> <span style='color:#806030; '>=</span> @idx<span style='color:#806030; '>;</span>
+
+            <span style='color:#c34e00; '>-- PRE-process: get defaults</span>
+            <span style='color:#400000; font-weight:bold; '>SET</span> @iValidFrom <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@iValidFrom<span style='color:#806030; '>,</span> @iIssueDate<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>SET</span> @iIsWholeSaler <span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#bb7977; font-weight:bold; '>COUNT</span><span style='color:#806030; '>(</span><span style='color:#806030; '>*</span><span style='color:#806030; '>)</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsv_interface_sap_wholesale_FI <span style='color:#400000; font-weight:bold; '>WHERE</span> CustomerID <span style='color:#806030; '>=</span> @iCustomerID<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>            
+            <span style='color:#400000; font-weight:bold; '>SET</span> @iNumUsage <span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> dbo<span style='color:#806030; '>.</span>gtsf_interface_sap_usage_FI<span style='color:#806030; '>(</span>@iVisualID<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+            <span style='color:#400000; font-weight:bold; '>IF</span> @iIsWholeSaler <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iChannel <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span>   <span style='color:#c34e00; '>-- wholesaler</span>
+            <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iChannel <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span>   <span style='color:#c34e00; '>-- company</span>
+
+            <span style='color:#c34e00; '>-- set max number usage</span>
+            <span style='color:#400000; font-weight:bold; '>IF</span> ISNUMERIC<span style='color:#806030; '>(</span>@iRevNumVisits<span style='color:#806030; '>)</span> <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iMaxNumUsage <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>INT</span><span style='color:#806030; '>,</span> @iRevNumVisits<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iRevNumVisits <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'UNLIMITED'</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iMaxNumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>365</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iMaxNumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>;</span>                                  
+
+            <span style='color:#c34e00; '>-- set galaxy rule</span>
+            <span style='color:#400000; font-weight:bold; '>IF</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'10'</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>4</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'1'</span> <span style='color:#400000; font-weight:bold; '>OR</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'5'</span> <span style='color:#400000; font-weight:bold; '>OR</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'6'</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'2'</span> <span style='color:#400000; font-weight:bold; '>OR</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'3'</span> <span style='color:#400000; font-weight:bold; '>OR</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'4'</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'7'</span> <span style='color:#400000; font-weight:bold; '>OR</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'8'</span> <span style='color:#400000; font-weight:bold; '>OR</span> @iRevRule <span style='color:#806030; '>=</span> <span style='color:#e60000; '>'9'</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>3</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>ELSE</span>
+            <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+                <span style='color:#400000; font-weight:bold; '>IF</span> @iAccessCode <span style='color:#400000; font-weight:bold; '>BETWEEN</span>  <span style='color:#c00000; '>10000</span> <span style='color:#400000; font-weight:bold; '>AND</span> <span style='color:#c00000; '>20000</span>        <span style='color:#c34e00; '>-- single day</span>
+                    <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>;</span>
+                <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iAccessCode <span style='color:#400000; font-weight:bold; '>BETWEEN</span> <span style='color:#c00000; '>20000</span> <span style='color:#400000; font-weight:bold; '>AND</span> <span style='color:#c00000; '>30000</span>    <span style='color:#c34e00; '>-- multi day</span>
+                    <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>2</span><span style='color:#806030; '>;</span>                                   
+                <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iAccessCode <span style='color:#400000; font-weight:bold; '>BETWEEN</span> <span style='color:#c00000; '>80000</span> <span style='color:#400000; font-weight:bold; '>AND</span> <span style='color:#c00000; '>90000</span>    <span style='color:#c34e00; '>-- MA</span>
+                    <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>3</span><span style='color:#806030; '>;</span>   
+                <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iAccessCode <span style='color:#400000; font-weight:bold; '>BETWEEN</span> <span style='color:#c00000; '>30000</span> <span style='color:#400000; font-weight:bold; '>AND</span> <span style='color:#c00000; '>30002</span>    <span style='color:#c34e00; '>-- MA cert</span>
+                    <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>4</span><span style='color:#806030; '>;</span>                                                                       
+            <span style='color:#400000; font-weight:bold; '>END</span>
+
+            <span style='color:#c34e00; '>-- recalculate expiration date</span>
+            <span style='color:#400000; font-weight:bold; '>IF</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span> <span style='color:#400000; font-weight:bold; '>OR</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>2</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iValidTo <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@iValidTo<span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>DATEADD</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>MONTH</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>6</span><span style='color:#806030; '>,</span> @iValidFrom<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>                  
+            <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>3</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iValidTo <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@iValidTo<span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>DATEADD</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>YEAR</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>,</span> @iValidFrom<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>                                   
+            <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>4</span>                
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iValidTo <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@iValidTo<span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>DATEADD</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>MONTH</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>3</span><span style='color:#806030; '>,</span> @iValidFrom<span style='color:#806030; '>)</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>                                                                      
+
+            <span style='color:#c34e00; '>-- Adjust calculation</span>
+            <span style='color:#400000; font-weight:bold; '>SET</span> @iRemValue <span style='color:#806030; '>=</span> @iMaxNumUsage <span style='color:#806030; '>-</span> @iNumUsage<span style='color:#806030; '>;</span>
+
+            <span style='color:#c34e00; '>-- POST-process: calculate deferred revenue</span>
+            <span style='color:#400000; font-weight:bold; '>IF</span> @iMaxNumUsage <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iDefRevenue <span style='color:#806030; '>=</span> <span style='color:#806030; '>(</span>@iPrice <span style='color:#806030; '>*</span> @iRemValue<span style='color:#806030; '>)</span> <span style='color:#806030; '>/</span> @iMaxNumUsage<span style='color:#806030; '>;</span>
+
+            <span style='color:#c34e00; '>-- calculate amortization</span>
+            <span style='color:#400000; font-weight:bold; '>IF</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>3</span>
+            <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+                <span style='color:#400000; font-weight:bold; '>IF</span> @iValidFrom <span style='color:#806030; '>></span> @ExpirationDate
+                    <span style='color:#400000; font-weight:bold; '>SET</span> @iRemValue <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>DATEDIFF</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DAY</span><span style='color:#806030; '>,</span> @iValidFrom<span style='color:#806030; '>,</span> @iValidTo<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+                <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                    <span style='color:#400000; font-weight:bold; '>SET</span> @iRemValue <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>DATEDIFF</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DAY</span><span style='color:#806030; '>,</span> @ExpirationDate<span style='color:#806030; '>,</span> @iValidTo<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+
+                <span style='color:#400000; font-weight:bold; '>IF</span> @iRemValue <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span>
+                    <span style='color:#400000; font-weight:bold; '>SET</span> @iDefRevenue <span style='color:#806030; '>=</span> @iPrice <span style='color:#806030; '>/</span> <span style='color:#bb7977; font-weight:bold; '>DATEDIFF</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>DAY</span><span style='color:#806030; '>,</span> @iValidFrom<span style='color:#806030; '>,</span> @iValidTo<span style='color:#806030; '>)</span> <span style='color:#806030; '>*</span> @iRemValue<span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>END</span>
+
+            <span style='color:#c34e00; '>-- adjust for expired + wholesaler tickets</span>
+            <span style='color:#400000; font-weight:bold; '>IF</span> @iIsWholeSaler <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span> <span style='color:#400000; font-weight:bold; '>AND</span> @iNumUsage <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span> <span style='color:#400000; font-weight:bold; '>AND</span> @iValidTo <span style='color:#806030; '>&lt;</span><span style='color:#806030; '>=</span> @ExpirationDate
+            <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>5</span><span style='color:#806030; '>;</span>
+                <span style='color:#400000; font-weight:bold; '>SET</span> @iValidTo <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>DATEADD</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>MONTH</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>5</span><span style='color:#806030; '>,</span> @iValidTo<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+            <span style='color:#400000; font-weight:bold; '>END</span>
+
+            <span style='color:#c34e00; '>-- set upgrade galaxy rule          </span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iBaseID                    <span style='color:#400000; font-weight:bold; '>INT</span>
+            <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iCurrTicketType            <span style='color:#400000; font-weight:bold; '>INT</span>
+
+            <span style='color:#c34e00; '>-- write fucntion to see if ticket was upgraded, suggestion from Matt to check SuperTickets</span>
+            <span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#400000; font-weight:bold; '>TOP</span> <span style='color:#c00000; '>1</span>
+                @iBaseID <span style='color:#806030; '>=</span> BaseID<span style='color:#806030; '>,</span>
+                @iCurrTicketType <span style='color:#806030; '>=</span> TicketType
+            <span style='color:#400000; font-weight:bold; '>FROM</span>                                    <span style='color:#c34e00; '>-- get current/new ticket</span>
+                gtsv_interface_sap_super_FI <span style='color:#400000; font-weight:bold; '>WHERE</span> VisualID <span style='color:#806030; '>=</span> @iVisualID <span style='color:#400000; font-weight:bold; '>AND</span> CurrentRecord <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>;</span>
+
+            <span style='color:#400000; font-weight:bold; '>IF</span> @@ROWCOUNT <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span> 
+            <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+                <span style='color:#400000; font-weight:bold; '>DECLARE</span> @iPrevTicketType <span style='color:#400000; font-weight:bold; '>INT</span>        <span style='color:#c34e00; '>-- get previous/old ticket</span>
+                <span style='color:#400000; font-weight:bold; '>SELECT</span> @iPrevTicketType <span style='color:#806030; '>=</span> TicketType <span style='color:#400000; font-weight:bold; '>FROM</span> gtsv_interface_sap_super_FI <span style='color:#400000; font-weight:bold; '>WHERE</span> SuperTicketID <span style='color:#806030; '>=</span> @iBaseID <span style='color:#400000; font-weight:bold; '>AND</span> Status <span style='color:#806030; '>=</span> <span style='color:#c00000; '>4</span><span style='color:#806030; '>;</span>
+
+                <span style='color:#400000; font-weight:bold; '>IF</span> @@ROWCOUNT <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span>
+                <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+                    <span style='color:#400000; font-weight:bold; '>IF</span> @iCurrTicketType <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span>         <span style='color:#c34e00; '>-- current is MA</span>
+                    <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+                        <span style='color:#400000; font-weight:bold; '>IF</span> @iPrevTicketType <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span>
+                            <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>7</span><span style='color:#806030; '>;</span>   <span style='color:#c34e00; '>-- previous is lower tier MA</span>
+                        <span style='color:#400000; font-weight:bold; '>ELSE</span>
+                            <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>6</span><span style='color:#806030; '>;</span>   <span style='color:#c34e00; '>-- previous is ticket</span>
+                    <span style='color:#400000; font-weight:bold; '>END</span>
+                    <span style='color:#400000; font-weight:bold; '>ELSE</span> <span style='color:#400000; font-weight:bold; '>IF</span> @iCurrTicketType <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span>    <span style='color:#c34e00; '>-- current is multi-ticket</span>
+                    <span style='color:#400000; font-weight:bold; '>BEGIN</span>
+                        <span style='color:#400000; font-weight:bold; '>IF</span> @iPrevTicketType <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span>
+                            <span style='color:#400000; font-weight:bold; '>SET</span> @iGalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>8</span><span style='color:#806030; '>;</span>   <span style='color:#c34e00; '>-- previous is ticket</span>
+                    <span style='color:#400000; font-weight:bold; '>END</span>                         
+                <span style='color:#400000; font-weight:bold; '>END</span>                                                                     
+            <span style='color:#400000; font-weight:bold; '>END</span>
+
+            <span style='color:#c34e00; '>-- get transaction start date, for day end calculation</span>
+            <span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#400000; font-weight:bold; '>TOP</span> <span style='color:#c00000; '>1</span>
+                @iTransDate <span style='color:#806030; '>=</span> jh<span style='color:#806030; '>.</span>TransStartDateTime<span style='color:#806030; '>,</span>
+                @iUserID <span style='color:#806030; '>=</span> jh<span style='color:#806030; '>.</span>UserId    
+            <span style='color:#400000; font-weight:bold; '>FROM</span> <span style='color:#806030; '>#</span>temp_item_FI <span style='color:#400000; font-weight:bold; '>ti</span>
+            <span style='color:#400000; font-weight:bold; '>JOIN</span> JnlTickets jt <span style='color:#400000; font-weight:bold; '>ON</span> <span style='color:#400000; font-weight:bold; '>ti</span><span style='color:#806030; '>.</span>VisualID <span style='color:#806030; '>=</span> jt<span style='color:#806030; '>.</span>VisualID
+            <span style='color:#400000; font-weight:bold; '>JOIN</span> JnlDetails jd <span style='color:#400000; font-weight:bold; '>ON</span> jt<span style='color:#806030; '>.</span>JnlDetailID <span style='color:#806030; '>=</span> jd<span style='color:#806030; '>.</span>JnlDetailID
+            <span style='color:#400000; font-weight:bold; '>JOIN</span> JnlHeaders jh <span style='color:#400000; font-weight:bold; '>ON</span> jd<span style='color:#806030; '>.</span>JnlTranID <span style='color:#806030; '>=</span> jh<span style='color:#806030; '>.</span>JnlTranID
+            <span style='color:#400000; font-weight:bold; '>WHERE</span> <span style='color:#400000; font-weight:bold; '>ti</span><span style='color:#806030; '>.</span>VisualID <span style='color:#806030; '>=</span> @iVisualID  
+
+            <span style='color:#400000; font-weight:bold; '>SET</span> @iTransDate <span style='color:#806030; '>=</span> <span style='color:#bb7977; font-weight:bold; '>ISNULL</span><span style='color:#806030; '>(</span>@iTransDate<span style='color:#806030; '>,</span> @iIssueDate<span style='color:#806030; '>)</span><span style='color:#806030; '>;</span> 
+
+            <span style='color:#c34e00; '>-- update temps table with new calculated values</span>
+            <span style='color:#400000; font-weight:bold; '>UPDATE</span>
+                <span style='color:#806030; '>#</span>temp_item_FI 
+            <span style='color:#400000; font-weight:bold; '>SET</span> 
+                TransDate <span style='color:#806030; '>=</span> @iTransDate<span style='color:#806030; '>,</span>
+                UserId <span style='color:#806030; '>=</span> @iUserID<span style='color:#806030; '>,</span>
+                NumUsage <span style='color:#806030; '>=</span> @iNumUsage<span style='color:#806030; '>,</span>
+                RemValue <span style='color:#806030; '>=</span> @iRemValue<span style='color:#806030; '>,</span>
+                GalaxyRule <span style='color:#806030; '>=</span> @iGalaxyRule<span style='color:#806030; '>,</span>
+                MaxNumUsage <span style='color:#806030; '>=</span> @iMaxNumUsage<span style='color:#806030; '>,</span>
+                ValidFrom <span style='color:#806030; '>=</span> @iValidFrom<span style='color:#806030; '>,</span>
+                ValidTo <span style='color:#806030; '>=</span> @iValidTo<span style='color:#806030; '>,</span>
+                Channel <span style='color:#806030; '>=</span> @iChannel<span style='color:#806030; '>,</span>
+                DefRevenue <span style='color:#806030; '>=</span> @iDefRevenue
+            <span style='color:#400000; font-weight:bold; '>WHERE</span> <span style='color:#400000; font-weight:bold; '>ID</span> <span style='color:#806030; '>=</span> @idx<span style='color:#806030; '>;</span> 
+
+            <span style='color:#400000; font-weight:bold; '>SET</span> @idx <span style='color:#806030; '>=</span> @idx<span style='color:#806030; '>+</span><span style='color:#c00000; '>1</span>
+        <span style='color:#400000; font-weight:bold; '>END</span>
+
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  storing result to [gtsd_FI_sap_export_logs] table'</span><span style='color:#806030; '>;</span>
+
+        <span style='color:#c34e00; '>-- Insert statements for procedure here</span>
+        <span style='color:#400000; font-weight:bold; '>INSERT</span>
+            gtsd_FI_sap_export_logs
+        <span style='color:#400000; font-weight:bold; '>SELECT</span>
+            ExportDate<span style='color:#806030; '>,</span> ExportTime<span style='color:#806030; '>,</span> BusinessDate<span style='color:#806030; '>,</span> it<span style='color:#806030; '>.</span>VisualID<span style='color:#806030; '>,</span> it<span style='color:#806030; '>.</span>AccessCode<span style='color:#806030; '>,</span> ValidFrom<span style='color:#806030; '>,</span> ValidTo<span style='color:#806030; '>,</span> 
+            RevRule<span style='color:#806030; '>,</span> GalaxyRule<span style='color:#806030; '>,</span> Channel<span style='color:#806030; '>,</span> RemValue<span style='color:#806030; '>,</span> it<span style='color:#806030; '>.</span>Price<span style='color:#806030; '>,</span> it<span style='color:#806030; '>.</span>PLU<span style='color:#806030; '>,</span> DefRevenue
+        <span style='color:#400000; font-weight:bold; '>FROM</span> 
+            <span style='color:#806030; '>#</span>temp_item_FI it
+        <span style='color:#c34e00; '>--JOIN JnlTickets jt ON it.VisualID = jt.VisualID</span>
+        <span style='color:#c34e00; '>--JOIN JnlDetails jd ON jt.JnlDetailID = jd.JnlDetailID</span>
+        <span style='color:#c34e00; '>--JOIN JnlHeaders jh ON jd.JnlTranID = jh.JnlTranID</span>
+        <span style='color:#400000; font-weight:bold; '>WHERE</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>=</span><span style='color:#c00000; '>1</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> <span style='color:#806030; '>(</span>
+                   <span style='color:#806030; '>(</span>@GalaxyRule <span style='color:#806030; '>=</span> <span style='color:#c00000; '>0</span> <span style='color:#400000; font-weight:bold; '>AND</span> it<span style='color:#806030; '>.</span>GalaxyRule <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span> <span style='color:#806030; '>)</span>             <span style='color:#c34e00; '>-- all</span>
+                <span style='color:#400000; font-weight:bold; '>OR</span> <span style='color:#806030; '>(</span>@GalaxyRule <span style='color:#806030; '>=</span> it<span style='color:#806030; '>.</span>GalaxyRule <span style='color:#806030; '>)</span>                       <span style='color:#c34e00; '>-- by specific rules</span>
+            <span style='color:#806030; '>)</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> it<span style='color:#806030; '>.</span>Status <span style='color:#400000; font-weight:bold; '>IN</span> <span style='color:#806030; '>(</span><span style='color:#c00000; '>0</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>1</span><span style='color:#806030; '>)</span>                                     <span style='color:#c34e00; '>-- valid/voided</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> it<span style='color:#806030; '>.</span>RemValue <span style='color:#806030; '>></span> <span style='color:#c00000; '>0</span>                                         <span style='color:#c34e00; '>-- unused</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> it<span style='color:#806030; '>.</span>ValidTo <span style='color:#806030; '>></span> @ExpirationDate                            <span style='color:#c34e00; '>-- unexpired</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> it<span style='color:#806030; '>.</span>TransDate <span style='color:#806030; '>&lt;</span> @CutoffDateTime                          <span style='color:#c34e00; '>-- consider only data made before 3:30am</span>
+            <span style='color:#400000; font-weight:bold; '>AND</span> it<span style='color:#806030; '>.</span>UserId <span style='color:#400000; font-weight:bold; '>NOT</span> <span style='color:#400000; font-weight:bold; '>IN</span> <span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>SELECT</span> UserId <span style='color:#400000; font-weight:bold; '>FROM</span> @excludeUsers<span style='color:#806030; '>)</span>     <span style='color:#c34e00; '>-- exlude ATS users</span>
+        <span style='color:#c34e00; '>--GROUP BY</span>
+        <span style='color:#c34e00; '>--  jt.VisualID, jd.JnlDetailID, jh.JnlTranID</span>
+        <span style='color:#400000; font-weight:bold; '>ORDER</span> <span style='color:#400000; font-weight:bold; '>BY</span>
+            it<span style='color:#806030; '>.</span>ItemID
+
+        <span style='color:#c34e00; '>-- save copy to history table</span>
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  archiving result to [gtsd_FI_sap_export_hist] table'</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>INSERT</span> <span style='color:#400000; font-weight:bold; '>INTO</span> gtsd_FI_sap_export_hist <span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#806030; '>*</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsd_FI_sap_export_logs<span style='color:#806030; '>;</span>
+                
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  returning result set to caller'</span><span style='color:#806030; '>;</span>
+        <span style='color:#c34e00; '>-- return result set</span>
+        <span style='color:#400000; font-weight:bold; '>IF</span> @DebugFlag <span style='color:#806030; '>=</span> <span style='color:#c00000; '>1</span>
+            <span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#c34e00; '>/*DISTINCT*/</span> it<span style='color:#806030; '>.</span><span style='color:#806030; '>*</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsd_FI_sap_export_logs el <span style='color:#400000; font-weight:bold; '>JOIN</span> <span style='color:#806030; '>#</span>temp_item_FI it <span style='color:#400000; font-weight:bold; '>ON</span> el<span style='color:#806030; '>.</span>VisualID <span style='color:#806030; '>=</span> it<span style='color:#806030; '>.</span>VisualID<span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>ELSE</span>
+            <span style='color:#400000; font-weight:bold; '>SELECT</span> <span style='color:#c34e00; '>/*DISTINCT*/</span> <span style='color:#806030; '>*</span> <span style='color:#400000; font-weight:bold; '>FROM</span> gtsd_FI_sap_export_logs<span style='color:#806030; '>;</span>
+
+    <span style='color:#e34adc; '>Finalize:</span>   <span style='color:#c34e00; '>-- label</span>
+        <span style='color:#c34e00; '>-- clean up</span>
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'  cleaning up objects'</span><span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>DROP</span> <span style='color:#400000; font-weight:bold; '>TABLE</span> <span style='color:#400000; font-weight:bold; '>IF</span> <span style='color:#400000; font-weight:bold; '>EXISTS</span> <span style='color:#806030; '>#</span>temp_item_FI<span style='color:#806030; '>;</span>
+        <span style='color:#400000; font-weight:bold; '>DROP</span> <span style='color:#400000; font-weight:bold; '>TABLE</span> <span style='color:#400000; font-weight:bold; '>IF</span> <span style='color:#400000; font-weight:bold; '>EXISTS</span> <span style='color:#806030; '>#</span>temp_item_view_FI<span style='color:#806030; '>;</span>
+
+        <span style='color:#400000; font-weight:bold; '>PRINT</span> <span style='color:#e60000; '>'Done: '</span> <span style='color:#806030; '>+</span> <span style='color:#bb7977; font-weight:bold; '>CONVERT</span><span style='color:#806030; '>(</span><span style='color:#400000; font-weight:bold; '>VARCHAR</span><span style='color:#806030; '>(</span><span style='color:#c00000; '>32</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#bb7977; font-weight:bold; '>GETDATE</span><span style='color:#806030; '>(</span><span style='color:#806030; '>)</span><span style='color:#806030; '>,</span> <span style='color:#c00000; '>121</span><span style='color:#806030; '>)</span><span style='color:#806030; '>;</span>
+<span style='color:#400000; font-weight:bold; '>END</span>
+</pre>

@@ -1,0 +1,141 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/2/2008</span>
+<span style='color:#008000; '>// File:    ComExample.h</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Example using COM interface via C++ COM</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#008000; '>// ComExamplecom_test.cpp : Defines the entry point for the console application.</span>
+<span style='color:#008000; '>//</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> _WIN32_DCOM</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// include com headers</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>objbase.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>comdef.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>Wbemidl.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>comutil.h</span><span style='color:#0000e6; '>></span>
+
+<span style='color:#008000; '>// import library and type library</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; font-weight:bold; '>pragma</span><span style='color:#000088; font-weight:bold; '> comment(lib, </span><span style='color:#0000e6; font-weight:bold; '>"wbemuuid.lib"</span><span style='color:#000088; font-weight:bold; '>)</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>import </span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>..</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>..</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>ComExampleCOM</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>_ComExampleCOM.tlb</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// global function decl</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> PrintReturnCode</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>s1</span><span style='color:#0000ff; '>,</span><span style='color:#004a43; '> s2</span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '>   </span><span style='color:#0000ff; '>{</span><span style='color:#004a43; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '> Result: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>s2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span><span style='color:#004a43; '> _com_util</span><span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span><span style='color:#004a43; '>ConvertBSTRToString</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>s1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span><span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; font-weight:bold; '>typedef</span> <span style='color:#0000ff; font-weight:bold; '>HRESULT</span> <span style='color:#0000ff; '>(</span> STDAPICALLTYPE <span style='color:#0000ff; '>*</span>pDllGetClassObject <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span>   REFCLSID rclsid<span style='color:#0000ff; '>,</span> REFIID riid<span style='color:#0000ff; '>,</span>  <span style='color:#0000ff; font-weight:bold; '>LPVOID</span> <span style='color:#0000ff; '>*</span> ppv <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>// ===============================================================</span>
+<span style='color:#008000; '>//           SAMPLE USING ComExample IN COM</span>
+<span style='color:#008000; '>// ===============================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> _tmain<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> argc<span style='color:#0000ff; '>,</span> _TCHAR<span style='color:#0000ff; '>*</span> argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>try</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; font-weight:bold; '>namespace</span> ComExampleCOM<span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// namespace and interfaces via IDL</span>
+
+        IClassFactory<span style='color:#0000ff; '>*</span>      pICF<span style='color:#0000ff; '>;</span>
+        pDllGetClassObject  m_pDllGCO<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>HMODULE</span> hLib <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        IComComExample<span style='color:#0000ff; '>*</span> pIUV<span style='color:#0000ff; '>;</span>
+
+        _bstr_t sDLL <span style='color:#0000ff; '>=</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ComExampleCOM.dll</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// init COM, use [COINIT_MULTITHREADED] if multi-threaded</span>
+        _tprintf<span style='color:#0000ff; '>(</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Initializing COM</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        CoInitializeEx<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> COINIT_APARTMENTTHREADED<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// load COM DLL</span>
+        _tprintf<span style='color:#0000ff; '>(</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Loading ComExample COM DLL</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>(</span>hLib <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>LoadLibrary</span><span style='color:#0000ff; '>(</span>sDLL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _ftprintf<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Loading DLL Unsuccessful.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>goto</span> <span style='color:#e34adc; '>end</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// load class factory</span>
+        _tprintf<span style='color:#0000ff; '>(</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Loading COM Class Factory</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>(</span> m_pDllGCO <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span> pDllGetClassObject <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>GetProcAddress</span><span style='color:#0000ff; '>(</span> hLib<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DllGetClassObject</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _ftprintf<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Failed to resolve function addresses: DllGetClassObject.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>goto</span> <span style='color:#e34adc; '>end</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// loadings successful, instantiate objects</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>SUCCEEDED</span><span style='color:#0000ff; '>(</span> m_pDllGCO<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>__uuidof</span><span style='color:#0000ff; '>(</span>CComComExample<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>__uuidof</span><span style='color:#0000ff; '>(</span>IClassFactory<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>&amp;</span>pICF<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _tprintf<span style='color:#0000ff; '>(</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Instantiating COM Object</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>SUCCEEDED</span><span style='color:#0000ff; '>(</span> pICF<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>CreateInstance<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>__uuidof</span><span style='color:#0000ff; '>(</span>IComComExample<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>&amp;</span>pIUV<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>try</span>
+                <span style='color:#0000ff; '>{</span>
+                    _tprintf<span style='color:#0000ff; '>(</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Instantiating ComExample Object</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>SUCCEEDED</span><span style='color:#0000ff; '>(</span>pIUV<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Init<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        _tprintf<span style='color:#0000ff; '>(</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Parsing XML File: </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>SUCCEEDED</span><span style='color:#0000ff; '>(</span>pIUV<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ParseXmlFile<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>filename.xml</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#008000; '>// ==========================================================================================</span>
+                            _bstr_t sXmlInputBlock <span style='color:#0000ff; '>=</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                            sXmlInputBlock <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>&lt;XmlRoot></span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            sXmlInputBlock <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>&lt;/XmlRoot></span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#008000; '>// ==========================================================================================</span>
+
+                            _tprintf<span style='color:#0000ff; '>(</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Success!</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            BSTR rcRes<span style='color:#0000ff; '>;</span>
+
+                            rcRes <span style='color:#0000ff; '>=</span> pIUV<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>InvokeMethod<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> sXmlInputBlock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            PrintReturnCode<span style='color:#0000ff; '>(</span>rcRes<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>FuncName</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; '>}</span>
+                        _tprintf<span style='color:#0000ff; '>(</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Term</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        pIUV<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Term<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>_com_error <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    _ftprintf<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>COM Error.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>   
+                <span style='color:#0000ff; '>}</span>
+                pIUV<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                _ftprintf<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: CreateInstance for IComComExample failed.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>   
+            <span style='color:#0000ff; '>}</span>
+            pICF<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Release<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            _ftprintf<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: Creating IClassFactory for IComComExample failed.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>   
+
+<span style='color:#e34adc; '>end:</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span> hLib <span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>FreeLibrary</span><span style='color:#0000ff; '>(</span>hLib<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        CoUninitialize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        _ftprintf<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>stderr</span><span style='color:#0000ff; '>,</span> _T<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error: Unexpected error in ComExampleCOM.</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>int PrintReturnCode(const BSTR rcRes, const char* sTitle)</span>
+<span style='color:#008000; '>{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;printf("%s Result: ", sTitle);</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;char* szRes = _com_util::ConvertBSTRToString(rcRes);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;printf("%s\n", szRes);</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;return 1;</span>
+<span style='color:#008000; '>}</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>*/</span>
+</pre>

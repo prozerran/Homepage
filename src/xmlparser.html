@@ -1,0 +1,133 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#3f7f59; '>// ==========================================================================</span>
+<span style='color:#3f7f59; '>// Author:  Yee Hsu</span>
+<span style='color:#3f7f59; '>// Date:    3/10/2007</span>
+<span style='color:#3f7f59; '>// File:    xmlparser.java</span>
+<span style='color:#3f7f59; '>//</span>
+<span style='color:#3f7f59; '>// Desc:    Demonstrates parsing of XML file in Java</span>
+<span style='color:#3f7f59; '>// ==========================================================================</span>
+<span style='color:#7f0055; font-weight:bold; '>package</span><span style='color:#7f0055; '> com</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>company</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>xmlparser</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> com</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>company</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>util</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '> </span><span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>*</span><span style='color:#7f0055; '> </span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>io</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '> </span><span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>*</span><span style='color:#7f0055; '> </span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>util</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '> </span><span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>*</span><span style='color:#7f0055; '> </span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>class</span> XmlParserImpl <span style='color:#7f0055; font-weight:bold; '>implements</span> CXmlParser {
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sLastUpdateTime;
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sTimeStamp;
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> Map &lt; <span style='color:#7f0055; font-weight:bold; '>Integer</span>,
+    CUpdate > m_mapUpdate;
+    <span style='color:#3f7f59; '>//private Map&lt;String, Map&lt;Integer, CUpdate>> m_mapEndPoint;  </span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>int</span> Init(<span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sLicense) {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> 1;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>boolean</span> ParseXMLFile(<span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sFile) {
+
+        <span style='color:#7f0055; font-weight:bold; '>try</span> {
+
+            <span style='color:#7f0055; font-weight:bold; '>this</span>.m_mapUpdate = <span style='color:#7f0055; font-weight:bold; '>new</span> HashMap &lt; <span style='color:#7f0055; font-weight:bold; '>Integer</span>,
+            CUpdate > ();
+            <span style='color:#3f7f59; '>//this.m_mapEndPoint  = new HashMap&lt;String, Map&lt;Integer, CUpdate>>();</span>
+            <span style='color:#3f7f59; '>// Setup XML Parsing</span>
+            <span style='color:#7f0055; font-weight:bold; '>InputStream</span> xmlInputStream = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>FileInputStream</span>(sFile);
+            XmlTree xmlDirectivesTree = <span style='color:#7f0055; font-weight:bold; '>new</span> XmlTree(xmlInputStream, <span style='color:#7f0055; font-weight:bold; '>true</span>);
+
+            <span style='color:#3f7f59; '>// Get Root info</span>
+            <span style='color:#3f7f59; '>//Attempt to find the name attribute of the application</span>
+            XmlNode nLastUpdateTime = (XmlNode) xmlDirectivesTree.getRoot().getFirstChild().getFirstChild(<span style='color:#7f0055; font-weight:bold; '>new</span> XmlNode(<span style='color:#2a00ff; '>"LastUpdateTime"</span>, XmlNode.Type.ATTRIBUTE, <span style='color:#2a00ff; '>""</span>));
+            XmlNode nTimeStamp = (XmlNode) xmlDirectivesTree.getRoot().getFirstChild().getFirstChild(<span style='color:#7f0055; font-weight:bold; '>new</span> XmlNode(<span style='color:#2a00ff; '>"TimeStamp"</span>, XmlNode.Type.ATTRIBUTE, <span style='color:#2a00ff; '>""</span>));
+
+            sLastUpdateTime = nLastUpdateTime.getValue();
+            sTimeStamp = nTimeStamp.getValue();
+
+            XmlNode Vendors = (XmlNode) xmlDirectivesTree.getRoot().getFirstChild().getFirstChild(<span style='color:#7f0055; font-weight:bold; '>new</span> XmlNode(<span style='color:#2a00ff; '>"Vendor"</span>, XmlNode.Type.ELEMENT, <span style='color:#7f0055; font-weight:bold; '>null</span>));
+
+            <span style='color:#7f0055; font-weight:bold; '>while</span> (Vendors != <span style='color:#7f0055; font-weight:bold; '>null</span>) {
+
+                XmlNode VendorNode = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetAttriInfo(Vendors, <span style='color:#2a00ff; '>"Name"</span>);
+                <span style='color:#7f0055; font-weight:bold; '>String</span> sVendorName = VendorNode.getValue();
+
+                <span style='color:#7f0055; font-weight:bold; '>if</span> (!<span style='color:#7f0055; font-weight:bold; '>this</span>.GetEPUpdate(Vendors, sVendorName, <span style='color:#2a00ff; '>"Node"</span>)) <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>false</span>;
+
+                Vendors = (XmlNode) xmlDirectivesTree.getRoot().getFirstChild().getNextChild(<span style='color:#7f0055; font-weight:bold; '>new</span> XmlNode(<span style='color:#2a00ff; '>"Vendor"</span>, XmlNode.Type.ELEMENT, <span style='color:#7f0055; font-weight:bold; '>null</span>), Vendors);
+            }
+
+        } <span style='color:#7f0055; font-weight:bold; '>catch</span>(<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {
+            <span style='color:#3f7f59; '>//System.err.println("Exception caught: " + e.getMessage());</span>
+            <span style='color:#3f7f59; '>//e.printStackTrace();</span>
+            <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>false</span>;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>true</span>;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>boolean</span> GetEPUpdate(XmlNode nodeVendor, <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sVendorName, <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sElementName) {
+
+        <span style='color:#7f0055; font-weight:bold; '>try</span> {
+
+            XmlNode nodeEndPoint = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetChildInfo(nodeVendor, sElementName);
+            XmlNode nodeUpdate = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetChildInfo(nodeEndPoint, <span style='color:#2a00ff; '>"Next"</span>);
+
+            <span style='color:#7f0055; font-weight:bold; '>while</span> (nodeUpdate != <span style='color:#7f0055; font-weight:bold; '>null</span>) {
+
+                CUpdate objUpdate = <span style='color:#7f0055; font-weight:bold; '>new</span> CUpdate();
+                objUpdate.sVendorName = sVendorName;
+                objUpdate.mUpdateHistory = <span style='color:#7f0055; font-weight:bold; '>new</span> HashMap &lt; <span style='color:#7f0055; font-weight:bold; '>Integer</span>,
+                DefinitionUpdate > ();
+
+                XmlNode nodeOS = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetChildInfo(nodeUpdate, <span style='color:#2a00ff; '>"OS"</span>);
+                XmlNode nodeHist = (XmlNode) nodeUpdate.getNextChild(nodeOS);
+                XmlNode nextHist = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetChildInfo(nodeHist, <span style='color:#2a00ff; '>"History"</span>);
+
+                objUpdate.sUpdateType = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetAttriInfo(nodeUpdate, <span style='color:#2a00ff; '>"Type"</span>).getValue();
+                objUpdate.nUpdateID = <span style='color:#7f0055; font-weight:bold; '>Integer</span>.parseInt(<span style='color:#7f0055; font-weight:bold; '>this</span>.GetAttriInfo(nodeUpdate, <span style='color:#2a00ff; '>"ID"</span>).getValue());
+                objUpdate.nOSType = <span style='color:#7f0055; font-weight:bold; '>Integer</span>.parseInt(<span style='color:#7f0055; font-weight:bold; '>this</span>.GetAttriInfo(nodeOS, <span style='color:#2a00ff; '>"Type"</span>).getValue());
+
+                <span style='color:#7f0055; font-weight:bold; '>while</span> (nextHist != <span style='color:#7f0055; font-weight:bold; '>null</span>) {
+
+                    DefinitionUpdate objDefHistory = <span style='color:#7f0055; font-weight:bold; '>new</span> DefinitionUpdate();
+
+                    objDefHistory.nHistoryId = <span style='color:#7f0055; font-weight:bold; '>Integer</span>.parseInt(<span style='color:#7f0055; font-weight:bold; '>this</span>.GetAttriInfo(nextHist, <span style='color:#2a00ff; '>"ID"</span>).getValue());
+                    objDefHistory.sTimeStamp = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetAttriInfo(nextHist, <span style='color:#2a00ff; '>"TimeStamp"</span>).getValue();
+                    objDefHistory.sDefDate = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetChildInfo(nextHist, <span style='color:#2a00ff; '>"Date"</span>).getValue();
+                    objDefHistory.sDefVersion = <span style='color:#7f0055; font-weight:bold; '>this</span>.GetChildInfo(nextHist, <span style='color:#2a00ff; '>"Version"</span>).getValue();
+
+                    objUpdate.mUpdateHistory.put(objDefHistory.nHistoryId, objDefHistory);
+
+                    nextHist = (XmlNode) nodeHist.getNextChild(<span style='color:#7f0055; font-weight:bold; '>new</span> XmlNode(<span style='color:#2a00ff; '>"History"</span>, XmlNode.Type.ELEMENT, <span style='color:#7f0055; font-weight:bold; '>null</span>), nextHist);
+                }
+                <span style='color:#7f0055; font-weight:bold; '>this</span>.m_mapUpdate.put(objUpdate.nUpdateID, objUpdate);
+                <span style='color:#3f7f59; '>//this.m_mapEndPoint.put(objUpdate.sVendorName, this.m_mapUpdate);</span>
+                nodeUpdate = (XmlNode) nodeEndPoint.getNextChild(<span style='color:#7f0055; font-weight:bold; '>new</span> XmlNode(<span style='color:#2a00ff; '>"Next"</span>, XmlNode.Type.ELEMENT, <span style='color:#7f0055; font-weight:bold; '>null</span>), nodeUpdate);
+            }
+
+        } <span style='color:#7f0055; font-weight:bold; '>catch</span>(<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {
+            <span style='color:#3f7f59; '>//System.err.println("Exception caught: " + e.getMessage());</span>
+            <span style='color:#3f7f59; '>//e.printStackTrace();</span>
+            <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>false</span>;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>true</span>;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> XmlNode GetChildInfo(XmlNode node, <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sChildName) {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> (XmlNode) node.getFirstChild(<span style='color:#7f0055; font-weight:bold; '>new</span> XmlNode(sChildName, XmlNode.Type.ELEMENT, <span style='color:#7f0055; font-weight:bold; '>null</span>));
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> XmlNode GetAttriInfo(XmlNode node, <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sAttribName) {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> (XmlNode) node.getFirstChild(<span style='color:#7f0055; font-weight:bold; '>new</span> XmlNode(sAttribName, XmlNode.Type.ATTRIBUTE, <span style='color:#2a00ff; '>""</span>));
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Calendar</span> GetGregorianCalendar(<span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>String</span> sDefDate) {
+
+        <span style='color:#7f0055; font-weight:bold; '>String</span>[] sDate = sDefDate.split(<span style='color:#2a00ff; '>"/"</span>);
+
+        <span style='color:#7f0055; font-weight:bold; '>int</span> nMon = <span style='color:#7f0055; font-weight:bold; '>Integer</span>.parseInt(sDate[0]) - 1;
+        <span style='color:#7f0055; font-weight:bold; '>int</span> nDay = <span style='color:#7f0055; font-weight:bold; '>Integer</span>.parseInt(sDate[1]);
+        <span style='color:#7f0055; font-weight:bold; '>int</span> nYear = <span style='color:#7f0055; font-weight:bold; '>Integer</span>.parseInt(sDate[2]);
+
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>GregorianCalendar</span>(nYear, nMon, nDay);
+    }
+
+}
+</pre>

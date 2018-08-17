@@ -1,0 +1,911 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/10/2012</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Watch Folder Manager. Uses a library that instantly watches</span>
+<span style='color:#008000; '>//          a folder for file existance, modification, deletion, etc.</span>
+<span style='color:#008000; '>//          Once a file has been add/del/mod it will notify your library</span>
+<span style='color:#008000; '>//          with a callback. Very handy for real time processing while</span>
+<span style='color:#008000; '>//          watching a folder for file control.</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>WatchFolderImporter.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>boost/algorithm/string.hpp</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>boost/lexical_cast.hpp</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>boost/timer.hpp</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>boost/assign.hpp</span><span style='color:#0000e6; '>></span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> WIN32</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>CWatchFolder_Win.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>else</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>CWatchFolder_Mac.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>ImportDummy.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> __ET__
+<span style='color:#0000ff; '>{</span>
+    ImportInterface<span style='color:#0000ff; '>*</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>defaultImportInterface <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ImportDummy<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    WatchFolderImporter<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>:</span> m_bInitialized<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_watch_map<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_excluded_pack<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_pwf<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_pimp<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_pt_ScanOnce<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_pt_ScanWorker<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_pt_CacheProcessor<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_context<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>,</span> m_callback<span style='color:#0000ff; '>(</span><span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>}</span>
+
+    WatchFolderImporter<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>WatchFolderImporter<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>}</span>
+
+    WatchFolderImporter<span style='color:#0000ff; '>&amp;</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>Instance<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> WatchFolderImporter _instance<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> _instance<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>Init<span style='color:#0000ff; '>(</span>ImportInterface<span style='color:#0000ff; '>*</span> impl<span style='color:#0000ff; '>,</span> IWatchFolder<span style='color:#0000ff; '>::</span>WatchCallback callback<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span> context<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        ET_TRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WatchFolderImporter::Init</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_bInitialized<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>impl<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pimp <span style='color:#0000ff; '>=</span> impl<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pimp<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pimp <span style='color:#0000ff; '>=</span> defaultImportInterface<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            ET_ASSERT<span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pwf<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_context  <span style='color:#0000ff; '>=</span> context<span style='color:#0000ff; '>;</span>
+                m_callback <span style='color:#0000ff; '>=</span> callback<span style='color:#0000ff; '>;</span>    
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> </span><span style='color:#004a43; '>defined</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>__GNUC__</span><span style='color:#0000ff; '>)</span>
+                m_pwf <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>static_cast</span><span style='color:#0000ff; '>&lt;</span>IWatchFolder<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> CWatchFolder_Mac<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>elif</span><span style='color:#004a43; '> </span><span style='color:#004a43; '>defined</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>_WIN32</span><span style='color:#0000ff; '>)</span>
+                m_pwf <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>static_cast</span><span style='color:#0000ff; '>&lt;</span>IWatchFolder<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> CWatchFolder_Win<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+                ET_ASSERT<span style='color:#0000ff; '>(</span>m_pwf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pwf<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Init<span style='color:#0000ff; '>(</span>WatchCallback<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetExcludedPackageExtensions<span style='color:#0000ff; '>(</span>m_excluded_pack<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            m_bInitialized<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// load watch folders</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>LoadFolderList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                LoadWatchFolder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// cache file processor</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pt_CacheProcessor<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pt_CacheProcessor <span style='color:#0000ff; '>=</span> m_tm_CacheProcessor<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>CacheProcessor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                m_tm_CacheProcessor<span style='color:#0000ff; '>.</span>StartAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// folder scanner thread</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pt_ScanWorker<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pt_ScanWorker <span style='color:#0000ff; '>=</span> m_tm_ScanWorker<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>ScanWorker<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                m_tm_ScanWorker<span style='color:#0000ff; '>.</span>StartAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> m_bInitialized<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>Shutdown<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        ET_TRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>[WatchFolderImporter::Shutdown] Entered</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_bInitialized<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SaveFolderList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pt_ScanOnce<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    m_tm_ScanOnce<span style='color:#0000ff; '>.</span>StopAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    m_pt_ScanOnce <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pt_ScanWorker<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    m_tm_ScanWorker<span style='color:#0000ff; '>.</span>StopAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    m_pt_ScanWorker <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pt_CacheProcessor<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    m_tm_CacheProcessor<span style='color:#0000ff; '>.</span>StopAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    m_pt_CacheProcessor <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pwf<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Shutdown<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>delete</span> m_pwf<span style='color:#0000ff; '>;</span>
+                    m_pwf <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>            
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> e<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::Shutdown: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>       
+            <span style='color:#0000ff; '>}</span>    
+        <span style='color:#0000ff; '>}</span>
+        m_bInitialized<span style='color:#0000ff; '>=</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>WatchCallback<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> watchid<span style='color:#0000ff; '>,</span> IWatchFolder<span style='color:#0000ff; '>::</span>FileAction action<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>String</span> rootpath<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>String</span> filepath<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>*</span> context<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        WatchFolderImporter<span style='color:#0000ff; '>*</span> pwfm <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>static_cast</span><span style='color:#0000ff; '>&lt;</span>WatchFolderImporter<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>context<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>pwfm<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> </span><span style='color:#004a43; '>defined</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>__GNUC__</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>String</span> spath <span style='color:#0000ff; '>=</span> rootpath <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> filepath<span style='color:#0000ff; '>;</span> 
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>elif</span><span style='color:#004a43; '> </span><span style='color:#004a43; '>defined</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>_WIN32</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>String</span> spath <span style='color:#0000ff; '>=</span> rootpath <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> filepath<span style='color:#0000ff; '>;</span>   
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span><span style='color:#004a43; '>    </span>
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>action<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>IWatchFolder</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>FILE_ADD</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                    pwfm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>HandleAdd<span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>IWatchFolder</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>FILE_MODIFIED</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                    pwfm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>HandleMod<span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>IWatchFolder</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>FILE_RENAME_FROM</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                    pwfm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>HandleRenameFm<span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>IWatchFolder</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>FILE_RENAME_TO</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                    pwfm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>HandleRenameTo<span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>case </span><span style='color:#808080; font-weight:bold; '>IWatchFolder</span><span style='color:#0000ff; font-weight:bold; '>::</span><span style='color:#808080; font-weight:bold; '>FILE_DELETE</span><span style='color:#e34adc; font-weight:bold; '>:</span>
+                    pwfm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>HandleDel<span style='color:#0000ff; '>(</span>spath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#e34adc; '>:</span>
+                    ET_TRACE<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WatchFolderImporter : Unknown [</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>][</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>][</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>]</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> watchid<span style='color:#0000ff; '>,</span> action<span style='color:#0000ff; '>,</span> spath<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>pwfm <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> pwfm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_callback<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                pwfm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_callback<span style='color:#0000ff; '>(</span>watchid<span style='color:#0000ff; '>,</span> action<span style='color:#0000ff; '>,</span> rootpath<span style='color:#0000ff; '>,</span> filepath<span style='color:#0000ff; '>,</span> pwfm<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_context<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::WatchCallback: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>IsPathSubPathOfWatchFolder<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        WatchFolderInfoList folders<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetWatchFolders<span style='color:#0000ff; '>(</span>folders<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>WatchFolderInfoList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> folders<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> folders<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>status<span style='color:#0000ff; '>.</span>compare<span style='color:#0000ff; '>(</span>WATCH_STATUS_DELETED<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>BeginWith<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>long</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>IsPathSuperPathOfWatchFolder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir<span style='color:#0000ff; '>,</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>vector</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>&amp;</span> slist<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        WatchFolderInfoList folders<span style='color:#0000ff; '>;</span>
+        slist<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetWatchFolders<span style='color:#0000ff; '>(</span>folders<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>WatchFolderInfoList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> folders<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> folders<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>status<span style='color:#0000ff; '>.</span>compare<span style='color:#0000ff; '>(</span>WATCH_STATUS_DELETED<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>BeginWith<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>,</span> sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        slist<span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> slist<span style='color:#0000ff; '>.</span>size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>AddWatchFolder<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pwf<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsValidDirectory<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>  
+                std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>vector</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span> slist<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#008000; '>// filter ignored list</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsMediaFiltered<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#008000; '>// super path exist, ignore request</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsPathSubPathOfWatchFolder<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#008000; '>// sub paths exist, delete old watch folders</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsPathSuperPathOfWatchFolder<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> slist<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>vector</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> slist<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> slist<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+                        DelWatchFolder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+
+                <span style='color:#008000; '>// now add the new watch folder</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetWatchFolder<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddWatchFolder<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    AddWatchFolderInfo<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>{</span>
+                        Thread<span style='color:#0000ff; '>::</span>BoostScopedLock lock<span style='color:#0000ff; '>(</span>m_tmutex_once<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                     
+                        m_path_once   <span style='color:#0000ff; '>=</span> sDir<span style='color:#0000ff; '>;</span>
+                        m_pt_ScanOnce <span style='color:#0000ff; '>=</span> m_tm_ScanOnce<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>ScanOnce<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        m_tm_ScanOnce<span style='color:#0000ff; '>.</span>StartAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    SaveWatchFolder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::AddWatchFolder: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>DelWatchFolder<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pwf<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> wid <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>wid <span style='color:#0000ff; '>=</span> m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetWatchFolder<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DelWatchFolder<span style='color:#0000ff; '>(</span>wid<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                DelWatchFolderInfo<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                SaveWatchFolder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> 
+            <span style='color:#0000ff; '>{</span>
+                ET_WARN<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Warn: Watchfolder </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '> doesn't exist!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sDir<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::DelWatchFolder: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>int</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>GetWatchFolders<span style='color:#0000ff; '>(</span> WatchFolderInfoList<span style='color:#0000ff; '>&amp;</span> folders <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetFolderList<span style='color:#0000ff; '>(</span>folders<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> folders<span style='color:#0000ff; '>.</span>size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>GetWatchFolderInfo<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir<span style='color:#0000ff; '>,</span> WatchFolderInfo<span style='color:#0000ff; '>&amp;</span> wi<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>FindWatchFolder<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> wi<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>        
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>LoadWatchFolder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            WatchFolderInfoList watch_folders<span style='color:#0000ff; '>;</span>
+            m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetFolderList<span style='color:#0000ff; '>(</span>watch_folders<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>WatchFolderInfoList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> watch_folders<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> watch_folders<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddWatchFolder<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                
+                AddWatchFolderInfo<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>SaveWatchFolder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>SaveFolderList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>HandleAdd<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> str <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pimp<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsValidDirectory<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsMediaFiltered<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsMediaFolderExists<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddMediaFolder<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                
+                    ScanWatchFolder<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsMediaFile<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                AddMediaFile<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>HandleAdd: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>HandleMod<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> str <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// TO DO...</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>HandleDel<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> str <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pimp<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsMediaFile<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DelMediaFile<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#008000; '>//else if (IsValidDirectory(str)) </span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>    <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>FIXME: all other files/folders will call this ...</span>
+        <span style='color:#0000ff; '>{</span>
+            m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DelMediaFolder<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>HandleRenameFm<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> str <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        HandleDel<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>HandleRenameTo<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> str <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        HandleAdd<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>long</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>ScanWatchFolderPreparation<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>long</span> ncount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsValidDirectory<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                UpdateWatchFolderStatus<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> WATCH_STATUS_SCANNING<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                ncount <span style='color:#0000ff; '>=</span> ScanWatchFolder<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                UpdateWatchFolderStatus<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> WATCH_STATUS_SCANNED<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>String</span> scan_time <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>lexical_cast<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>TimeNow<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                UpdateWatchFolderScanTime<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> scan_time<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                AddWatchFolderImportedNumber<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> ncount<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                UpdateWatchFolderStatus<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> WATCH_STATUS_DISCONNECTED<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            SaveWatchFolder<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::ScanWatchFolderPreparation: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> ncount<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>long</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>ScanWatchFolder<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>long</span> ncount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsValidDirectory<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> ncount<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsMediaFiltered<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> ncount<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            bf<span style='color:#0000ff; '>::</span>directory_iterator end_iter <span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span> bf<span style='color:#0000ff; '>::</span>directory_iterator iter<span style='color:#0000ff; '>(</span> sDir <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> end_iter <span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter <span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                bf<span style='color:#0000ff; '>::</span>path dir <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span> bf<span style='color:#0000ff; '>::</span>is_directory<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>*</span>iter <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; '>!</span>m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsMediaFolderExists<span style='color:#0000ff; '>(</span>dir<span style='color:#0000ff; '>.</span>native_directory_string<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddMediaFolder<span style='color:#0000ff; '>(</span>dir<span style='color:#0000ff; '>.</span>native_directory_string<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    ncount <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> ScanWatchFolder<span style='color:#0000ff; '>(</span> dir<span style='color:#0000ff; '>.</span>native_directory_string<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span> 
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsMediaFile<span style='color:#0000ff; '>(</span>dir<span style='color:#0000ff; '>.</span>native_file_string<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>   
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>AddMediaFile<span style='color:#0000ff; '>(</span>dir<span style='color:#0000ff; '>.</span>native_file_string<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                            ncount<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::ScanWatchFolder: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> ncount<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>ContainVideoOrAudioFiles<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Path<span style='color:#0000ff; '>&amp;</span> p<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsValidDirectory<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+        bf<span style='color:#0000ff; '>::</span>directory_iterator end_iter<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>bf<span style='color:#0000ff; '>::</span>directory_iterator iter<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> end_iter<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsValidFile<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>*</span>iter <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> 
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsVideoFile<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>*</span>iter <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsMusicFile<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; '>*</span>iter <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>AddMediaFile<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sFile <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsValidFile<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsMediaFiltered<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>!</span><span style='color:#004a43; '>defined</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>ENABLE_PHOTO_IMPORTING</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#008000; '>// TEMPORARY: remove image/photo, we dont want to import these files yet</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsPictureFile<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#008000; '>// END TEMP</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>IsPictureFile<span style='color:#0000ff; '>(</span>sFile<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Path p <span style='color:#0000ff; '>=</span> sFile<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>ContainVideoOrAudioFiles<span style='color:#0000ff; '>(</span>p<span style='color:#0000ff; '>.</span>parent_path<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// insert file into cache, for processing into db</span>
+            ET_LOG<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WatchFolderImporter::AddMediaFile: Detected File : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> sFile<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>{</span>            
+                Thread<span style='color:#0000ff; '>::</span>BoostScopedLock lock<span style='color:#0000ff; '>(</span>m_tmutex_cache<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                m_watch_map<span style='color:#0000ff; '>[</span>sFile<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::AddMediaFile: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>AddWatchFolderInfo<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        WatchFolderInfo     wfi<span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>id              <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>path            <span style='color:#0000ff; '>=</span> sDir<span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>status          <span style='color:#0000ff; '>=</span> WATCH_STATUS_NORMAL<span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>type            <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>scan_time       <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>0</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>update_time     <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>0</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>num_imported    <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>num_queued      <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>num_total       <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        wfi<span style='color:#0000ff; '>.</span>num_unknown     <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+            m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddWatchFolder<span style='color:#0000ff; '>(</span>wfi<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>UpdateWatchFolderStatus<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> WATCH_STATUS_NORMAL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>DelWatchFolderInfo<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>DelWatchFolder<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>AddWatchFolderImportedNumber<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nNum <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddWatchFolderImportedNumber<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> nNum<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>GetStatus<span style='color:#0000ff; '>(</span> JsonObject<span style='color:#0000ff; '>&amp;</span> jobj <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            JsonArray jarr<span style='color:#0000ff; '>;</span>
+
+            WatchFolderInfoList wlist<span style='color:#0000ff; '>;</span>
+            GetWatchFolders<span style='color:#0000ff; '>(</span>wlist<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>WatchFolderInfoList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>const_iterator</span> iter <span style='color:#0000ff; '>=</span> wlist<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> wlist<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                JsonObject _job<span style='color:#0000ff; '>;</span>
+                _job<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>path</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>            iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                _job<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>status</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>          iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>status<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                _job<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>scan_time</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>       iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>scan_time<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                _job<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>update_time</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>     iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>update_time<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                _job<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>num_imported</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>    iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>num_imported<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                _job<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>num_total</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>       iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>num_total<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                jarr<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>_job<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>       
+            <span style='color:#0000ff; '>}</span>
+            jobj<span style='color:#0000ff; '>.</span>Set<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Folders</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> jarr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>[</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>] Error: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> __func__<span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>IsMediaFiltered<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> Path<span style='color:#0000ff; '>&amp;</span> p <span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>String</span> _filter<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// filter path ends with</span>
+            <span style='color:#0000ff; font-weight:bold; '>static</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span> _end <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>assign<span style='color:#0000ff; '>::</span>list_of
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.app</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>;</span>
+
+            _filter <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>extension<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            boost<span style='color:#0000ff; '>::</span>to_lower<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_end<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> _end<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// filter system path (full path start with system path)</span>
+            <span style='color:#0000ff; font-weight:bold; '>static</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span> _begin <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>assign<span style='color:#0000ff; '>::</span>list_of
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>c:</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>windows</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>c:</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>program files</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>c:</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>appdata</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/usr</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/system</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/sys</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/opt</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/etc</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>;</span>
+
+            _filter <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>native_file_string<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            boost<span style='color:#0000ff; '>::</span>to_lower<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> _begin<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> _begin<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>BeginWith<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// filter hidden path (path begins with a special character)</span>
+            <span style='color:#0000ff; font-weight:bold; '>static</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span> _hidden <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>assign<span style='color:#0000ff; '>::</span>list_of
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>~</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>;</span>
+
+            _filter <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>            
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> _hidden<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> _hidden<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>BeginWith<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            _filter <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>relative_path<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>parent_path<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>            
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> _hidden<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> _hidden<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>BeginWith<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// filter parent directory ends with xxx, such as packages</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> m_excluded_pack<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> m_excluded_pack<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>EndWith<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// filter path exactly contains</span>
+            <span style='color:#0000ff; font-weight:bold; '>static</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span> _exa <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>assign<span style='color:#0000ff; '>::</span>list_of
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>c:</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>c:</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>c:</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>windows</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>c:</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>program files</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>c:</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>appdata</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>;</span>
+
+            _filter <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>stem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            boost<span style='color:#0000ff; '>::</span>to_lower<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_exa<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> _exa<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            _filter <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>native_file_string<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            boost<span style='color:#0000ff; '>::</span>to_lower<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_exa<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> _exa<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// filter path contains</span>
+            <span style='color:#0000ff; font-weight:bold; '>static</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span> _pcon <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>assign<span style='color:#0000ff; '>::</span>list_of
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>imovie </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>cache</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>sample</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>trailer</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>;</span>
+
+            _filter <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>native_directory_string<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            boost<span style='color:#0000ff; '>::</span>to_lower<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>        
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> _pcon<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> _pcon<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#808080; font-weight:bold; '>npos</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// filter filename contains</span>
+            <span style='color:#0000ff; font-weight:bold; '>static</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span> _con <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>::</span>assign<span style='color:#0000ff; '>::</span>list_of
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>sample</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>trailer</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>;</span>
+
+            _filter <span style='color:#0000ff; '>=</span> p<span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            boost<span style='color:#0000ff; '>::</span>to_lower<span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>        
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> _con<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> _con<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_filter<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>::</span><span style='color:#808080; font-weight:bold; '>npos</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> ex<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>IsMediaFiltered: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>long</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>ScanFolder<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        Thread<span style='color:#0000ff; '>::</span>BoostScopedLock lock<span style='color:#0000ff; '>(</span>m_tmutex_once<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+
+        m_path_once   <span style='color:#0000ff; '>=</span> sDir<span style='color:#0000ff; '>;</span>
+        m_pt_ScanOnce <span style='color:#0000ff; '>=</span> m_tm_ScanOnce<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>CreateThread</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>ScanOnce<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        m_tm_ScanOnce<span style='color:#0000ff; '>.</span>StartAll<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>UpdateWatchFolderStatus<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> status <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>UpdateWatchFolderStatus<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> status<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> __ET__<span style='color:#0000ff; '>::</span>WatchFolderImporter<span style='color:#0000ff; '>::</span>UpdateWatchFolderScanTime<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> sDir<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> stime <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pimp<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>UpdateWatchFolderScanTime<span style='color:#0000ff; '>(</span>sDir<span style='color:#0000ff; '>,</span> stime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>ScanOnce<span style='color:#0000ff; '>::</span>DoTask<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        ET_ASSERT<span style='color:#0000ff; '>(</span>m_pObj<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pObj<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ScanWatchFolderPreparation<span style='color:#0000ff; '>(</span>m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_path_once<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::ScanOnce: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        Stop<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>ScanWorker<span style='color:#0000ff; '>::</span>DoTask<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+<span style='color:#008000; '>//        Thread::Sleep(5000);    // added additional delay to prevent race condition</span>
+        
+        <span style='color:#008000; '>// DO SCAN TASK EVERY 5 SECONDS</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>time_t</span> lastScanTime <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#0000ff; font-weight:bold; '>time_t</span> now <span style='color:#0000ff; '>=</span> TimeNow<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>now <span style='color:#0000ff; '>-</span> lastScanTime <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>5</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Thread<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>250</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        lastScanTime <span style='color:#0000ff; '>=</span> now<span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ASSERT<span style='color:#0000ff; '>(</span>m_pObj<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pObj<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                WatchFolderInfoList folders<span style='color:#0000ff; '>;</span>
+                m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>GetWatchFolders<span style='color:#0000ff; '>(</span>folders<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>WatchFolderInfoList<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> folders<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> folders<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>FIXME: IF the Watchfolder doesn't exist,</span>
+                    <span style='color:#008000; '>// DON'T scan it, and if the watchfolder is a local path, remove it from watchfolder list</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>Exists<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>continue</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>status<span style='color:#0000ff; '>.</span>compare<span style='color:#0000ff; '>(</span>WATCH_STATUS_SCANNING<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>time_t</span> t <span style='color:#0000ff; '>=</span> TimeNow<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>t <span style='color:#0000ff; '>-</span> boost<span style='color:#0000ff; '>::</span>lexical_cast<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>time_t</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>scan_time<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>(</span>SCAN_INTERVAL_HOURS <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>60</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>60</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            ET_LOG<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Scanning folder [</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>]</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>ScanWatchFolderPreparation<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::ScanWorker: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> WatchFolderImporter<span style='color:#0000ff; '>::</span>CacheProcessor<span style='color:#0000ff; '>::</span>DoTask<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>time_t</span> lastScanTime <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#0000ff; font-weight:bold; '>time_t</span> now <span style='color:#0000ff; '>=</span> TimeNow<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>now <span style='color:#0000ff; '>-</span> lastScanTime <span style='color:#0000ff; '>&lt;</span> FILE_CHECK_TIME_SEC<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            Thread<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>Sleep</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>250</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        lastScanTime <span style='color:#0000ff; '>=</span> now<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>//Thread::Sleep(FILE_CHECK_TIME_SEC * 1000);</span>
+        ET_ASSERT<span style='color:#0000ff; '>(</span>m_pObj<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>try</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pObj <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pimp <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pwf<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>WatchMap<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_watch_map<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_watch_map<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>                    
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> Exists<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>first<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; '>(</span>bf<span style='color:#0000ff; '>::</span>file_size<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>first<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span> 
+                        <span style='color:#008000; '>// </span><span style='color:#ffffff; background:#808000; '>FIXME: bug exist if file was imported, it cannot be imported again if file was deleted and re-add</span>
+
+                        <span style='color:#008000; '>// check filesize does NOT work, copy/download does not change filesize</span>
+                        <span style='color:#008000; '>// check last_mod does NOT work, copy/download does not change last_mod</span>
+
+                        <span style='color:#008000; '>// check exclusive read/write access to file</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pwf<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>HasExclusiveAccess<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>first<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            <span style='color:#0000ff; '>{</span>
+                                Thread<span style='color:#0000ff; '>::</span>BoostScopedLock lock<span style='color:#0000ff; '>(</span>m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_tmutex_cache<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+                                iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>second <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+                            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>IsMediaFileExists<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>first<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; '>{</span>
+                                ET_LOG<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WatchFolderImporter::CacheProcessor: Imported File : </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>first<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                                m_pObj<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>m_pimp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>AddMediaFile<span style='color:#0000ff; '>(</span>iter<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>first<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; '>}</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>exception</span><span style='color:#0000ff; '>&amp;</span> e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            ET_ERROR<span style='color:#0000ff; '>(</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Error in WatchFolderImporter::CacheProcessor: </span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>what<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

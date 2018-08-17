@@ -1,0 +1,383 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#3f7f59; '>// ==========================================================================</span>
+<span style='color:#3f7f59; '>// Author:  Yee Hsu</span>
+<span style='color:#3f7f59; '>// Date:    3/10/2007</span>
+<span style='color:#3f7f59; '>// File:    constrain.java</span>
+<span style='color:#3f7f59; '>//</span>
+<span style='color:#3f7f59; '>// Desc:    Constrainer for Compiler/Debugger</span>
+<span style='color:#3f7f59; '>// ==========================================================================</span>
+
+<span style='color:#7f0055; font-weight:bold; '>package</span><span style='color:#7f0055; '> constrain</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> lexer</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> parser</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>Parser</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> visitor</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> ast</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>util</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrainer object will visit the AST</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> gather</span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '>check variable</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  type information and decorate uses of variables with their</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  declarations</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> the decorations will be used by the code generator</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  to provide access to the frame offset of the variable for generating</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  load</span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '>store bytecodes</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Note that when constraining expression trees we return the type tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  corresponding to the result type of the expression</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g. </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  the result of constraining the tree for </span><span style='color:#3f5fbf; '>1</span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '>2</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>3</span><span style='color:#3f5fbf; '> will be the int type</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  tree</span>
+<span style='color:#3f5fbf; '>*/</span>
+<span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>class</span> Constrainer <span style='color:#7f0055; font-weight:bold; '>extends</span> ASTVisitor {
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> BadAssignType = 0;
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> CallingNonFunction = 1;
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> ActualFormalTypeMismatch = 2;
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> NumActualFormalDiffer = 3;
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> TypeMismatchInExpr = 4;
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> BooleanExprExpected = 5;
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> BadConditional = 6;
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> ReturnNotInFunction = 7;
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> <span style='color:#7f0055; font-weight:bold; '>final</span> <span style='color:#7f0055; font-weight:bold; '>int</span> BadreturnExpr = 8;
+    
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> AST t;           <span style='color:#3f7f59; '>// the AST to constrain</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> Table symtab = <span style='color:#7f0055; font-weight:bold; '>new</span> Table();
+    <span style='color:#7f0055; font-weight:bold; '>private</span> Parser parser;   <span style='color:#3f7f59; '>// parser used with this constrainer</span>
+    
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  The following comment refers to the functions stack</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  declared below the comment.</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Whenever we start constraining a function declaration</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  we push the function decl tree which indicates we're</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  in a function (to ensure that we don't attempt to return</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  from the main program </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> return's are only allowed from</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  within functions)</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> it also gives us access to the return</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  type to ensure the type of the expr that is returned is</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  the same as the type declared in the function header</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>Stack</span> functions = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>Stack</span>();
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  readTree</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> writeTree</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> intTree</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> boolTree</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '>falseTree</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> trueTree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  are AST's that will be constructed (intrinsic trees) for</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  every program. They are constructed in the same fashion as</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  source program trees to ensure consisten processing of </span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  functions</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> etc.</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>static</span> AST readTree, writeTree, intTree, boolTree,
+               falseTree, trueTree, readId, writeId;
+               
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Constrainer(AST t, Parser parser) {
+        <span style='color:#7f0055; font-weight:bold; '>this</span>.t = t;
+        <span style='color:#7f0055; font-weight:bold; '>this</span>.parser = parser;
+    }
+    
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>void</span> execute() {
+        symtab.beginScope();
+        t.accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+    }
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  t is an IdTree</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> retrieve the pointer to its declaration</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> AST lookup(AST t) {  
+        <span style='color:#7f0055; font-weight:bold; '>return</span> (AST)(symtab.get( ((IdTree)t).getSymbol()));
+    }
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Decorate the IdTree with the given decoration </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> its decl tree</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>void</span> enter(AST t, AST decoration) {
+<span style='color:#3f7f59; '>/*</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;System.out.println("enter: "+((IdTree)t).getSymbol().toString()</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;+ ": " + decoration.getNodeNum());</span>
+<span style='color:#3f7f59; '>*/</span>
+        symtab.put( ((IdTree)t).getSymbol(), decoration);
+    }
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  get the type of the current type tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@param</span><span style='color:#3f5fbf; '> t is the type tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the intrinsic tree corresponding to the type of t</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> AST getType(AST t) {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> (t.getClass() == IntTypeTree.class)? intTree: boolTree;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>void</span> decorate(AST t, AST decoration) {
+        t.setDecoration(decoration);
+    }
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the decoration of the tree</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> AST decoration(AST t) {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> t.getDecoration();
+    }
+    
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  build the intrinsic trees</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> constrain them in the same fashion</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  as any other AST</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>void</span> buildIntrinsicTrees() {
+        Lexer lex = parser.getLex();
+        trueTree = <span style='color:#7f0055; font-weight:bold; '>new</span> IdTree(lex.newIdToken(<span style='color:#2a00ff; '>"true"</span>,-1,-1));
+        falseTree = <span style='color:#7f0055; font-weight:bold; '>new</span> IdTree(lex.newIdToken(<span style='color:#2a00ff; '>"false"</span>,-1,-1));
+        readId = <span style='color:#7f0055; font-weight:bold; '>new</span> IdTree(lex.newIdToken(<span style='color:#2a00ff; '>"read"</span>,-1,-1));
+        writeId = <span style='color:#7f0055; font-weight:bold; '>new</span> IdTree(lex.newIdToken(<span style='color:#2a00ff; '>"write"</span>,-1,-1));
+        boolTree = (<span style='color:#7f0055; font-weight:bold; '>new</span> DeclTree()).addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> BoolTypeTree()).
+                 addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> IdTree(lex.newIdToken(<span style='color:#2a00ff; '>"&lt;&lt;bool>>"</span>,-1,-1)));
+        decorate(boolTree.getKid(2),boolTree);  
+        intTree = (<span style='color:#7f0055; font-weight:bold; '>new</span> DeclTree()).addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> IntTypeTree()).
+                 addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> IdTree(lex.newIdToken(<span style='color:#2a00ff; '>"&lt;&lt;int>>"</span>,-1,-1)));
+        decorate(intTree.getKid(2),intTree);  
+        <span style='color:#3f7f59; '>// to facilitate type checking; this ensures int decls and id decls</span>
+        <span style='color:#3f7f59; '>// have the same structure</span>
+        
+        <span style='color:#3f7f59; '>// read tree takes no parms and returns an int</span>
+        readTree = (<span style='color:#7f0055; font-weight:bold; '>new</span> FunctionDeclTree()).addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> IntTypeTree()).
+                       addKid(readId).addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> FormalsTree()).
+                       addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> BlockTree());
+        
+        <span style='color:#3f7f59; '>// write tree takes one int parm and returns that value</span>
+        writeTree = (<span style='color:#7f0055; font-weight:bold; '>new</span> FunctionDeclTree()).addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> IntTypeTree()).
+                       addKid(writeId);
+        AST decl = (<span style='color:#7f0055; font-weight:bold; '>new</span> DeclTree()).addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> IntTypeTree()).
+                       addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> IdTree(lex.newIdToken(<span style='color:#2a00ff; '>"dummyFormal"</span>,-1,-1)));
+        AST formals = (<span style='color:#7f0055; font-weight:bold; '>new</span> FormalsTree()).addKid(decl);
+        writeTree.addKid(formals).addKid(<span style='color:#7f0055; font-weight:bold; '>new</span> BlockTree());
+        writeTree.accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        readTree.accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+    }
+    
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the program tree </span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '> visit its kid</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitProgramTree(AST t) {
+        buildIntrinsicTrees();
+        <span style='color:#7f0055; font-weight:bold; '>this</span>.t = t;
+        t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the Block tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;ol></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;li></span><span style='color:#3f5fbf; '>open a new scope</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;li></span><span style='color:#3f5fbf; '>constrain the kids in this new scope</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;li></span><span style='color:#3f5fbf; '>close the</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  scope removing any local declarations from this scope</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/ol></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitBlockTree(AST t) {
+        symtab.beginScope();
+        visitKids(t);
+        symtab.endScope();
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>; }
+        
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the FunctionDeclTree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;ol></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;li></span><span style='color:#3f5fbf; '>Enter the function name in the current scope</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;li></span><span style='color:#3f5fbf; '>enter the formals</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  in the function scope and </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;li></span><span style='color:#3f5fbf; '>constrain the body of the function</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/ol></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitFunctionDeclTree(AST t) {
+        AST fname = t.getKid(2),
+            returnType = t.getKid(1),
+            formalsTree = t.getKid(3),
+            bodyTree = t.getKid(4);
+        functions.push(t);
+        enter(fname,t);  <span style='color:#3f7f59; '>// enter function name in CURRENT scope</span>
+        decorate(returnType,getType(returnType));
+        symtab.beginScope();  <span style='color:#3f7f59; '>// new scope for formals and body</span>
+        visitKids(formalsTree); <span style='color:#3f7f59; '>// all formal names go in new scope</span>
+        bodyTree.accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        symtab.endScope();
+        functions.pop();
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+        
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the Call tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  check that the number and types of the actuals match the</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  number and type of the formals</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitCallTree(AST t) {
+        AST fct,
+            fname = t.getKid(1),
+            fctType;
+        visitKids(t);
+        fct = lookup(fname);
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (fct.getClass() != FunctionDeclTree.class) {
+            constraintError(CallingNonFunction);
+        }
+        fctType = decoration(fct.getKid(1));
+        decorate(t,fctType);
+        decorate(t.getKid(1),fct);
+        <span style='color:#3f7f59; '>// now check that the number/types of actuals match the</span>
+        <span style='color:#3f7f59; '>// number/types of formals</span>
+        checkArgDecls(t,fct);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> fctType;
+    }
+    
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>void</span> checkArgDecls(AST caller, AST fct) {
+        <span style='color:#3f7f59; '>// check number and types of args/formals match</span>
+        AST formals = fct.getKid(3);
+        <span style='color:#7f0055; font-weight:bold; '>Enumeration</span> actualKids = caller.getKids(),
+                    formalKids = formals.getKids();
+        actualKids.nextElement();  <span style='color:#3f7f59; '>// skip past fct name</span>
+        <span style='color:#7f0055; font-weight:bold; '>for</span> (; actualKids.hasMoreElements();) {
+            <span style='color:#7f0055; font-weight:bold; '>try</span> {
+                AST actualDecl = decoration((AST)actualKids.nextElement()),
+                    formalDecl = (AST)formalKids.nextElement();
+                <span style='color:#7f0055; font-weight:bold; '>if</span> (decoration(actualDecl.getKid(2)) != 
+                    decoration(formalDecl.getKid(2))) {
+                    constraintError(ActualFormalTypeMismatch);
+                }
+            } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>Exception</span> e) {
+                constraintError(NumActualFormalDiffer);
+            }
+        }
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (formalKids.hasMoreElements()) {
+            constraintError(NumActualFormalDiffer);
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span>;
+    }
+                
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the Decl tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;ol></span><span style='color:#7f9fbf; font-weight:bold; '>&lt;li></span><span style='color:#3f5fbf; '>decorate to the corresponding intrinsic type tree</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;li></span><span style='color:#3f5fbf; '>enter the</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  variable in the current scope so later variable references can</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  retrieve the information in this tree</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/ol></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitDeclTree(AST t) {
+        AST idTree = t.getKid(2);
+        enter(idTree,t);
+        AST typeTree = getType(t.getKid(1));
+        decorate(idTree,typeTree);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>; }
+        
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the </span><span style='color:#7f9fbf; font-weight:bold; '>&lt;i></span><span style='color:#3f5fbf; '>If</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;/i></span><span style='color:#3f5fbf; '> tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  check that the first kid is an expression that is a boolean type</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitIfTree(AST t) {
+        AST kid;
+        <span style='color:#7f0055; font-weight:bold; '>if</span> ( (AST)t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>) != boolTree) {
+            constraintError(BadConditional);
+        }
+        t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        t.getKid(3).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+        
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitWhileTree(AST t) {
+        AST kid;
+        <span style='color:#7f0055; font-weight:bold; '>if</span> ( (AST)t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>) != boolTree) {
+            constraintError(BadConditional);
+        }
+        t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+        
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the Return tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Check that the returned expression type matches the type indicated</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  in the function we're returning from</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitReturnTree(AST t) {
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (functions.empty()) {
+            constraintError(ReturnNotInFunction);
+        }
+        AST currentFunction = (AST)(functions.peek());
+        decorate(t,currentFunction);
+        AST returnType = decoration(currentFunction.getKid(1));
+        <span style='color:#7f0055; font-weight:bold; '>if</span> ( (AST)(t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>)) != returnType) {
+            constraintError(BadreturnExpr);
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+        
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the Assign tree</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  be sure the types of the right</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>hand</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>side expression and variable</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  match</span><span style='color:#7f9fbf; font-weight:bold; '>;</span><span style='color:#3f5fbf; '> when we constrain an expression we'll return a reference</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  to the intrinsic type tree describing the type of the expression</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitAssignTree(AST t) {
+        AST idTree = t.getKid(1),
+            idDecl = lookup(idTree),
+            typeTree;
+        decorate(idTree,idDecl);
+        typeTree = decoration(idDecl.getKid(2));
+        
+        <span style='color:#3f7f59; '>// now check that the types of the expr and id are the same</span>
+        <span style='color:#3f7f59; '>// visit the expr tree and get back its type</span>
+        <span style='color:#7f0055; font-weight:bold; '>if</span> ( (AST)(t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>)) != typeTree) {
+            constraintError(BadAssignType);
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;
+    }
+        
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitIntTree(AST t) {
+        decorate(t,intTree);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> intTree;
+    }
+        
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitIdTree(AST t) {
+        AST decl = lookup(t);
+        decorate(t,decl);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> decoration(decl.getKid(2));
+    }
+        
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitRelOpTree(AST t) {
+        AST leftOp = t.getKid(1),
+            rightOp = t.getKid(2);
+        <span style='color:#7f0055; font-weight:bold; '>if</span> ( (AST)(leftOp.accept(<span style='color:#7f0055; font-weight:bold; '>this</span>)) != (AST)(rightOp.accept(<span style='color:#7f0055; font-weight:bold; '>this</span>)) ) {
+            constraintError(TypeMismatchInExpr);
+        }
+        decorate(t,boolTree);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> boolTree;
+    }
+ 
+<span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  Constrain the expression tree with an adding op at the root</span><span style='color:#7f9fbf; font-weight:bold; '>:</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  e</span><span style='color:#3f5fbf; '>.</span><span style='color:#3f5fbf; '>g. t1 </span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '> t2</span><span style='color:#7f9fbf; font-weight:bold; '>&lt;br></span><span style='color:#3f5fbf; '></span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  check that the types of t1 and t2 match</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> if it's a plus tree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  then the types must be a reference to the intTree</span>
+<span style='color:#3f5fbf; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>  </span><span style='color:#7f9fbf; font-weight:bold; '>@return</span><span style='color:#3f5fbf; '> the type of the tree</span>
+<span style='color:#3f5fbf; '>*/</span>
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitAddOpTree(AST t) {
+        AST leftOpType = (AST)(t.getKid(1).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>)),
+            rightOpType = (AST)(t.getKid(2).accept(<span style='color:#7f0055; font-weight:bold; '>this</span>));
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (leftOpType != rightOpType) {
+            constraintError(TypeMismatchInExpr);
+        }
+        decorate(t,leftOpType);
+        <span style='color:#7f0055; font-weight:bold; '>return</span> leftOpType;
+    }
+        
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitMultOpTree(AST t) {
+        <span style='color:#7f0055; font-weight:bold; '>return</span> visitAddOpTree(t);
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitIntTypeTree(AST t) {<span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;}
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitBoolTypeTree(AST t) {<span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;}
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitFormalsTree(AST t) {<span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;}
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>Object</span> visitActualArgsTree(AST t) {<span style='color:#7f0055; font-weight:bold; '>return</span> <span style='color:#7f0055; font-weight:bold; '>null</span>;}
+    
+    <span style='color:#7f0055; font-weight:bold; '>void</span> constraintError(<span style='color:#7f0055; font-weight:bold; '>int</span> err) {
+        <span style='color:#7f0055; font-weight:bold; '>String</span> msg = <span style='color:#2a00ff; '>""</span>;
+        <span style='color:#7f0055; font-weight:bold; '>switch</span> (err) {
+            <span style='color:#7f0055; font-weight:bold; '>case</span> BadAssignType: msg = <span style='color:#2a00ff; '>"BadAssignType"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> CallingNonFunction: msg = <span style='color:#2a00ff; '>"CallingNonFunction"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> ActualFormalTypeMismatch: msg = <span style='color:#2a00ff; '>"ActualFormalTypeMismatch"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> NumActualFormalDiffer: msg = <span style='color:#2a00ff; '>"NumActualFormalDiffer"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> TypeMismatchInExpr: msg = <span style='color:#2a00ff; '>"TypeMismatchInExpr"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> BooleanExprExpected: msg = <span style='color:#2a00ff; '>"BooleanExprExpected"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> BadConditional: msg = <span style='color:#2a00ff; '>"BadConditional"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> ReturnNotInFunction: msg = <span style='color:#2a00ff; '>"ReturnNotInFunction"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> BadreturnExpr: msg = <span style='color:#2a00ff; '>"BadreturnExpr"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>default</span>: msg = <span style='color:#2a00ff; '>"Bad Error Message"</span>; <span style='color:#7f0055; font-weight:bold; '>break</span>;
+        }
+        PrintVisitor v1 = <span style='color:#7f0055; font-weight:bold; '>new</span> PrintVisitor();
+        v1.visitProgramTree(t);
+        <span style='color:#7f0055; font-weight:bold; '>System</span>.out.println(<span style='color:#2a00ff; '>"****CONSTRAINER ERROR: "</span> + msg + <span style='color:#2a00ff; '>"   ****"</span>);
+        <span style='color:#7f0055; font-weight:bold; '>System</span>.exit(1);
+        <span style='color:#7f0055; font-weight:bold; '>return</span>;
+    }
+    
+}
+</pre>

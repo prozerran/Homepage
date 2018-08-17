@@ -1,0 +1,348 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#3f7f59; '>/* ******************************************************************** */</span>
+<span style='color:#3f7f59; '>/* File: BigCalc.c                                                      */</span>
+<span style='color:#3f7f59; '>/* Author: Yee Hsu                                                      */</span>
+<span style='color:#3f7f59; '>/* Instructor: Abbas Moghtanei                                          */</span>
+<span style='color:#3f7f59; '>/* Course: CIS-145                                                      */</span>
+<span style='color:#3f7f59; '>/* Date: 02-10-03                                                       */</span>
+<span style='color:#3f7f59; '>/*                                                                      */</span>
+<span style='color:#3f7f59; '>/* Compilation: jcr BigCalc.java                                        */</span>
+<span style='color:#3f7f59; '>/* Usage: jcr BigCalc                                                   */</span>
+<span style='color:#3f7f59; '>/*                                                                      */</span>
+<span style='color:#3f7f59; '>/* URL: </span><span style='color:#3f3fbf; '>http://hills.ccsf.edu/~yhsu03/BigCalc/BigCalc.html</span><span style='color:#3f7f59; '>              */</span>
+<span style='color:#3f7f59; '>/*                                                                      */</span>
+<span style='color:#3f7f59; '>/* Description -                                                        */</span>
+<span style='color:#3f7f59; '>/*      This program calculates big integers.                           */</span>
+<span style='color:#3f7f59; '>/* ******************************************************************** */</span>
+
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>math</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>util</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>applet</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>Applet</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>awt</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+<span style='color:#7f0055; font-weight:bold; '>import</span><span style='color:#7f0055; '> java</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>awt</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; '>event</span><span style='color:#7f0055; '>.</span><span style='color:#7f0055; font-weight:bold; '>*</span><span style='color:#7f0055; '>;</span>
+
+<span style='color:#3f7f59; '>/*</span>
+<span style='color:#3f7f59; '>&lt;APPLET</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;CODE=BigCalc.class</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;WIDTH=300</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;HEIGHT=220></span>
+<span style='color:#3f7f59; '>&lt;/APPLET></span>
+<span style='color:#3f7f59; '>*/</span>
+
+<span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>class</span> BigCalc <span style='color:#7f0055; font-weight:bold; '>extends</span> Applet <span style='color:#7f0055; font-weight:bold; '>implements</span> ActionListener
+{
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>void</span> init()
+    {
+        <span style='color:#3f7f59; '>// Ensures java loads both classes to avoid</span>
+        <span style='color:#3f7f59; '>// a nasty lag when the calculator is first used...</span>
+        Equation eq = <span style='color:#7f0055; font-weight:bold; '>new</span> Equation(<span style='color:#2a00ff; '>"2 + 2"</span>);
+
+        setLayout(<span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>BorderLayout</span>());
+        add(text, <span style='color:#7f0055; font-weight:bold; '>BorderLayout</span>.NORTH);
+
+        <span style='color:#7f0055; font-weight:bold; '>Panel</span> pad = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>Panel</span>();
+        pad.setLayout(<span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>GridLayout</span>(rows, columns));
+
+        <span style='color:#7f0055; font-weight:bold; '>for</span> (<span style='color:#7f0055; font-weight:bold; '>int</span> i = 0; i &lt; rows; i++) {
+            <span style='color:#7f0055; font-weight:bold; '>for</span> (<span style='color:#7f0055; font-weight:bold; '>int</span> j = 0; j &lt; columns; j++) {
+                <span style='color:#7f0055; font-weight:bold; '>Button</span> button = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>Button</span>(button_pad[i*columns+j][0]);
+                button.addActionListener(<span style='color:#7f0055; font-weight:bold; '>this</span>);
+                pad.add(button);
+                lookup.put(button, button_pad[i*columns+j][1]);
+            }
+        }
+        add(pad, <span style='color:#7f0055; font-weight:bold; '>BorderLayout</span>.CENTER);
+        add(status, <span style='color:#7f0055; font-weight:bold; '>BorderLayout</span>.SOUTH);
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>void</span> actionPerformed(<span style='color:#7f0055; font-weight:bold; '>ActionEvent</span> event)
+    {
+        <span style='color:#7f0055; font-weight:bold; '>String</span> append = (<span style='color:#7f0055; font-weight:bold; '>String</span>)lookup.get(event.getSource());
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (append.equals(<span style='color:#2a00ff; '>"eq"</span>)) {
+            Equation equation = <span style='color:#7f0055; font-weight:bold; '>new</span> Equation(text.getText());
+
+            <span style='color:#7f0055; font-weight:bold; '>try</span> {
+                status.setText(<span style='color:#2a00ff; '>" "</span>);
+                text.setText(<span style='color:#7f0055; font-weight:bold; '>String</span>.valueOf(equation.evaluate()));
+            } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span> e) {
+                status.setText(e.getMessage());
+            } <span style='color:#7f0055; font-weight:bold; '>catch</span> (<span style='color:#7f0055; font-weight:bold; '>ArithmeticException</span> e) {
+                status.setText(e.getMessage());
+            }
+        } <span style='color:#7f0055; font-weight:bold; '>else</span> <span style='color:#7f0055; font-weight:bold; '>if</span> (append.equals(<span style='color:#2a00ff; '>"ac"</span>)) {
+            status.setText(<span style='color:#2a00ff; '>" "</span>);
+            text.setText(<span style='color:#2a00ff; '>""</span>);
+        } <span style='color:#7f0055; font-weight:bold; '>else</span> <span style='color:#7f0055; font-weight:bold; '>if</span> (append.equals(<span style='color:#2a00ff; '>"del"</span>)) {
+            <span style='color:#7f0055; font-weight:bold; '>String</span> str = text.getText();
+
+            <span style='color:#7f0055; font-weight:bold; '>if</span> (str.length() > 0) {
+                text.setText(str.substring(0, str.length() - 1));
+            }
+        } <span style='color:#7f0055; font-weight:bold; '>else</span> {
+            text.setText(text.getText()+append);
+        }
+    }
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>TextField</span> text = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>TextField</span>();
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>Label</span> status = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>Label</span>(<span style='color:#2a00ff; '>" "</span>);
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>Hashtable</span> lookup = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>Hashtable</span>();
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>int</span> rows = 5;
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>int</span> columns = 4;
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>String</span> [][] button_pad = {
+  {<span style='color:#2a00ff; '>"x^y"</span>, <span style='color:#2a00ff; '>"^"</span>}    ,{<span style='color:#2a00ff; '>"x!"</span>, <span style='color:#2a00ff; '>"!"</span>}     ,{<span style='color:#2a00ff; '>"x%y"</span>, <span style='color:#2a00ff; '>"%"</span>} ,{<span style='color:#2a00ff; '>"</span><span style='color:#2a00ff; '>\367</span><span style='color:#2a00ff; '>"</span>, <span style='color:#2a00ff; '>"/"</span>},
+  {<span style='color:#2a00ff; '>"7"</span> , <span style='color:#2a00ff; '>"7"</span> }    ,{<span style='color:#2a00ff; '>"8"</span>, <span style='color:#2a00ff; '>"8"</span>}      ,{<span style='color:#2a00ff; '>"9"</span>, <span style='color:#2a00ff; '>"9"</span>}   ,{<span style='color:#2a00ff; '>"</span><span style='color:#2a00ff; '>\327</span><span style='color:#2a00ff; '>"</span>, <span style='color:#2a00ff; '>"*"</span>},
+  {<span style='color:#2a00ff; '>"4"</span> , <span style='color:#2a00ff; '>"4"</span> }    ,{<span style='color:#2a00ff; '>"5"</span>, <span style='color:#2a00ff; '>"5"</span>}      ,{<span style='color:#2a00ff; '>"6"</span>, <span style='color:#2a00ff; '>"6"</span>}   ,{<span style='color:#2a00ff; '>"-"</span>, <span style='color:#2a00ff; '>"-"</span>},
+  {<span style='color:#2a00ff; '>"1"</span> , <span style='color:#2a00ff; '>"1"</span> }    ,{<span style='color:#2a00ff; '>"2"</span>, <span style='color:#2a00ff; '>"2"</span>}      ,{<span style='color:#2a00ff; '>"3"</span>, <span style='color:#2a00ff; '>"3"</span>}   ,{<span style='color:#2a00ff; '>"+"</span>, <span style='color:#2a00ff; '>"+"</span>},
+  {<span style='color:#2a00ff; '>"AC"</span>, <span style='color:#2a00ff; '>"ac"</span>}    ,{<span style='color:#2a00ff; '>"DEL"</span>, <span style='color:#2a00ff; '>"del"</span>}  ,{<span style='color:#2a00ff; '>"0"</span> , <span style='color:#2a00ff; '>"0"</span> } ,{<span style='color:#2a00ff; '>"="</span>, <span style='color:#2a00ff; '>"eq"</span>}
+    };
+}
+
+
+<span style='color:#7f0055; font-weight:bold; '>class</span> Equation
+{
+    <span style='color:#7f0055; font-weight:bold; '>public</span> Equation(<span style='color:#7f0055; font-weight:bold; '>String</span> data)
+    {
+        bits = data.toCharArray();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> evaluate()
+        <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>ArithmeticException</span>, <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>
+    {
+        pos = 0;
+        <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> ret = evalPlusMinus();
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (pos != bits.length) {
+            <span style='color:#7f0055; font-weight:bold; '>throw</span> <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>(<span style='color:#2a00ff; '>"Garbage at end of equation"</span>);
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> ret;
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>public</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> evaluate(<span style='color:#7f0055; font-weight:bold; '>BigInteger</span> x)
+        <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>ArithmeticException</span>, <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>
+    {
+        <span style='color:#7f0055; font-weight:bold; '>this</span>.x = x;
+        <span style='color:#7f0055; font-weight:bold; '>return</span> evaluate();
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>void</span> skipWS()
+    {
+        <span style='color:#7f0055; font-weight:bold; '>while</span> ((pos &lt; bits.length) &amp;&amp; <span style='color:#7f0055; font-weight:bold; '>Character</span>.isWhitespace(bits[pos])) {
+            pos++;
+        }
+    }
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> evalReal() <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>
+    {
+        <span style='color:#3f7f59; '>// ([0-9]*'.'[0-9]+) | ([0-9]+)</span>
+        skipWS();
+        <span style='color:#7f0055; font-weight:bold; '>int</span> skip = pos;
+
+        <span style='color:#7f0055; font-weight:bold; '>while</span> ((skip &lt; bits.length) &amp;&amp;
+               <span style='color:#7f0055; font-weight:bold; '>Character</span>.isDigit(bits[skip])) skip++;
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> ((skip == pos) &amp;&amp; (bits[skip] != <span style='color:#2a00ff; '>'.'</span>)) {
+            <span style='color:#7f0055; font-weight:bold; '>throw</span> <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>(<span style='color:#2a00ff; '>"skip != pos"</span>);
+        }
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> ((skip &lt; bits.length) &amp;&amp; bits[skip] == <span style='color:#2a00ff; '>'.'</span>) {
+            <span style='color:#7f0055; font-weight:bold; '>int</span> saved = ++skip;
+
+            <span style='color:#7f0055; font-weight:bold; '>while</span> ((skip &lt; bits.length) &amp;&amp;
+                   <span style='color:#7f0055; font-weight:bold; '>Character</span>.isDigit(bits[skip])) skip++;
+
+            <span style='color:#7f0055; font-weight:bold; '>if</span> (skip == saved) {
+                <span style='color:#7f0055; font-weight:bold; '>throw</span> <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>(<span style='color:#2a00ff; '>"Invalid numeric literal"</span>);
+            }
+        }
+
+        <span style='color:#7f0055; font-weight:bold; '>double</span> res1 =
+            <span style='color:#7f0055; font-weight:bold; '>Double</span>.valueOf(<span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>String</span>(bits, pos, skip-pos)).doubleValue();
+
+        pos = skip;
+        
+        <span style='color:#7f0055; font-weight:bold; '>int</span> res2 = (<span style='color:#7f0055; font-weight:bold; '>int</span>) res1;
+        
+        <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> results = <span style='color:#7f0055; font-weight:bold; '>BigInteger</span>.valueOf(res2);
+
+        <span style='color:#7f0055; font-weight:bold; '>return</span> results;
+    }
+
+    <span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;Peeks at the next symbol</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>String</span> peekSymbol()
+    {
+        <span style='color:#7f0055; font-weight:bold; '>String</span> lhs;
+        <span style='color:#7f0055; font-weight:bold; '>int</span> skip = pos;
+
+        <span style='color:#7f0055; font-weight:bold; '>while</span> ((skip &lt; bits.length) &amp;&amp;
+               (<span style='color:#7f0055; font-weight:bold; '>Character</span>.isLetterOrDigit(bits[skip]))) {
+            skip++;
+        }
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (skip > pos) {
+            lhs = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>String</span>(bits, pos, skip-pos);
+        } <span style='color:#7f0055; font-weight:bold; '>else</span> {
+            lhs = <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>String</span>(<span style='color:#2a00ff; '>""</span>);
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> lhs;
+    }
+
+    <span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;Evaluates a term for a BigInteger</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> evalTerm()
+        <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>ArithmeticException</span>, <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>
+    {
+        <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> lhs = <span style='color:#7f0055; font-weight:bold; '>BigInteger</span>.valueOf(0);
+        skipWS();
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (<span style='color:#7f0055; font-weight:bold; '>Character</span>.isDigit(bits[pos]) || (bits[pos] == <span style='color:#2a00ff; '>'.'</span>)) {
+            lhs = evalReal();
+        } <span style='color:#7f0055; font-weight:bold; '>else</span> <span style='color:#7f0055; font-weight:bold; '>if</span> (<span style='color:#7f0055; font-weight:bold; '>Character</span>.isLetter(bits[pos])) {
+            lhs = x;
+        } <span style='color:#7f0055; font-weight:bold; '>else</span> {
+            <span style='color:#7f0055; font-weight:bold; '>throw</span> <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>(<span style='color:#2a00ff; '>"Expecting Term"</span>);
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> lhs;
+    }
+
+    <span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;Evaluates a unary for a BigInteger</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> evalUnary()
+        <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>ArithmeticException</span>, <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>
+    {
+        <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> lhs = <span style='color:#7f0055; font-weight:bold; '>BigInteger</span>.valueOf(0);
+        skipWS();
+
+        <span style='color:#7f0055; font-weight:bold; '>if</span> (pos >= bits.length) {
+            <span style='color:#7f0055; font-weight:bold; '>throw</span> <span style='color:#7f0055; font-weight:bold; '>new</span> <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>(<span style='color:#2a00ff; '>"Premature expression end"</span>);
+        }
+
+        <span style='color:#7f0055; font-weight:bold; '>switch</span> (bits[pos]) {
+        <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'-'</span>:
+            pos++;
+            lhs = evalUnary();
+            lhs = lhs.negate();
+            <span style='color:#7f0055; font-weight:bold; '>break</span>;
+        <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'+'</span>:
+            pos++; 
+            lhs = evalUnary();
+            <span style='color:#7f0055; font-weight:bold; '>break</span>;
+        <span style='color:#7f0055; font-weight:bold; '>default</span>:
+            lhs = evalTerm();
+            <span style='color:#7f0055; font-weight:bold; '>break</span>;
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> lhs;
+    }
+
+    <span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;Evaluates '^' and '!' of a BigInteger</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> evalExponent()
+        <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>ArithmeticException</span>, <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>
+    {
+        <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> lhs = evalUnary();
+        <span style='color:#7f0055; font-weight:bold; '>boolean</span> need_more = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+        skipWS();
+
+        <span style='color:#7f0055; font-weight:bold; '>while</span> ((pos &lt; bits.length) &amp;&amp; need_more) {
+            <span style='color:#7f0055; font-weight:bold; '>switch</span> (bits[pos]) {
+            <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'^'</span>:
+                pos++;
+                lhs = lhs.pow(evalUnary().intValue());
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'!'</span>:
+                <span style='color:#7f0055; font-weight:bold; '>int</span> lhs_int = lhs.intValue();
+                pos++;
+
+                <span style='color:#3f7f59; '>/*</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (lhs &lt; 0 || lhs_int != lhs) {</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;throw new ArithmeticException("Factorial: Invalid domain");</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#3f7f59; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+                lhs = <span style='color:#7f0055; font-weight:bold; '>BigInteger</span>.valueOf(1);
+                <span style='color:#7f0055; font-weight:bold; '>for</span>(<span style='color:#7f0055; font-weight:bold; '>int</span> i = 2; i &lt;= lhs_int; i++) {
+                    lhs = lhs.multiply(<span style='color:#7f0055; font-weight:bold; '>BigInteger</span>.valueOf(i));
+                }
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>default</span>:
+                need_more = <span style='color:#7f0055; font-weight:bold; '>false</span>;
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            }
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> lhs;
+    }
+
+    <span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;Evaluates '</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f5fbf; '>'</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '>'</span><span style='color:#7f9fbf; font-weight:bold; '>/</span><span style='color:#3f5fbf; '>'</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f5fbf; '> and '%' of a BigInteger</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> evalMultDivide()
+        <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>ArithmeticException</span>, <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>
+    {
+        <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> lhs = evalExponent();
+        <span style='color:#7f0055; font-weight:bold; '>boolean</span> need_more = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+        skipWS();
+
+        <span style='color:#7f0055; font-weight:bold; '>while</span> ((pos &lt; bits.length) &amp;&amp; need_more) {
+            <span style='color:#7f0055; font-weight:bold; '>switch</span> (bits[pos]) {
+            <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'*'</span>:
+                pos++;
+                lhs = lhs.multiply(evalExponent());
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'/'</span>:
+                pos++;
+                lhs = lhs.divide(evalExponent());   <span style='color:#3f7f59; '>// No need to explicit check for</span>
+                                                    <span style='color:#3f7f59; '>// divide-by-zero, java will throw</span>
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'%'</span>:
+                pos++;
+                lhs = lhs.mod(evalExponent());
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;           
+            <span style='color:#7f0055; font-weight:bold; '>default</span>:
+                need_more = <span style='color:#7f0055; font-weight:bold; '>false</span>;
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            }
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> lhs;
+    }
+
+    <span style='color:#3f5fbf; '>/**</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;Evaluates '</span><span style='color:#7f9fbf; font-weight:bold; '>+</span><span style='color:#3f5fbf; '>' and '</span><span style='color:#7f9fbf; font-weight:bold; '>-</span><span style='color:#3f5fbf; '>' of a BigInteger</span>
+<span style='color:#3f5fbf; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> evalPlusMinus() 
+        <span style='color:#7f0055; font-weight:bold; '>throws</span> <span style='color:#7f0055; font-weight:bold; '>ArithmeticException</span>, <span style='color:#7f0055; font-weight:bold; '>NumberFormatException</span>
+    {
+        <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> lhs = evalMultDivide();
+        <span style='color:#7f0055; font-weight:bold; '>boolean</span> need_more = <span style='color:#7f0055; font-weight:bold; '>true</span>;
+        skipWS();
+
+        <span style='color:#7f0055; font-weight:bold; '>while</span> ((pos &lt; bits.length) &amp;&amp; need_more) {
+            <span style='color:#7f0055; font-weight:bold; '>switch</span> (bits[pos]) {
+            <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'-'</span>:
+                pos++;
+                lhs = lhs.subtract(evalMultDivide());
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>case</span> <span style='color:#2a00ff; '>'+'</span>:
+                pos++;
+                lhs = lhs.add(evalMultDivide());
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            <span style='color:#7f0055; font-weight:bold; '>default</span>:
+                need_more = <span style='color:#7f0055; font-weight:bold; '>false</span>;
+                <span style='color:#7f0055; font-weight:bold; '>break</span>;
+            }
+        }
+        <span style='color:#7f0055; font-weight:bold; '>return</span> lhs;
+    }
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>char</span> bits[];
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>int</span> pos = 0;
+    <span style='color:#7f0055; font-weight:bold; '>private</span> <span style='color:#7f0055; font-weight:bold; '>BigInteger</span> x = <span style='color:#7f0055; font-weight:bold; '>BigInteger</span>.valueOf(0);
+}
+</pre>

@@ -1,0 +1,174 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    8/5/2008</span>
+<span style='color:#008000; '>// File:    String.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Big Brother Server Monitor</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Xml<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>.</span>Mail<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> BigBrotherEx
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> BBStruct
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nUpdateId<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nTimeStamp<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sVendorName<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sDefDate<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sDefVersion<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sEngVersion<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> sStatus<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Monitor
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> XmlTextReader xmlReader<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> BBStruct<span style='color:#0000ff; '>></span> bbdata<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Monitor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>xmlReader <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>bbdata <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Dictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> BBStruct<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ParseBigBrother<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> sFileName<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>xmlReader <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> XmlTextReader<span style='color:#0000ff; '>(</span>sFileName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// move xml reader to the node we want...</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>NodeType <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> XmlNodeType<span style='color:#0000ff; '>.</span>Element<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>LocalName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Monitor</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Item</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GSX</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// now start parsing...</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>NodeType <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> XmlNodeType<span style='color:#0000ff; '>.</span>Element<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>LocalName <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>VM</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        BBStruct bbstruct <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> BBStruct<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        bbstruct<span style='color:#0000ff; '>.</span>nUpdateId <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>UpdateId</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        bbstruct<span style='color:#0000ff; '>.</span>nTimeStamp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>.</span>Parse<span style='color:#0000ff; '>(</span>xmlReader<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>TimeStamp</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        bbstruct<span style='color:#0000ff; '>.</span>sVendorName <span style='color:#0000ff; '>=</span> xmlReader<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>VendorName</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        bbstruct<span style='color:#0000ff; '>.</span>sDefDate <span style='color:#0000ff; '>=</span> xmlReader<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DefDate</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        bbstruct<span style='color:#0000ff; '>.</span>sDefVersion <span style='color:#0000ff; '>=</span> xmlReader<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DefVersion</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        bbstruct<span style='color:#0000ff; '>.</span>sEngVersion <span style='color:#0000ff; '>=</span> xmlReader<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>EngVersion</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        bbstruct<span style='color:#0000ff; '>.</span>sStatus <span style='color:#0000ff; '>=</span> xmlReader<span style='color:#0000ff; '>.</span>GetAttribute<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Status</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>bbdata<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>bbstruct<span style='color:#0000ff; '>.</span>nUpdateId<span style='color:#0000ff; '>,</span> bbstruct<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> DisplayWarningVMs<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>KeyValuePair<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> BBStruct<span style='color:#0000ff; '>></span> bMap <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>bbdata<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sStatus<span style='color:#0000ff; '>.</span>Equals<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Yellow</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span> || bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sStatus<span style='color:#0000ff; '>.</span>Equals<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Red</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>nUpdateId <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>nTimeStamp <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sVendorName <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sDefDate <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sDefVersion <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sEngVersion <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Console<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sStatus <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> SendEmailWithVMErrors<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> sEmailString <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// header</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Date: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GSX Virtual Machine Errors...</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// red status</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>RED Status\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>============================================================================\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>KeyValuePair<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> BBStruct<span style='color:#0000ff; '>></span> bMap <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>bbdata<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sStatus<span style='color:#0000ff; '>.</span>Equals<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Red</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sLine <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0,-10}{1,-50}{2}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                        bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>nUpdateId<span style='color:#0000ff; '>,</span> bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sVendorName<span style='color:#0000ff; '>,</span> bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sDefDate<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> sLine<span style='color:#0000ff; '>;</span>
+                    sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// yellow status</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>YELLOW Status\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>============================================================================\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>KeyValuePair<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> BBStruct<span style='color:#0000ff; '>></span> bMap <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>bbdata<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sStatus<span style='color:#0000ff; '>.</span>Equals<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Yellow</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> sLine <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0,-10}{1,-50}{2}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+                        bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>nUpdateId<span style='color:#0000ff; '>,</span> bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sVendorName<span style='color:#0000ff; '>,</span> bMap<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>.</span>sDefDate<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> sLine<span style='color:#0000ff; '>;</span>
+                    sEmailString <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\r\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// lets send the email...</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;MailMessage mail = new MailMessage();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;SmtpClient smtp = new SmtpClient("smtp.domain.net");</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;mail.From = new MailAddress("</span><span style='color:#7144c4; '>bigbrother@company.com</span><span style='color:#008000; '>");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;mail.To.Add("</span><span style='color:#7144c4; '>email@company.com</span><span style='color:#008000; '>");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;//mail.To.Add("</span><span style='color:#7144c4; '>bb_qa@company.com</span><span style='color:#008000; '>");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;mail.Subject = "BigBrother GSX VM Warnings!";            </span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;mail.Body = sEmailString;           </span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;smtp.Send(mail);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;* */</span>
+
+            MailMessage mail <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MailMessage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            SmtpClient smtp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SmtpClient<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>smtp.domain.com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            mail<span style='color:#0000ff; '>.</span>From <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MailAddress<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>bigbrother@company.com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            mail<span style='color:#0000ff; '>.</span>To<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>mail@bbmonitor.com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            mail<span style='color:#0000ff; '>.</span>Subject <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>BigBrother GSX VM Warnings!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            mail<span style='color:#0000ff; '>.</span>Body <span style='color:#0000ff; '>=</span> sEmailString<span style='color:#0000ff; '>;</span>
+
+            System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>.</span>NetworkCredential SMTPUserInfo <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>.</span>NetworkCredential<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>bigbrother@bbmonitor.com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>password</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            smtp<span style='color:#0000ff; '>.</span>UseDefaultCredentials <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            smtp<span style='color:#0000ff; '>.</span>Credentials <span style='color:#0000ff; '>=</span> SMTPUserInfo<span style='color:#0000ff; '>;</span>
+            smtp<span style='color:#0000ff; '>.</span>Send<span style='color:#0000ff; '>(</span>mail<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>

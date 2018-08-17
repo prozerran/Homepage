@@ -1,0 +1,220 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    10/10/2012</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// More Reference ...</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://en.wikipedia.org/wiki/Black%E2%80%93Scholes</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://www.espenhaug.com/black_scholes.html</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://www.numa.com/cgi-bin/numa/calc_op.pl</span>
+<span style='color:#008000; '>// </span>
+<span style='color:#008000; '>// This is only partial implementation of the Black Scholes Model.</span>
+<span style='color:#008000; '>// There are other ones such as ...</span>
+<span style='color:#008000; '>//    - Black</span>
+<span style='color:#008000; '>//    - Binomial</span>
+<span style='color:#008000; '>//    - Binomial Smooth</span>
+<span style='color:#008000; '>//    - Binomial N</span>
+<span style='color:#008000; '>//    - Garman Kolhagen</span>
+<span style='color:#008000; '>//    - etc</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+ 
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>stdafx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Black-Scholes.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>math.h</span><span style='color:#0000e6; '>"</span>
+ 
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>vector</span><span style='color:#0000e6; '>></span>
+ 
+<span style='color:#0000ff; font-weight:bold; '>void</span> BlackScholes<span style='color:#0000ff; '>::</span>AssignValue<span style='color:#0000ff; '>(</span>OptionProperty<span style='color:#0000ff; '>&amp;</span> opt<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      S <span style='color:#0000ff; '>=</span> opt<span style='color:#0000ff; '>.</span>price<span style='color:#0000ff; '>;</span>
+      K <span style='color:#0000ff; '>=</span> opt<span style='color:#0000ff; '>.</span>strike<span style='color:#0000ff; '>;</span>
+      T <span style='color:#0000ff; '>=</span> opt<span style='color:#0000ff; '>.</span>time<span style='color:#0000ff; '>;</span>
+      r <span style='color:#0000ff; '>=</span> opt<span style='color:#0000ff; '>.</span>interestrate<span style='color:#0000ff; '>;</span>
+      v <span style='color:#0000ff; '>=</span> opt<span style='color:#0000ff; '>.</span>volatility<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>f<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>double</span> x<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>double</span> pi <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>4.0</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>atan</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>1.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>exp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>x<span style='color:#0000ff; '>*</span>x<span style='color:#0000ff; '>*</span><span style='color:#800000; '>0.5</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>/</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>*</span>pi<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>N<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>double</span> x<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> Boole<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span><span style='color:#800000; '>10.0</span><span style='color:#0000ff; '>,</span> x<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>240</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>// Boole's rule of approximation</span>
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>Boole<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>double</span> StartPoint<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>double</span> EndPoint<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> n<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>vector</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>double</span><span style='color:#0000ff; '>></span> X<span style='color:#0000ff; '>(</span>n<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>vector</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>double</span><span style='color:#0000ff; '>></span> Y<span style='color:#0000ff; '>(</span>n<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>double</span> delta_x <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>EndPoint <span style='color:#0000ff; '>-</span> StartPoint<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>/</span><span style='color:#0000ff; font-weight:bold; '>double</span><span style='color:#0000ff; '>(</span>n<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span>n<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+            X<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> StartPoint <span style='color:#0000ff; '>+</span> i<span style='color:#0000ff; '>*</span>delta_x<span style='color:#0000ff; '>;</span>
+            Y<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> f<span style='color:#0000ff; '>(</span>X<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>double</span> sum <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> t<span style='color:#0000ff; '>=</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> t<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span>n<span style='color:#0000ff; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>/</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>;</span> t<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> ind <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>4</span><span style='color:#0000ff; '>*</span>t<span style='color:#0000ff; '>;</span>
+            sum <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>/</span><span style='color:#800000; '>45.0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>14</span><span style='color:#0000ff; '>*</span>Y<span style='color:#0000ff; '>[</span>ind<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>64</span><span style='color:#0000ff; '>*</span>Y<span style='color:#0000ff; '>[</span>ind<span style='color:#0000ff; '>+</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>24</span><span style='color:#0000ff; '>*</span>Y<span style='color:#0000ff; '>[</span>ind<span style='color:#0000ff; '>+</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>64</span><span style='color:#0000ff; '>*</span>Y<span style='color:#0000ff; '>[</span>ind<span style='color:#0000ff; '>+</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>14</span><span style='color:#0000ff; '>*</span>Y<span style='color:#0000ff; '>[</span>ind<span style='color:#0000ff; '>+</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>delta_x<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> sum<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>// The cumulative normal distribution function</span>
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>Calc_CND<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>double</span> X <span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      <span style='color:#0000ff; font-weight:bold; '>double</span> L<span style='color:#0000ff; '>,</span> K<span style='color:#0000ff; '>,</span> w <span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>double</span> <span style='color:#0000ff; font-weight:bold; '>const</span> a1 <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0.31938153</span><span style='color:#0000ff; '>,</span> a2 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>0.356563782</span><span style='color:#0000ff; '>,</span> a3 <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1.781477937</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>double</span> <span style='color:#0000ff; font-weight:bold; '>const</span> a4 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>-</span><span style='color:#800000; '>1.821255978</span><span style='color:#0000ff; '>,</span> a5 <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1.330274429</span><span style='color:#0000ff; '>;</span>
+ 
+      L <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>fabs</span><span style='color:#0000ff; '>(</span>X<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      K <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1.0</span> <span style='color:#0000ff; '>/</span> <span style='color:#0000ff; '>(</span><span style='color:#800000; '>1.0</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>0.2316419</span> <span style='color:#0000ff; '>*</span> L<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      w <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1.0</span> <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1.0</span> <span style='color:#0000ff; '>/</span> <span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span> <span style='color:#0000ff; '>*</span> PI<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>exp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>L <span style='color:#0000ff; '>*</span>L <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; '>(</span>a1 <span style='color:#0000ff; '>*</span> K <span style='color:#0000ff; '>+</span> a2 <span style='color:#0000ff; '>*</span> K <span style='color:#0000ff; '>*</span>K <span style='color:#0000ff; '>+</span> a3 <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>pow</span><span style='color:#0000ff; '>(</span>K<span style='color:#0000ff; '>,</span><span style='color:#800000; '>3</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> a4 <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>pow</span><span style='color:#0000ff; '>(</span>K<span style='color:#0000ff; '>,</span><span style='color:#800000; '>4</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> a5 <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>pow</span><span style='color:#0000ff; '>(</span>K<span style='color:#0000ff; '>,</span><span style='color:#800000; '>5</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>X <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span> <span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; '>{</span>
+            w<span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1.0</span> <span style='color:#0000ff; '>-</span> w<span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> w<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;The Black and Scholes (1973) Stock option formula</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;This is the theoretical (or fair) value of the option,</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;and should be compared with the actual trading price of the option in the market.</span>
+<span style='color:#008000; '>&#xa0;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;This Black-Scholes calculator allows you to figure out the value of a European call or put option.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;The calculator uses the stock's current share price, the option strike price, time to expiration,</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;risk-free interest rate, and volatility to derive the value of these options.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;The Black-Scholes calculation used by this tool assumes no dividend is paid on the stock.</span>
+<span style='color:#008000; '>*/</span>
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>Calc_BlackScholes<span style='color:#0000ff; '>(</span>OptionProperty<span style='color:#0000ff; '>&amp;</span> opt<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      AssignValue<span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>double</span> d1<span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>log</span><span style='color:#0000ff; '>(</span>S<span style='color:#0000ff; '>/</span>K<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>(</span>r<span style='color:#0000ff; '>+</span>v<span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>/</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>/</span><span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>double</span> d2<span style='color:#0000ff; '>=</span>d1<span style='color:#0000ff; '>-</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>.</span>type <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CALL<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> S <span style='color:#0000ff; '>*</span>Calc_CND<span style='color:#0000ff; '>(</span>d1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>-</span>K <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>exp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>r<span style='color:#0000ff; '>*</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>Calc_CND<span style='color:#0000ff; '>(</span>d2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span><span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>.</span>type <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> PUT<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> K <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; font-weight:bold; '>exp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>r <span style='color:#0000ff; '>*</span> T<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> Calc_CND<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>d2<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> S <span style='color:#0000ff; '>*</span> Calc_CND<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>d1<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>// The Greeks measurements</span>
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Delta = change in OPTION price with respect to change in Stock price.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if stock price changes, how sensitive will BS be. All Greeks are first derivatives. If</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;delta is .6, if stock price changes so will the option price but by 60% of the stock price</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;change. Delta is a sensitivity for the stock price. Delta is a percentage between 0 - 1.0.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;As it converges to 1, the stock price increases faster. As stock prices lower, option</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;prices converges out of the money.</span>
+<span style='color:#008000; '>*/</span>
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>Calc_Delta<span style='color:#0000ff; '>(</span>OptionProperty<span style='color:#0000ff; '>&amp;</span> opt<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      AssignValue<span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>double</span> d <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>log</span><span style='color:#0000ff; '>(</span>S<span style='color:#0000ff; '>/</span>K<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> T<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>r <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>0.5</span><span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> <span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>.</span>type <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CALL<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> N<span style='color:#0000ff; '>(</span>d<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> N<span style='color:#0000ff; '>(</span>d<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Gamma=Change ins DELTA with respect to change in stock price. Gamma is second derivative of</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;stock price but first derivative of delta. Longer term of gamma of call option vs time to</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;expire also indicates lower delta. Delta peaks at the money when the option is at the</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;money. This is where the delta is changing the most rapidly. After the peak, the delta</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;converges to 1 but becoming more stable. Delta converges more stable as it converges from 0</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;and the rate of change is slower.</span>
+<span style='color:#008000; '>*/</span>
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>Calc_Gamma<span style='color:#0000ff; '>(</span>OptionProperty<span style='color:#0000ff; '>&amp;</span> opt<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      AssignValue<span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>double</span> d <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>log</span><span style='color:#0000ff; '>(</span>S<span style='color:#0000ff; '>/</span>K<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> T<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>r <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>0.5</span><span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> <span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> f<span style='color:#0000ff; '>(</span>d<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> S <span style='color:#0000ff; '>/</span> v <span style='color:#0000ff; '>/</span> <span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Vega=Change in OPTION price with respect to CHANGE in volatility. This is significant since</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;the sensitivity is high. The higher vega means the option price is change (or more</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;sensitive) to changes in volatility. The longer the term, the more sensitive as vega grows</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;as the option life grows. Gamma peaks at the in the money.</span>
+<span style='color:#008000; '>*/</span>
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>Calc_Vega<span style='color:#0000ff; '>(</span>OptionProperty<span style='color:#0000ff; '>&amp;</span> opt<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      AssignValue<span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>double</span> d <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>log</span><span style='color:#0000ff; '>(</span>S<span style='color:#0000ff; '>/</span>K<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> T<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>r <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>0.5</span><span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> <span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>return</span> S<span style='color:#0000ff; '>*</span>f<span style='color:#0000ff; '>(</span>d<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Rho=Change in OPTION price with respect to change in interest rate. It is less sensitive as</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;compare to other inputs of volatility. Option price is more sensitive to changes in</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;volatility versus interest rate.</span>
+<span style='color:#008000; '>*/</span>
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>Calc_Rho<span style='color:#0000ff; '>(</span>OptionProperty<span style='color:#0000ff; '>&amp;</span> opt<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      AssignValue<span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>double</span> d <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>log</span><span style='color:#0000ff; '>(</span>S<span style='color:#0000ff; '>/</span>K<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> T<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>r <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>0.5</span><span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> <span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>.</span>type <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CALL<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> T<span style='color:#0000ff; '>*</span>K<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>exp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>r<span style='color:#0000ff; '>*</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>N<span style='color:#0000ff; '>(</span>d <span style='color:#0000ff; '>-</span> v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span>T<span style='color:#0000ff; '>*</span>K<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>exp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>r<span style='color:#0000ff; '>*</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>N<span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> d<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Theta=Change in OPTION price with respect to change in Term (T). This is known as time</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;decay. This is always negative. As time passes, the option and gets closer to expiration,</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;it becomes less valueable. Time erodes the value of the option.</span>
+<span style='color:#008000; '>*/</span>
+<span style='color:#0000ff; font-weight:bold; '>double</span> BlackScholes<span style='color:#0000ff; '>::</span>Calc_Theta<span style='color:#0000ff; '>(</span>OptionProperty<span style='color:#0000ff; '>&amp;</span> opt<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+      AssignValue<span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+ 
+      <span style='color:#0000ff; font-weight:bold; '>double</span> d <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>log</span><span style='color:#0000ff; '>(</span>S<span style='color:#0000ff; '>/</span>K<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> T<span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>r <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>0.5</span><span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> <span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>opt<span style='color:#0000ff; '>.</span>type <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> CALL<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span>S<span style='color:#0000ff; '>*</span>f<span style='color:#0000ff; '>(</span>d<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>/</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>/</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> r<span style='color:#0000ff; '>*</span>K<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>exp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>r<span style='color:#0000ff; '>*</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>N<span style='color:#0000ff; '>(</span>d <span style='color:#0000ff; '>-</span> v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>-</span>S<span style='color:#0000ff; '>*</span>f<span style='color:#0000ff; '>(</span>d<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>v<span style='color:#0000ff; '>/</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>/</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> r<span style='color:#0000ff; '>*</span>K<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>exp</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>-</span>r<span style='color:#0000ff; '>*</span>T<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>*</span>N<span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>sqrt</span><span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>-</span> d<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+ 
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>int _tmain(int argc, _TCHAR* argv[])</span>
+<span style='color:#008000; '>{</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;IDerivativeModel* pDev = new BlackScholes();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;OptionProperty opt;</span>
+<span style='color:#008000; '>&#xa0;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// Option properties</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;opt.price = 60.0;             // stock price</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;opt.strike = 65.0;                  // strike</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;opt.time = 0.25;              // 3 month</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;opt.interestrate = 0.08;      // 8%</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;opt.volatility = 0.3;         // 30%</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;opt.type = CALL;</span>
+<span style='color:#008000; '>&#xa0;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// Derivative Measurements   </span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;printf("Black Scholes Delta = %f\n", pDev->Calc_Delta(opt));</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;printf("Black Scholes Gamma = %f\n", pDev->Calc_Gamma(opt));</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;printf("Black Scholes Vega  = %f\n", pDev->Calc_Vega(opt));</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;printf("Black Scholes Rho   = %f\n", pDev->Calc_Rho(opt));</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;printf("Black Scholes Theta = %f\n", pDev->Calc_Theta(opt));</span>
+<span style='color:#008000; '>&#xa0;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// Black-Scholes Specific</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;BlackScholes* pbs = static_cast&lt;BlackScholes*>(pDev);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;printf("Black Scholes Value = %f\n", pbs->Calc_BlackScholes(opt));</span>
+<span style='color:#008000; '>&#xa0;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;return 0;</span>
+<span style='color:#008000; '>}</span>
+<span style='color:#008000; '>*/</span>
+</pre>

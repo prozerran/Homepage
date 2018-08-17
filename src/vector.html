@@ -1,0 +1,527 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    6/1/2005</span>
+<span style='color:#008000; '>// File:    Vector.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Description:</span>
+<span style='color:#008000; '>//      Implementation of class Vector. Vector performs all</span>
+<span style='color:#008000; '>//      necessary task to maintain the list structure. The list</span>
+<span style='color:#008000; '>//      is a bi-directional doubly linked list containing nodes</span>
+<span style='color:#008000; '>//      of records. ADT member functions performs the</span>
+<span style='color:#008000; '>//      restructuring and reattaching the link list.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>iostream.h</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Node.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Vector.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Vector default constructor</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Vector<span style='color:#0000ff; '>::</span>Vector<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>curr <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>tail <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Vector default copy constructor</span>
+<span style='color:#008000; '>// Performs a deep copy of a vector.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Vector<span style='color:#0000ff; '>::</span>Vector<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Vector <span style='color:#0000ff; '>&amp;</span>v<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>.</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        head <span style='color:#0000ff; '>=</span> curr <span style='color:#0000ff; '>=</span> tail <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// copy the head node</span>
+        head <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        pNode newptr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+        pNode oldptr <span style='color:#0000ff; '>=</span> v<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// copy the rest of the list</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>oldptr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+            newptr <span style='color:#0000ff; '>=</span> newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>*</span>newptr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span>oldptr<span style='color:#0000ff; '>;</span>
+            oldptr <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Vector default destructor</span>
+<span style='color:#008000; '>// Deletes all nodes to prevent memory leak</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Vector<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>Vector<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode temp <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>head <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        head <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> temp<span style='color:#0000ff; '>;</span>
+        temp <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    head <span style='color:#0000ff; '>=</span> curr <span style='color:#0000ff; '>=</span> tail <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Vector overloaded = operator</span>
+<span style='color:#008000; '>// Allows a vector object to be assigned to another vector</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Vector<span style='color:#0000ff; '>&amp;</span> Vector<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Vector <span style='color:#0000ff; '>&amp;</span>v<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>&amp;</span>v<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// deletes old vector</span>
+        <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>~</span>Vector<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>.</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            head <span style='color:#0000ff; '>=</span> curr <span style='color:#0000ff; '>=</span> tail <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// copy the head node</span>
+            head <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            pNode newptr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+            pNode oldptr <span style='color:#0000ff; '>=</span> v<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// copy the rest of the list</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>oldptr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+                newptr <span style='color:#0000ff; '>=</span> newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>*</span>newptr <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span>oldptr<span style='color:#0000ff; '>;</span>
+                oldptr <span style='color:#0000ff; '>=</span> oldptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            newptr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Vector overloaded == operator</span>
+<span style='color:#008000; '>// Allows vector objects to compare each other for equality</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Vector<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Vector <span style='color:#0000ff; '>&amp;</span>v<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> VEqual <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    pNode v1 <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+    pNode v2 <span style='color:#0000ff; '>=</span> v<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>Length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> v<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>v1 <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            VEqual <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>v1 <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>*</span>v2<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                VEqual <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                v1 <span style='color:#0000ff; '>=</span> v1<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                v2 <span style='color:#0000ff; '>=</span> v2<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> VEqual<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Vector overloaded == operator</span>
+<span style='color:#008000; '>// Allows vector objects to compare each other for inequality</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Vector<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>operator</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Vector <span style='color:#0000ff; '>&amp;</span>v<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> v<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  InsertAtFront(const Data data)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       data        -- a data of records</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     curr->data  -- the data inserted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Inserts a data at the beginning of the list.</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>InsertAtFront<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Data data<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode temp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+    temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data <span style='color:#0000ff; '>=</span> data<span style='color:#0000ff; '>;</span>
+    temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// special case when list is empty</span>
+        head <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+        head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        tail <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// inserts the node at beginning of list</span>
+        head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+        temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+        head <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    curr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  InsertAtPlace(const Data data)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       data        -- a data of records</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     curr->data  -- the data inserted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Inserts a data at it's currect sorted place.</span>
+<span style='color:#008000; '>//              Neighboring nodes are reattached for list integrity</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>InsertAtPlace<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Data data<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode temp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+    temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data <span style='color:#0000ff; '>=</span> data<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>do</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// special case when list is empty</span>
+            curr <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+            head <span style='color:#0000ff; '>=</span> tail <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// special case at the beginning of the list</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+            head <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>></span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// special case at the end of the list</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+            tail <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>></span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// insert between this node and its previous node</span>
+            temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>;</span>
+            temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            curr <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>></span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// insert between this node and its next node</span>
+            temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            curr <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key<span style='color:#0000ff; '>)</span>
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>.</span>key <span style='color:#0000ff; '>></span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key<span style='color:#0000ff; '>)</span>
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span> <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  InsertAtEnd(const Data data)</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       data        -- a data of records</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     curr->data  -- the data inserted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Inserts a data at the end of the list.</span>
+<span style='color:#008000; '>//              Similar to Push() and Enqueue()</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>InsertAtEnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> Data data<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode temp <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Node<span style='color:#0000ff; '>;</span>
+    temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data <span style='color:#0000ff; '>=</span> data<span style='color:#0000ff; '>;</span>
+    temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>tail <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// special case when list is empty</span>
+        tail <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+        tail<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        head <span style='color:#0000ff; '>=</span> tail<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// inserts at the end of the list</span>
+        tail<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+        temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> tail<span style='color:#0000ff; '>;</span>
+        tail <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    curr <span style='color:#0000ff; '>=</span> tail<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Returns the data at the head of the list</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>PeekAtFront<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Returns the data at the current place of the list</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>PeekAtPlace<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Returns the data at the end of the list</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>PeekAtEnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> tail<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  DeleteAtFront()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     data    -- the data deleted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Deletes the head of of the list</span>
+<span style='color:#008000; '>//              Similar to Dequeue()</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>DeleteAtFront<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Data data<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>head <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        pNode temp <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+        data <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+        head <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+        head <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>?</span> head <span style='color:#0000ff; '>=</span> tail <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>:</span> head<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        curr <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> temp<span style='color:#0000ff; '>;</span>
+        temp <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  DeleteAtPlace()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PARAM:       key     -- the data key to be deleted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     data    -- the data deleted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Deletes the node record with the Id key</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>DeleteAtPlace<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>int</span> key<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Data data<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            pNode temp <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            data <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// special case when list is a singal node</span>
+                curr <span style='color:#0000ff; '>=</span> head <span style='color:#0000ff; '>=</span> tail <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// special case at the beginning of the list</span>
+                curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+                head <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// special case at the end of the list</span>
+                curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>;</span>
+                curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+                tail <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// inserts and reattach nodes</span>
+                curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+                curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>;</span>
+                curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+                curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>delete</span> temp<span style='color:#0000ff; '>;</span>
+            temp <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>&lt;</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key<span style='color:#0000ff; '>)</span>
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>key <span style='color:#0000ff; '>></span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>.</span>key<span style='color:#0000ff; '>)</span>
+            curr <span style='color:#0000ff; '>=</span> curr<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  DeleteAtEnd()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     data    -- the data deleted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Deletes the end of of the list</span>
+<span style='color:#008000; '>//              Simplar to Pop()</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+Data Vector<span style='color:#0000ff; '>::</span>DeleteAtEnd<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Data data<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>tail <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        pNode temp <span style='color:#0000ff; '>=</span> tail<span style='color:#0000ff; '>;</span>
+        data <span style='color:#0000ff; '>=</span> tail<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>data<span style='color:#0000ff; '>;</span>
+        tail <span style='color:#0000ff; '>=</span> tail<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>prev<span style='color:#0000ff; '>;</span>
+        tail <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>?</span> tail <span style='color:#0000ff; '>=</span> head <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span> <span style='color:#0000ff; '>:</span> tail<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+        curr <span style='color:#0000ff; '>=</span> tail<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>delete</span> temp<span style='color:#0000ff; '>;</span>
+        temp <span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> data<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  Length()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     length  -- the length of the list</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Traverse the list and determines it's length</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> Vector<span style='color:#0000ff; '>::</span>Length<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    pNode temp <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>int</span> length <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>temp <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        length<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+        temp <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> length<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  IsEmpty()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// RETURNS:     true if list is empty, false otherwise</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Determines if the list is empty</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>bool</span> Vector<span style='color:#0000ff; '>::</span>IsEmpty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span>curr <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  SortVector()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// PRE:         A vector out of order that needs to be sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// CALLS        IsEmpty()           --  Determine list empty?</span>
+<span style='color:#008000; '>//              DeleteAtFront()     --  Dequeue()</span>
+<span style='color:#008000; '>//              InsertAtPlace()     --  Inserts at sorted place</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// POST:        The same vector sorted</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Sorts the vector into accending order</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Vector<span style='color:#0000ff; '>::</span>SortVector<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    Vector v<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>IsEmpty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>v<span style='color:#0000ff; '>.</span>InsertAtPlace<span style='color:#0000ff; '>(</span>DeleteAtFront<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span><span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>*</span><span style='color:#0000ff; font-weight:bold; '>this</span> <span style='color:#0000ff; '>=</span> v<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// IDENTIFIER:  DisplayList()</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// COMMENTS:    Displays the entire vector array</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>void</span> Vector<span style='color:#0000ff; '>::</span>DisplayList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span>
+<span style='color:#0000ff; '>{</span>
+    pNode temp <span style='color:#0000ff; '>=</span> head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>temp <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; '>*</span>temp<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; font-weight:bold; '>endl</span><span style='color:#0000ff; '>;</span>
+        temp <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// ================================================================</span>
+<span style='color:#008000; '>// Overloaded &lt;&lt; to display Vector (DEQ) objects</span>
+<span style='color:#008000; '>// ================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>ostream</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ostream</span> <span style='color:#0000ff; '>&amp;</span>out<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> Vector <span style='color:#0000ff; '>&amp;</span>v<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    pNode temp <span style='color:#0000ff; '>=</span> v<span style='color:#0000ff; '>.</span>head<span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>temp <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#808080; font-weight:bold; '>NULL</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        out <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; '>*</span>temp<span style='color:#0000ff; '>;</span>
+        temp <span style='color:#0000ff; '>=</span> temp<span style='color:#0000ff; '>-</span><span style='color:#0000ff; '>></span>next<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; font-weight:bold; '>return</span> out<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
