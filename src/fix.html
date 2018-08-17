@@ -1,0 +1,180 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Yee Hsu</span>
+<span style='color:#008000; '>// Date:    9/30/2013</span>
+<span style='color:#008000; '>// File:    FixString.cpp</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    An implementation of the </span><span style='color:#ffffff; background:#808000; '>FIX protocol. The FixString class allows</span>
+<span style='color:#008000; '>//      you to create a </span><span style='color:#ffffff; background:#808000; '>FIX string that is exchange compatible according</span>
+<span style='color:#008000; '>//      to the standards as describe in the </span><span style='color:#ffffff; background:#808000; '>FIX protocol. FIX is use to</span>
+<span style='color:#008000; '>//      communicate between institutions, brokers/dealers, and exchange</span>
+<span style='color:#008000; '>//      for financial interchange to help facilitate market orders. This</span>
+<span style='color:#008000; '>//      particular implementation is very fast and is suitable to plug</span>
+<span style='color:#008000; '>//      into any </span><span style='color:#ffffff; background:#808000; '>FIX engine for Ultra-Low Latency Direct-to-Market Orders</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>StdAfx.h</span><span style='color:#0000e6; '>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>FixString.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> FixEngine
+<span style='color:#0000ff; '>{</span>
+    FixString<span style='color:#0000ff; '>::</span>FixString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>:</span> m_fixvec<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> m_fixmap<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>m_fixstr<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m_fixstr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    FixString<span style='color:#0000ff; '>::</span><span style='color:#0000ff; '>~</span>FixString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>void</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> FixString<span style='color:#0000ff; '>::</span>BeginFix<span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> msgtype<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> senderCompId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> targetCompId<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> applVerId <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        m_fixvec<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        m_fixmap<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        SetTag<span style='color:#0000ff; '>(</span>TAG_BEGIN_STRING<span style='color:#0000ff; '>,</span> FIX_VERSION_5_0<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        SetTag<span style='color:#0000ff; '>(</span>TAG_BODY_LENGTH<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        SetTag<span style='color:#0000ff; '>(</span>TAG_MESSAGE_TYPE<span style='color:#0000ff; '>,</span> msgtype<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        SetTag<span style='color:#0000ff; '>(</span>TAG_SENDER_COMP_ID<span style='color:#0000ff; '>,</span> senderCompId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        SetTag<span style='color:#0000ff; '>(</span>TAG_TARGET_COMP_ID<span style='color:#0000ff; '>,</span> targetCompId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>applVerId<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            SetTag<span style='color:#0000ff; '>(</span>TAG_APPLICATION_VERSION_ID<span style='color:#0000ff; '>,</span> applVerId<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> FixString<span style='color:#0000ff; '>::</span>SetTag<span style='color:#0000ff; '>(</span> FixTag tag<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> value <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_fixmap<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>(</span>tag<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> m_fixmap<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            m_fixmap<span style='color:#0000ff; '>.</span>insert<span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span>make_pair<span style='color:#0000ff; '>(</span>tag<span style='color:#0000ff; '>,</span> value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            m_fixvec<span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>tag<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>else</span>
+        <span style='color:#0000ff; '>{</span>
+            m_fixmap<span style='color:#0000ff; '>[</span>tag<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> value<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> FixString<span style='color:#0000ff; '>::</span>SetTag<span style='color:#0000ff; '>(</span> FixTag tag<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> value <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>char</span> buffer<span style='color:#0000ff; '>[</span><span style='color:#800000; '>32</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        SetTag<span style='color:#0000ff; '>(</span>tag<span style='color:#0000ff; '>,</span> buffer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> FixString<span style='color:#0000ff; '>::</span>SetTag<span style='color:#0000ff; '>(</span> FixTag tag<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>float</span> value <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>char</span> buffer<span style='color:#0000ff; '>[</span><span style='color:#800000; '>32</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>buffer<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%f</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        SetTag<span style='color:#0000ff; '>(</span>tag<span style='color:#0000ff; '>,</span> buffer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>void</span> FixString<span style='color:#0000ff; '>::</span>EndFix<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> offset <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// calculate and set body length</span>
+        <span style='color:#008000; '>// 2nd element is always tag/value pair after TAG_BODY_LENGTH</span>
+        <span style='color:#008000; '>// assume TAG_CHECKSUM has not been added into the struct, so we can sum up the length</span>
+        <span style='color:#0000ff; font-weight:bold; '>char</span> body<span style='color:#0000ff; '>[</span>FIX_MAX_STR_LEN<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>size_t</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> m_fixvec<span style='color:#0000ff; '>.</span>size<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>String</span> str<span style='color:#0000ff; '>;</span>
+            FixTag tag <span style='color:#0000ff; '>=</span> m_fixvec<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>GetFixValuebyTag<span style='color:#0000ff; '>(</span>tag<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                offset <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>body <span style='color:#0000ff; '>+</span> offset<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#007997; '>%d</span><span style='color:#0000e6; '>=</span><span style='color:#007997; '>%s</span><span style='color:#007997; '>%c</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> tag<span style='color:#0000ff; '>,</span> str<span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> FIX_SOH_DELIMITER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>int</span> len <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strlen</span><span style='color:#0000ff; '>(</span>body<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        SetTag<span style='color:#0000ff; '>(</span>TAG_BODY_LENGTH<span style='color:#0000ff; '>,</span> len<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// combine head + body with the calculated length</span>
+        <span style='color:#0000ff; font-weight:bold; '>memset</span><span style='color:#0000ff; '>(</span>m_fixstr<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span>m_fixstr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        offset <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span>m_fixstr<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>8=</span><span style='color:#007997; '>%s</span><span style='color:#007997; '>%c</span><span style='color:#0000e6; '>9=</span><span style='color:#007997; '>%d</span><span style='color:#007997; '>%c</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> 
+            GetFixValuebyTagFast<span style='color:#0000ff; '>(</span>TAG_BEGIN_STRING<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> FIX_SOH_DELIMITER<span style='color:#0000ff; '>,</span>
+            len<span style='color:#0000ff; '>,</span> FIX_SOH_DELIMITER<span style='color:#0000ff; '>,</span> body<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>long</span> buflen <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>strlen</span><span style='color:#0000ff; '>(</span>m_fixstr<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// calculate and set checksum</span>
+        <span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span> cks <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span><span style='color:#0000ff; '>(</span> <span style='color:#0000ff; font-weight:bold; '>int</span> idx <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> idx <span style='color:#0000ff; '>&lt;</span> buflen<span style='color:#0000ff; '>;</span> cks <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span> m_fixstr<span style='color:#0000ff; '>[</span>idx<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    
+        <span style='color:#0000ff; font-weight:bold; '>sprintf</span><span style='color:#0000ff; '>(</span> m_fixstr <span style='color:#0000ff; '>+</span> offset<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>10=</span><span style='color:#007997; '>%03d</span><span style='color:#007997; '>%c</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span> cks <span style='color:#0000ff; '>%</span> <span style='color:#800000; '>256</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> FIX_SOH_DELIMITER<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        SetTag<span style='color:#0000ff; '>(</span>TAG_CHECKSUM<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span> cks <span style='color:#0000ff; '>%</span> <span style='color:#800000; '>256</span> <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>bool</span> FixString<span style='color:#0000ff; '>::</span>GetFixValuebyTag<span style='color:#0000ff; '>(</span> FixTag tag<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>String</span><span style='color:#0000ff; '>&amp;</span> value <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        value<span style='color:#0000ff; '>.</span>clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>m_fixmap<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>find</span><span style='color:#0000ff; '>(</span>tag<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> m_fixmap<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            value <span style='color:#0000ff; '>=</span> m_fixmap<span style='color:#0000ff; '>[</span>tag<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> FixString<span style='color:#0000ff; '>::</span>GetFixValuebyTagFast<span style='color:#0000ff; '>(</span> FixTag tag <span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> m_fixmap<span style='color:#0000ff; '>[</span>tag<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>c_str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#008000; '>// Belongs in another file...</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> _tmain<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> argc<span style='color:#0000ff; '>,</span> _TCHAR<span style='color:#0000ff; '>*</span> argv<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+    FixString fs<span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;// 8=</span><span style='color:#ffffff; background:#808000; '>FIX.4.2|9=42|35=0|49=A|56=B|34=12|52=20100304-07:59:30|10=185|</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.BeginFix("0", "A", "B", "");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_MESSAGE_SEQ_NUM,    12);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_SENDING_TIME,      "20100304-07:59:30");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.EndFix();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#008000; '>// 8=</span><span style='color:#ffffff; background:#808000; '>FIX.4.2|9=65|35=A|49=SERVER|56=CLIENT|34=177|52=20090107-18:15:16|98=0|108=30|10=062|</span>
+    fs<span style='color:#0000ff; '>.</span>BeginFix<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>A</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SERVER</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>CLIENT</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    fs<span style='color:#0000ff; '>.</span>SetTag<span style='color:#0000ff; '>(</span>TAG_MESSAGE_SEQ_NUM<span style='color:#0000ff; '>,</span>    <span style='color:#800000; '>177</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    fs<span style='color:#0000ff; '>.</span>SetTag<span style='color:#0000ff; '>(</span>TAG_SENDING_TIME<span style='color:#0000ff; '>,</span>      <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>20090107-18:15:16</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    fs<span style='color:#0000ff; '>.</span>SetTag<span style='color:#0000ff; '>(</span>TAG_ENCRYPTION_METHOD<span style='color:#0000ff; '>,</span>  <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    fs<span style='color:#0000ff; '>.</span>SetTag<span style='color:#0000ff; '>(</span>TAG_HEARTBEAT_INTERVAL<span style='color:#0000ff; '>,</span>  <span style='color:#800000; '>30</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    fs<span style='color:#0000ff; '>.</span>EndFix<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;// 8=</span><span style='color:#ffffff; background:#808000; '>FIX.4.2 | 9=178 | 35=8 | 49=PHLX | 56=PERS | 52=20071123-05:30:00.000 | 11=ATOMNOCCC9990900 | 20=3 | 150=E | 39=E | 55=MSFT | 167=CS | 54=1 | 38=15 | 40=2 | 44=15 | 58=PHLX EQUITY TESTING | 59=0 | 47=C | 32=0 | 31=0 | 151=15 | 14=0 | 6=0 | 10=128 |</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.BeginFix("8", "PHLX", "PERS", "");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_SENDING_TIME,          "20071123-05:30:00.000");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_CLIENT_ORDERID,        "ATOMNOCCC9990900");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_EXECUTION_TRANSACTION_TYPE,  3);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_EXECUTION_TYPE,        "E");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_ORDER_STATUS,          "E");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_SYMBOL,            "MSFT");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_SECURITY_TYPE,        "CS");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_SIDE,              1);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_ORDER_QTY,          15);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_ORDER_TYPE,          2);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_PRICE,            15);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_FREE_TEXT,          "PHLX EQUITY TESTING");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_TIME_IN_FORCE,        0);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_RULE_80A,            "C");</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_LAST_QTY,            0);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_LAST_PRICE,          0);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_LEAVES_QTY,          15);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_CUMMULATIVE_QTY,        0);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.SetTag(TAG_AVERAGE_PRICE,        0);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;fs.EndFix();</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#008000; '>// In Linux, you can replace SOH char with pipe, display using</span>
+    <span style='color:#008000; '>// $ ./a.out | tr '\1' '|'</span>
+    <span style='color:#008000; '>//printf("%s", fs.GetFixStr());</span>
+
+    <span style='color:#008000; '>// printf in human readable format</span>
+    FixVec<span style='color:#0000ff; '>&amp;</span> fv <span style='color:#0000ff; '>=</span> fs<span style='color:#0000ff; '>.</span>GetFixVec<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>FixString:</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>FixVec<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>iterator</span> iter <span style='color:#0000ff; '>=</span> fv<span style='color:#0000ff; '>.</span>begin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> iter <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> fv<span style='color:#0000ff; '>.</span>end<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span>iter<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>printf</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#007997; '>%5d</span><span style='color:#0000e6; '> : [</span><span style='color:#007997; '>%s</span><span style='color:#0000e6; '>]</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>,</span> fs<span style='color:#0000ff; '>.</span>GetFixValuebyTagFast<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>*</span>iter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
