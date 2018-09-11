@@ -1,0 +1,120 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ==========================================================================</span>
+<span style='color:#008000; '>// Author:  Tim Hsu</span>
+<span style='color:#008000; '>// Date:    9/11/2018</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Desc:    Simplified version of a blockchain, not DLT (distributed ledger technology)</span>
+<span style='color:#008000; '>//          Demonstrate creating a block, and chaining them together as you add block.</span>
+<span style='color:#008000; '>//          The chain is supported by its hash and the previous block hash, which can</span>
+<span style='color:#008000; '>//          be verified (as proof of work) to ensure data integrity</span>
+<span style='color:#008000; '>// ==========================================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Reflection<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Newtonsoft<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Blockchain
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Block
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> DateTime Timestamp <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> PrevHash <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> Content <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Blockchain
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>string</span> filepath <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\\BlockFolder</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>string</span> filename <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\\INDEX</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Blockchain<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// create folder</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filepath <span style='color:#0000ff; '>=</span> Path<span style='color:#0000ff; '>.</span>GetDirectoryName<span style='color:#0000ff; '>(</span>Assembly<span style='color:#0000ff; '>.</span>GetExecutingAssembly<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Location<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filepath<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filename <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filepath <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>;</span>
+            Directory<span style='color:#0000ff; '>.</span>CreateDirectory<span style='color:#0000ff; '>(</span>filepath<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>File<span style='color:#0000ff; '>.</span>Exists<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                CreateEmptyBlock<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> CreateEmptyBlock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> hash_str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Block b <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Block<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Timestamp <span style='color:#0000ff; '>=</span> DateTime<span style='color:#0000ff; '>.</span>UtcNow<span style='color:#0000ff; '>,</span>
+                PrevHash <span style='color:#0000ff; '>=</span> hash_str<span style='color:#0000ff; '>,</span>
+                Content <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            File<span style='color:#0000ff; '>.</span>WriteAllText<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>,</span> JsonConvert<span style='color:#0000ff; '>.</span>SerializeObject<span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> AddBlock<span style='color:#0000ff; '>(</span>Block b<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> json_str <span style='color:#0000ff; '>=</span> File<span style='color:#0000ff; '>.</span>ReadAllText<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Block prev_block <span style='color:#0000ff; '>=</span> JsonConvert<span style='color:#0000ff; '>.</span>DeserializeObject<span style='color:#0000ff; '>&lt;</span>Block<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>json_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// prepare and add new block</span>
+            b<span style='color:#0000ff; '>.</span>Timestamp <span style='color:#0000ff; '>=</span> DateTime<span style='color:#0000ff; '>.</span>UtcNow<span style='color:#0000ff; '>;</span>
+            b<span style='color:#0000ff; '>.</span>PrevHash <span style='color:#0000ff; '>=</span> prev_block<span style='color:#0000ff; '>.</span>PrevHash<span style='color:#0000ff; '>;</span>
+            json_str <span style='color:#0000ff; '>=</span> JsonConvert<span style='color:#0000ff; '>.</span>SerializeObject<span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> hash_str <span style='color:#0000ff; '>=</span> Utility<span style='color:#0000ff; '>.</span>ComputeSha256Hash<span style='color:#0000ff; '>(</span>json_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            File<span style='color:#0000ff; '>.</span>WriteAllText<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>,</span> json_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            File<span style='color:#0000ff; '>.</span>Move<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filepath <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> hash_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            CreateEmptyBlock<span style='color:#0000ff; '>(</span>hash_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Block GetBlock<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> n<span style='color:#0000ff; '>)</span>    <span style='color:#008000; '>// n is how far back from dummy block</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> json_str <span style='color:#0000ff; '>=</span> File<span style='color:#0000ff; '>.</span>ReadAllText<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Block b <span style='color:#0000ff; '>=</span> JsonConvert<span style='color:#0000ff; '>.</span>DeserializeObject<span style='color:#0000ff; '>&lt;</span>Block<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>json_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> n<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>string</span> filename <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filepath <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> b<span style='color:#0000ff; '>.</span>PrevHash<span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>File<span style='color:#0000ff; '>.</span>Exists<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+                json_str <span style='color:#0000ff; '>=</span> File<span style='color:#0000ff; '>.</span>ReadAllText<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                b <span style='color:#0000ff; '>=</span> JsonConvert<span style='color:#0000ff; '>.</span>DeserializeObject<span style='color:#0000ff; '>&lt;</span>Block<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>json_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> b<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> VerifyBlockChain<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>  <span style='color:#008000; '>// proof of work</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>string</span> json_str <span style='color:#0000ff; '>=</span> File<span style='color:#0000ff; '>.</span>ReadAllText<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                Block b <span style='color:#0000ff; '>=</span> JsonConvert<span style='color:#0000ff; '>.</span>DeserializeObject<span style='color:#0000ff; '>&lt;</span>Block<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>json_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>do</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> filename <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>filepath <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\\</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> b<span style='color:#0000ff; '>.</span>PrevHash<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>File<span style='color:#0000ff; '>.</span>Exists<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+                    json_str <span style='color:#0000ff; '>=</span> File<span style='color:#0000ff; '>.</span>ReadAllText<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>string</span> hash <span style='color:#0000ff; '>=</span> Utility<span style='color:#0000ff; '>.</span>ComputeSha256Hash<span style='color:#0000ff; '>(</span>json_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>.</span>PrevHash <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> hash<span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+
+                    b <span style='color:#0000ff; '>=</span> JsonConvert<span style='color:#0000ff; '>.</span>DeserializeObject<span style='color:#0000ff; '>&lt;</span>Block<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>json_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>IsNullOrEmpty<span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>.</span>PrevHash<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
