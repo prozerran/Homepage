@@ -4,6 +4,10 @@ https://tohtml.com/
 - html colors
 https://www.w3schools.com/colors/colors_picker.asp
 
+- html scrapper
+wget --recursive --html-extension --page-requisites --convert-links http://website.com
+
+===================================================================================================================
 
 https://docs.microsoft.com/en-us/aspnet/web-api/overview/getting-started-with-aspnet-web-api/tutorial-your-first-web-api
 https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/
