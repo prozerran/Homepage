@@ -7,6 +7,9 @@ https://www.w3schools.com/colors/colors_picker.asp
 - html scrapper
 wget --recursive --html-extension --page-requisites --convert-links http://website.com
 
+- web api 2
+https://www.youtube.com/watch?v=0pcM6teVdKk&list=PL6n9fhu94yhW7yoUOGNOfHurUE6bpOO2b
+
 ===================================================================================================================
 
 https://docs.microsoft.com/en-us/aspnet/web-api/overview/getting-started-with-aspnet-web-api/tutorial-your-first-web-api
