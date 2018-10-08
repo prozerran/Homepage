@@ -1,0 +1,260 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>.</span>Http<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Web<span style='color:#0000ff; '>.</span>Http<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> WebApiDemo<span style='color:#0000ff; '>.</span>Models<span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>//  ================= TOP ====================================</span>
+<span style='color:#008000; '>// ASP.NET WEB API 2.0 TUTURIAL</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>https://www.youtube.com/watch?v=0pcM6teVdKk&amp;list=PL6n9fhu94yhW7yoUOGNOfHurUE6bpOO2b</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// URL: </span><span style='color:#5555dd; '>http://localhost:63609/</span>
+<span style='color:#008000; '>// API: </span><span style='color:#5555dd; '>http://localhost:63609/Help</span>
+<span style='color:#008000; '>// HTM: </span><span style='color:#5555dd; '>http://localhost:63609/testapi.html</span>
+<span style='color:#008000; '>// ===========================================================</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> WebApiDemo<span style='color:#0000ff; '>.</span>Controllers
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> ValuesController <span style='color:#0000ff; '>:</span> ApiController
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/values/</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> IEnumerable<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> Get<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>value1</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>value2</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/values/1</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> Get<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>value</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>BasicAuthen<span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/values/5?authen=1</span>
+        <span style='color:#008000; '>// requires Basic Authen in header</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> Get<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> authen<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>LOGIN OK</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/values/5</span>
+        <span style='color:#008000; '>// HEAD request</span>
+        <span style='color:#0000ff; '>[</span>HttpHead<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> HttpResponseMessage MyHead<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>[</span>FromUri<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>int</span> id <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>Found<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// POST api/values</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/values</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> HttpResponseMessage Post<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>[</span>FromBody<span style='color:#0000ff; '>]</span><span style='color:#0000ff; font-weight:bold; '>string</span> value<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>           
+                <span style='color:#008000; '>// do the add...</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>var</span> message <span style='color:#0000ff; '>=</span> Request<span style='color:#0000ff; '>.</span>CreateResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>Created<span style='color:#0000ff; '>,</span> value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                message<span style='color:#0000ff; '>.</span>Headers<span style='color:#0000ff; '>.</span>Location <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Uri<span style='color:#0000ff; '>(</span>Request<span style='color:#0000ff; '>.</span>RequestUri <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>POST</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> message<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateErrorResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>BadRequest<span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// PUT api/values/5</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/values/2</span>
+        <span style='color:#008000; '>// BODY : 5</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> HttpResponseMessage Put<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>[</span>FromBody<span style='color:#0000ff; '>]</span><span style='color:#0000ff; font-weight:bold; '>string</span> value<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>id <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateErrorResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>NotFound<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>id not found</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// do the real update</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>OK<span style='color:#0000ff; '>,</span> value<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateErrorResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>BadRequest<span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// DELETE api/values/5</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/values/-1</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> HttpResponseMessage Delete<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>id <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateErrorResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>NotFound<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>id not found</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#008000; '>// do the real delete</span>
+                    <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>OK<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateErrorResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>BadRequest<span style='color:#0000ff; '>,</span> ex<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>/////////////////////////////////////////////////////////////////////////////////////////////////////</span>
+
+    <span style='color:#0000ff; '>[</span>RoutePrefix<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>api/students</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> StudentsController <span style='color:#0000ff; '>:</span> ApiController
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> List<span style='color:#0000ff; '>&lt;</span>Students<span style='color:#0000ff; '>></span> students <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>Students<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>new</span> Students<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> Id <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span> Name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Tom</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>,</span>
+            <span style='color:#0000ff; font-weight:bold; '>new</span> Students<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> Id <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span> Name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Ben</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>,</span>
+            <span style='color:#0000ff; font-weight:bold; '>new</span> Students<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> Id <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>3</span><span style='color:#0000ff; '>,</span> Name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Tim</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/students/</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> IEnumerable<span style='color:#0000ff; '>&lt;</span>Students<span style='color:#0000ff; '>></span> Get<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> students<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/teachers</span>
+        <span style='color:#008000; '>// overrides RoutePrefix</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>~/api/teachers</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> IEnumerable<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> GetTeachers<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Teachers</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/students/1</span><span style='color:#008000; '>   </span>
+        <span style='color:#008000; '>// contraints int and minium value = 1</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{id:int:min(1)}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>//[Route("{id:int:min(1):max(3)}")]</span>
+        <span style='color:#008000; '>//[Route("{id:int:range(1,3)}")]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Students Get<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> students<span style='color:#0000ff; '>.</span>FirstOrDefault<span style='color:#0000ff; '>(</span>s <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> s<span style='color:#0000ff; '>.</span>Id <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> id<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/students/tim</span>
+        <span style='color:#008000; '>// contraints that start with alpha</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{name:alpha}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> Students Get<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> name<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> students<span style='color:#0000ff; '>.</span>FirstOrDefault<span style='color:#0000ff; '>(</span>s <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> s<span style='color:#0000ff; '>.</span>Name<span style='color:#0000ff; '>.</span>ToLower<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> name<span style='color:#0000ff; '>.</span>ToLower<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/routename</span>
+        <span style='color:#008000; '>// contraints that start with alpha</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>~/api/routename</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> Name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GetStudentById</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> HttpResponseMessage Post<span style='color:#0000ff; '>(</span>Students student<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> resp <span style='color:#0000ff; '>=</span> Request<span style='color:#0000ff; '>.</span>CreateResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>Created<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            resp<span style='color:#0000ff; '>.</span>Headers<span style='color:#0000ff; '>.</span>Location <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Uri<span style='color:#0000ff; '>(</span>Url<span style='color:#0000ff; '>.</span>Link<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GetStudentById</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; '>{</span> id <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> resp<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/students/1/courses</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{id}/courses</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// [Route("api/students/{id}/courses")]     // without RoutePrefix</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> IEnumerable<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> GetStudentCourses<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>id <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>C#</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ASP.NET</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>SQL SERVER</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>id <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>C++</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>MFC</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>MySQL</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Java</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Strut</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Oracle</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/webapi1/3</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>~/api/webapi1/{id}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> HttpResponseMessage GetWebApi1<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> student <span style='color:#0000ff; '>=</span> students<span style='color:#0000ff; '>.</span>FirstOrDefault<span style='color:#0000ff; '>(</span>s <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> s<span style='color:#0000ff; '>.</span>Id <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> id<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>student <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateErrorResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>NotFound<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Student Not Found</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> Request<span style='color:#0000ff; '>.</span>CreateResponse<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>OK<span style='color:#0000ff; '>,</span> student<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/webapi2/3</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>~/api/webapi2/{id}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> IHttpActionResult GetWebApi2<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> student <span style='color:#0000ff; '>=</span> students<span style='color:#0000ff; '>.</span>FirstOrDefault<span style='color:#0000ff; '>(</span>s <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> s<span style='color:#0000ff; '>.</span>Id <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> id<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>student <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Content<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>NotFound<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Student Not Found</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> Ok<span style='color:#0000ff; '>(</span>student<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:63609/api/getasync/1</span>
+        <span style='color:#0000ff; '>[</span>Route<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>~/api/getasync/{id}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> async Task<span style='color:#0000ff; '>&lt;</span>IHttpActionResult<span style='color:#0000ff; '>></span> GetAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> id<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> student <span style='color:#0000ff; '>=</span> await Task<span style='color:#0000ff; '>.</span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> students<span style='color:#0000ff; '>.</span>FirstOrDefault<span style='color:#0000ff; '>(</span>s <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> s<span style='color:#0000ff; '>.</span>Id <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> id<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>student <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> Content<span style='color:#0000ff; '>(</span>HttpStatusCode<span style='color:#0000ff; '>.</span>NotFound<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Student Not Found</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> Ok<span style='color:#0000ff; '>(</span>student<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// use Async Await for I/O bound job. a example code</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> async Task<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> GetFirstCharactersCountAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> url<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> count<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// Execution is synchronous here</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> client <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> HttpClient<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Execution of GetFirstCharactersCountAsync() is yielded to the caller here</span>
+            <span style='color:#008000; '>// GetStringAsync returns a Task&lt;string>, which is *awaited*</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> page <span style='color:#0000ff; '>=</span> await client<span style='color:#0000ff; '>.</span>GetStringAsync<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>http://www.dotnetfoundation.org</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Execution resumes when the client.GetStringAsync task completes,</span>
+            <span style='color:#008000; '>// becoming synchronous again.</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>count <span style='color:#0000ff; '>></span> page<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> page<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> page<span style='color:#0000ff; '>.</span>Substring<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> count<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// use Task for CPU bound job. a example</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> async Task<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span> CalculateResult<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> data<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// This queues up the work on the threadpool.</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> expensiveResultTask <span style='color:#0000ff; '>=</span> Task<span style='color:#0000ff; '>.</span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> DoExpensiveCalculation<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Note that at this point, you can do some other work concurrently,</span>
+            <span style='color:#008000; '>// as CalculateResult() is still executing!</span>
+
+            <span style='color:#008000; '>// Execution of CalculateResult is yielded here!</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> result <span style='color:#0000ff; '>=</span> await expensiveResultTask<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> result<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> DoExpensiveCalculation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> data<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
