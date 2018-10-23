@@ -1,0 +1,123 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#004a43; '>#</span><span style='color:#004a43; font-weight:bold; '>pragma</span><span style='color:#000088; font-weight:bold; '> once</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifndef</span><span style='color:#004a43; '> __MODERN_CPP_14_H</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> __MODERN_CPP_14_H</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Cpp11.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>regex</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>iostream</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>mutex</span><span style='color:#0000e6; '>></span><span style='color:#004a43; '>  </span><span style='color:#008000; '>// For std::unique_lock</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>shared_mutex</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>thread</span><span style='color:#0000e6; '>></span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; font-weight:bold; '>namespace</span> std<span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>https://www.learncpp.com/cpp-tutorial/b-2-introduction-to-c14/</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> MODERNCPP
+<span style='color:#0000ff; '>{</span>
+	<span style='color:#008000; '>// for constant expression</span>
+	<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; font-weight:bold; '>class</span> T <span style='color:#0000ff; '>></span>
+	constexpr <span style='color:#0000ff; font-weight:bold; '>const</span> T<span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>max</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>const</span> T<span style='color:#0000ff; '>&amp;</span> a<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> T<span style='color:#0000ff; '>&amp;</span> b<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>			<span style='color:#008000; '>// (C++14)</span>
+
+	<span style='color:#008000; '>// variable template</span>
+	<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> T<span style='color:#0000ff; '>></span>
+	constexpr T pi <span style='color:#0000ff; '>=</span> T<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3.141592653589793238462643383</span><span style='color:#800000; '>L</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>		<span style='color:#008000; '>// variable template</span>
+
+	<span style='color:#008000; '>// Usual specialization rules apply:</span>
+	<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>></span>
+	constexpr <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span> pi<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>pi</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>class</span> T<span style='color:#0000ff; '>></span>
+	T circular_area<span style='color:#0000ff; '>(</span>T r<span style='color:#0000ff; '>)</span> <span style='color:#008000; '>// function template</span>
+	<span style='color:#0000ff; '>{</span>
+		<span style='color:#0000ff; font-weight:bold; '>return</span> pi<span style='color:#0000ff; '>&lt;</span>T<span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>*</span> r <span style='color:#0000ff; '>*</span> r<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// pi&lt;T> is a variable template instantiation</span>
+	<span style='color:#0000ff; '>}</span>
+
+	<span style='color:#0000ff; font-weight:bold; '>struct</span> <span style='color:#0000ff; font-weight:bold; '>Rectangle</span>
+	<span style='color:#0000ff; '>{</span>
+		<span style='color:#0000ff; font-weight:bold; '>double</span> length <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1.0</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// non-static member initialization</span>
+		<span style='color:#0000ff; font-weight:bold; '>double</span> width <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1.0</span><span style='color:#0000ff; '>;</span>
+	<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#0000ff; font-weight:bold; '>class</span> Fraction <span style='color:#0000ff; '>{</span>		<span style='color:#008000; '>// for make_unique</span>
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>private</span><span style='color:#e34adc; '>:</span>
+		<span style='color:#0000ff; font-weight:bold; '>int</span> m_numerator <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>int</span> m_denominator <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>public</span><span style='color:#e34adc; '>:</span>
+		Fraction<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> numerator <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> denominator <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>:</span>
+			m_numerator<span style='color:#0000ff; '>(</span>numerator<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> m_denominator<span style='color:#0000ff; '>(</span>denominator<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>friend</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>ostream</span><span style='color:#0000ff; '>&amp;</span> <span style='color:#0000ff; font-weight:bold; '>operator</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>ostream</span><span style='color:#0000ff; '>&amp;</span> out<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>const</span> Fraction <span style='color:#0000ff; '>&amp;</span>f1<span style='color:#0000ff; '>)</span>
+		<span style='color:#0000ff; '>{</span>
+			out <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> f1<span style='color:#0000ff; '>.</span>m_numerator <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> f1<span style='color:#0000ff; '>.</span>m_denominator<span style='color:#0000ff; '>;</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> out<span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+	<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#008000; '>// Shared mutexes and locking</span>
+	<span style='color:#0000ff; font-weight:bold; '>class</span> ThreadSafeCounter <span style='color:#0000ff; '>{</span>
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>public</span><span style='color:#e34adc; '>:</span>
+		ThreadSafeCounter<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#0000ff; '>;</span>
+
+		<span style='color:#008000; '>// Multiple threads/readers can read the counter's value at the same time.</span>
+		<span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span> get<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>const</span> <span style='color:#0000ff; '>{</span>
+			std<span style='color:#0000ff; '>::</span>shared_lock<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span>shared_mutex<span style='color:#0000ff; '>></span> lock<span style='color:#0000ff; '>(</span>mutex_<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> value_<span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// Only one thread/writer can increment/write the counter's value.</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> increment<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			std<span style='color:#0000ff; '>::</span>unique_lock<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span>shared_mutex<span style='color:#0000ff; '>></span> lock<span style='color:#0000ff; '>(</span>mutex_<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+			value_<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// Only one thread/writer can reset/write the counter's value.</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			std<span style='color:#0000ff; '>::</span>unique_lock<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span>shared_mutex<span style='color:#0000ff; '>></span> lock<span style='color:#0000ff; '>(</span>mutex_<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+			value_ <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>private</span><span style='color:#e34adc; '>:</span>
+		<span style='color:#0000ff; font-weight:bold; '>mutable</span> std<span style='color:#0000ff; '>::</span>shared_mutex mutex_<span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>unsigned</span> <span style='color:#0000ff; font-weight:bold; '>int</span> value_ <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+	<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#0000ff; font-weight:bold; '>class</span> Cpp14 <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>public</span> Base <span style='color:#0000ff; '>{</span>
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>public</span><span style='color:#e34adc; '>:</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>explicit</span> Cpp14<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> noexcept <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>			<span style='color:#008000; '>// cannot called implicitly</span>
+
+		<span style='color:#008000; '>// auto return type deduction</span>
+		<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>class</span> T<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>class</span> U<span style='color:#0000ff; '>></span>
+		<span style='color:#0000ff; font-weight:bold; '>auto</span> ReturnTypeDeduction<span style='color:#0000ff; '>(</span>T <span style='color:#0000ff; font-weight:bold; '>const</span><span style='color:#0000ff; '>&amp;</span> lhs<span style='color:#0000ff; '>,</span> U <span style='color:#0000ff; font-weight:bold; '>const</span><span style='color:#0000ff; '>&amp;</span> rhs<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> lhs <span style='color:#0000ff; '>*</span> rhs<span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>void</span> AggregateMemberInitialization<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> BinaryLiterals<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> DigitSeparators<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> GenericLambdaExpr<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> LambdaCaptureExpr<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> ConstantExprRestriction<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> VariableTemplate<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> TupleAddressingByType<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> MakeUnique<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> HeterogeneousLookupAssocContainers<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> SharedMutexesLocking<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+		<span style='color:#008000; '>//[[deprecated("this method is deprecated")]]</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> DeprecatedMethod<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>private</span><span style='color:#e34adc; '>:</span>
+
+		<span style='color:#008000; '>// initialize</span>
+		<span style='color:#0000ff; font-weight:bold; '>Rectangle</span> x<span style='color:#0000ff; '>{</span> <span style='color:#800000; '>2.0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2.0</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// uniform initialization (has precedence)</span>
+	<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-23 07:04:35 UTC -->

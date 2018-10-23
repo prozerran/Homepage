@@ -1,0 +1,193 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Runtime<span style='color:#0000ff; '>.</span>Serialization<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ServiceModel<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ServiceModel<span style='color:#0000ff; '>.</span>Web<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>ServiceModel<span style='color:#0000ff; '>.</span>Channels<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Web<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Web<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Configuration<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>.</span>Principal<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>.</span>Permissions<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>.</span>Cryptography<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> WCFWinServiceLib
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; '>[</span>ServiceContract<span style='color:#0000ff; '>]</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>interface</span> IService1
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>[</span>OperationContract<span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:3761/Service1.svc/StringRequest/Hello/World</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://192.168.8.99/WCFWinService/Service1.svc/StringRequest/Hello/World</span>
+        <span style='color:#0000ff; '>[</span>WebInvoke<span style='color:#0000ff; '>(</span>Method <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GET</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> UriTemplate <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>StringRequest/{p1}/{p2}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> BodyStyle <span style='color:#0000ff; '>=</span> WebMessageBodyStyle<span style='color:#0000ff; '>.</span>Wrapped<span style='color:#0000ff; '>,</span> ResponseFormat <span style='color:#0000ff; '>=</span> WebMessageFormat<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>string</span> StringRequest<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> p1<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> p2<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; '>[</span>OperationContract<span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:3761/Service1.svc/InvokeRestString/theString</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://192.168.8.99/WCFWinService/Service1.svc/InvokeRestString/theString</span>
+        <span style='color:#0000ff; '>[</span>WebInvoke<span style='color:#0000ff; '>(</span>Method <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GET</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> UriTemplate <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>InvokeRestString/{str}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> BodyStyle <span style='color:#0000ff; '>=</span> WebMessageBodyStyle<span style='color:#0000ff; '>.</span>Wrapped<span style='color:#0000ff; '>,</span> ResponseFormat <span style='color:#0000ff; '>=</span> WebMessageFormat<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>string</span> InvokeRestString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; '>[</span>OperationContract<span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:3761/Service1.svc/InvokeGetString?str=theString</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://192.168.8.99/WCFWinService/Service1.svc/InvokeGetString?str=theString</span>
+        <span style='color:#0000ff; '>[</span>WebInvoke<span style='color:#0000ff; '>(</span>Method <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GET</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> UriTemplate <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>InvokeGetString?str={str}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> BodyStyle <span style='color:#0000ff; '>=</span> WebMessageBodyStyle<span style='color:#0000ff; '>.</span>Bare<span style='color:#0000ff; '>,</span> ResponseFormat <span style='color:#0000ff; '>=</span> WebMessageFormat<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>string</span> InvokeGetString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; '>[</span>OperationContract<span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:3761/Service1.svc/InvokePostString</span>
+        <span style='color:#0000ff; '>[</span>WebInvoke<span style='color:#0000ff; '>(</span>Method <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>POST</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> UriTemplate <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>InvokePostString</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> BodyStyle <span style='color:#0000ff; '>=</span> WebMessageBodyStyle<span style='color:#0000ff; '>.</span>Wrapped<span style='color:#0000ff; '>,</span> ResponseFormat <span style='color:#0000ff; '>=</span> WebMessageFormat<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>string</span> InvokePostString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> 
+
+        <span style='color:#0000ff; '>[</span>OperationContract<span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:3761/Service1.svc/Mult?x=100&amp;y=5</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://192.168.8.99/WCFWinService/Service1.svc/Mult?x=100&amp;y=5</span>
+        <span style='color:#0000ff; '>[</span>WebInvoke<span style='color:#0000ff; '>(</span>Method <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GET</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> UriTemplate <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Mult?x={x}&amp;y={y}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> BodyStyle <span style='color:#0000ff; '>=</span> WebMessageBodyStyle<span style='color:#0000ff; '>.</span>Wrapped<span style='color:#0000ff; '>,</span> ResponseFormat <span style='color:#0000ff; '>=</span> WebMessageFormat<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>long</span> Multiply<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>long</span> x<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>long</span> y<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; '>[</span>OperationContract<span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:3761/Service1.svc/login/name</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://192.168.8.99/WCFWinService/Service1.svc/login/name</span>
+        <span style='color:#0000ff; '>[</span>WebGet<span style='color:#0000ff; '>(</span>UriTemplate <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>login/{name}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> BodyStyle <span style='color:#0000ff; '>=</span> WebMessageBodyStyle<span style='color:#0000ff; '>.</span>Bare<span style='color:#0000ff; '>,</span> ResponseFormat <span style='color:#0000ff; '>=</span> WebMessageFormat<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        LoginResponse GetLogin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; '>[</span>OperationContract<span style='color:#0000ff; '>]</span>
+        <span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://localhost:3761/Service1.svc/login/</span>
+        <span style='color:#0000ff; '>[</span>WebInvoke<span style='color:#0000ff; '>(</span>Method <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>POST</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> UriTemplate <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>postlogin</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> BodyStyle <span style='color:#0000ff; '>=</span> WebMessageBodyStyle<span style='color:#0000ff; '>.</span>Bare<span style='color:#0000ff; '>,</span> ResponseFormat <span style='color:#0000ff; '>=</span> WebMessageFormat<span style='color:#0000ff; '>.</span>Json<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        LoginResponse GetLoginPost<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; '>[</span>DataContract<span style='color:#0000ff; '>]</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> LoginResponse
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> String username<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> String encoded_username<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> String windowsname<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> String authtoken<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> String ipaddress<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> String sessionid<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> String authtype<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>long</span> lastlogontime<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> failedlogonattempt<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>[</span>DataMember<span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> List<span style='color:#0000ff; '>&lt;</span>String<span style='color:#0000ff; '>></span> listString<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>//[System.ServiceModel.Activation.AspNetCompatibilityRequirements(RequirementsMode = System.ServiceModel.Activation.AspNetCompatibilityRequirementsMode.Required)]</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> Service1 <span style='color:#0000ff; '>:</span> IService1
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>string</span> saved_login_name <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> StringRequest<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> p1<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span> p2<span style='color:#0000ff; '>)</span> 
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>//WebOperationContext.Current.OutgoingResponse.StatusCode = System.Net.HttpStatusCode.Redirect;</span>
+            <span style='color:#008000; '>//WebOperationContext.Current.OutgoingResponse.Location = "</span><span style='color:#5555dd; '>http://www.google.com</span><span style='color:#008000; '>";</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Hello : {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>saved_login_name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>long</span> Multiply<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>long</span> x<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>long</span> y<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> x <span style='color:#0000ff; '>*</span> y<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> InvokeRestString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> str<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> InvokeGetString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> ServiceSecurityContext<span style='color:#0000ff; '>.</span>Current<span style='color:#0000ff; '>.</span>WindowsIdentity<span style='color:#0000ff; '>.</span>Name<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>catch</span> <span style='color:#0000ff; '>(</span>System<span style='color:#0000ff; '>.</span>Exception ex<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> ex<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>string</span> InvokePostString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> str<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> LoginResponse GetLogin<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> name<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            LoginResponse res <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> LoginResponse<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// get IP Address</span>
+            String ipaddr <span style='color:#0000ff; '>=</span> RemoteEndpointMessageProperty<span style='color:#0000ff; '>.</span>Name<span style='color:#0000ff; '>;</span>
+            OperationContext ctx <span style='color:#0000ff; '>=</span> OperationContext<span style='color:#0000ff; '>.</span>Current<span style='color:#0000ff; '>;</span>
+            MessageProperties mesgp <span style='color:#0000ff; '>=</span> ctx<span style='color:#0000ff; '>.</span>IncomingMessageProperties<span style='color:#0000ff; '>;</span>
+            RemoteEndpointMessageProperty client_ep <span style='color:#0000ff; '>=</span> mesgp<span style='color:#0000ff; '>[</span>ipaddr<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>as</span> RemoteEndpointMessageProperty<span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>ipaddress <span style='color:#0000ff; '>=</span> client_ep<span style='color:#0000ff; '>.</span>Address<span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>sessionid <span style='color:#0000ff; '>=</span> ctx<span style='color:#0000ff; '>.</span>SessionId<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>//System.ServiceModel.DomainServices.Server.ApplicationServices</span>
+            <span style='color:#008000; '>//res.authtype = ServiceSecurityContext.Current.PrimaryIdentity.AuthenticationType;</span>
+            <span style='color:#008000; '>//res.username = ctx.ServiceSecurityContext.WindowsIdentity.Name;</span>
+            res<span style='color:#0000ff; '>.</span>encoded_username <span style='color:#0000ff; '>=</span> name<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> decoded_str <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>FromBase64String<span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>username <span style='color:#0000ff; '>=</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span>decoded_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>this</span><span style='color:#0000ff; '>.</span>saved_login_name <span style='color:#0000ff; '>=</span> name<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>//get header information</span>
+            IncomingWebRequestContext req <span style='color:#0000ff; '>=</span> WebOperationContext<span style='color:#0000ff; '>.</span>Current<span style='color:#0000ff; '>.</span>IncomingRequest<span style='color:#0000ff; '>;</span>
+            WebHeaderCollection headers <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>Headers<span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>listString <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>String<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> headers<span style='color:#0000ff; '>.</span>Count<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                res<span style='color:#0000ff; '>.</span>listString<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>headers<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>               
+            <span style='color:#0000ff; font-weight:bold; '>return</span> res<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> LoginResponse GetLoginPost<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> name<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            LoginResponse res <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> LoginResponse<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// get IP Address</span>
+            String ipaddr <span style='color:#0000ff; '>=</span> RemoteEndpointMessageProperty<span style='color:#0000ff; '>.</span>Name<span style='color:#0000ff; '>;</span>
+            OperationContext ctx <span style='color:#0000ff; '>=</span> OperationContext<span style='color:#0000ff; '>.</span>Current<span style='color:#0000ff; '>;</span>
+            MessageProperties mesgp <span style='color:#0000ff; '>=</span> ctx<span style='color:#0000ff; '>.</span>IncomingMessageProperties<span style='color:#0000ff; '>;</span>
+            RemoteEndpointMessageProperty client_ep <span style='color:#0000ff; '>=</span> mesgp<span style='color:#0000ff; '>[</span>ipaddr<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>as</span> RemoteEndpointMessageProperty<span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>ipaddress <span style='color:#0000ff; '>=</span> client_ep<span style='color:#0000ff; '>.</span>Address<span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>sessionid <span style='color:#0000ff; '>=</span> ctx<span style='color:#0000ff; '>.</span>SessionId<span style='color:#0000ff; '>;</span>
+
+            res<span style='color:#0000ff; '>.</span>encoded_username <span style='color:#0000ff; '>=</span> name<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> decoded_str <span style='color:#0000ff; '>=</span> Convert<span style='color:#0000ff; '>.</span>FromBase64String<span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>username <span style='color:#0000ff; '>=</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span>decoded_str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>//get header information</span>
+            IncomingWebRequestContext req <span style='color:#0000ff; '>=</span> WebOperationContext<span style='color:#0000ff; '>.</span>Current<span style='color:#0000ff; '>.</span>IncomingRequest<span style='color:#0000ff; '>;</span>
+            WebHeaderCollection headers <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>Headers<span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>listString <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>String<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> i <span style='color:#0000ff; '>&lt;</span> headers<span style='color:#0000ff; '>.</span>Count<span style='color:#0000ff; '>;</span> i<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                res<span style='color:#0000ff; '>.</span>listString<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>headers<span style='color:#0000ff; '>.</span>Get<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> res<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-23 08:01:57 UTC -->

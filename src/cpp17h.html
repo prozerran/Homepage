@@ -1,0 +1,158 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#004a43; '>#</span><span style='color:#004a43; font-weight:bold; '>pragma</span><span style='color:#000088; font-weight:bold; '> once</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifndef</span><span style='color:#004a43; '> __MODERN_CPP_17_H</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> __MODERN_CPP_17_H</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>"</span><span style='color:#40015a; '>Cpp11.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// C++17 __has_include</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> __has_include						   </span><span style='color:#008000; '>// Check if __has_include is present</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>  </span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> __has_include</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&lt;</span><span style='color:#004a43; '>optional</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '>                </span><span style='color:#008000; '>// Check for a standard library</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>    </span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>optional</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>  </span><span style='color:#004a43; '>elif</span><span style='color:#004a43; '> __has_include</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&lt;</span><span style='color:#004a43; '>experimental</span><span style='color:#0000ff; '>/</span><span style='color:#004a43; '>optional</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '> </span><span style='color:#008000; '>// Check for an experimental version</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>    </span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>experimental/optional</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>  </span><span style='color:#004a43; '>elif</span><span style='color:#004a43; '> __has_include</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>&lt;</span><span style='color:#004a43; '>boost</span><span style='color:#0000ff; '>/</span><span style='color:#004a43; '>optional</span><span style='color:#0000ff; '>.</span><span style='color:#004a43; '>hpp</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '>    </span><span style='color:#008000; '>// Try with an external library</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>    </span><span style='color:#004a43; '>include </span><span style='color:#0000e6; '>&lt;</span><span style='color:#40015a; '>boost/optional.hpp</span><span style='color:#0000e6; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>  </span><span style='color:#004a43; '>else</span><span style='color:#004a43; '>                                        </span><span style='color:#008000; '>// Not found at all</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; font-weight:bold; '>     error</span><span style='color:#000088; font-weight:bold; '> </span><span style='color:#0000e6; font-weight:bold; '>"Missing &lt;optional>"</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>  </span><span style='color:#004a43; '>endif</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifdef</span><span style='color:#004a43; '> __has_cpp_attribute                      </span><span style='color:#008000; '>// Check if __has_cpp_attribute is present</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>  </span><span style='color:#004a43; '>if</span><span style='color:#004a43; '> __has_cpp_attribute</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>deprecated</span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '>           </span><span style='color:#008000; '>// Check for an attribute</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>    </span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> DEPRECATED</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>msg</span><span style='color:#0000ff; '>)</span><span style='color:#004a43; '> </span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>[</span><span style='color:#004a43; '>deprecated</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>msg</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>]</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>  </span><span style='color:#004a43; '>endif</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifndef</span><span style='color:#004a43; '> DEPRECATED</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>    </span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> DEPRECATED</span><span style='color:#0000ff; '>(</span><span style='color:#004a43; '>msg</span><span style='color:#0000ff; '>)</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; font-weight:bold; '>namespace</span> std<span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>https://www.learncpp.com/cpp-tutorial/b-2-introduction-to-c17/</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> MODERNCPP<span style='color:#0000ff; '>::</span>CPP17		<span style='color:#008000; '>// C++17, nested namespace</span>
+<span style='color:#0000ff; '>{</span>
+	<span style='color:#0000ff; font-weight:bold; '>class</span> Cpp17 <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>public</span> Base <span style='color:#0000ff; '>{</span>
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>public</span><span style='color:#e34adc; '>:</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>explicit</span> Cpp17<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> noexcept <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>			<span style='color:#008000; '>// cannot called implicitly</span>
+
+		<span style='color:#008000; '>// auto return type deduction</span>
+		<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> T<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>typename</span> U<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>typename</span> V<span style='color:#0000ff; '>></span>
+		<span style='color:#0000ff; font-weight:bold; '>auto</span> TemplateArgumentDeduction<span style='color:#0000ff; '>(</span>T <span style='color:#0000ff; font-weight:bold; '>const</span><span style='color:#0000ff; '>&amp;</span> p_char<span style='color:#0000ff; '>,</span> U <span style='color:#0000ff; font-weight:bold; '>const</span><span style='color:#0000ff; '>&amp;</span> p_int<span style='color:#0000ff; '>,</span> V <span style='color:#0000ff; font-weight:bold; '>const</span><span style='color:#0000ff; '>&amp;</span> p_bool<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> std<span style='color:#0000ff; '>::</span>tuple<span style='color:#0000ff; '>(</span>p_char<span style='color:#0000ff; '>,</span> p_int<span style='color:#0000ff; '>,</span> p_bool<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>// Auto type deduction from arguments</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// using typename vs class, compile time if</span>
+		<span style='color:#0000ff; font-weight:bold; '>template</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> T<span style='color:#0000ff; '>></span>
+		<span style='color:#0000ff; font-weight:bold; '>auto</span> CompileTimeIf<span style='color:#0000ff; '>(</span>T t<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>if</span> constexpr <span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span>is_pointer_v<span style='color:#0000ff; '>&lt;</span>T<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>)</span>
+				<span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>*</span>t<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// deduces return type to int for T = int*</span>
+			<span style='color:#0000ff; font-weight:bold; '>else</span>
+				<span style='color:#0000ff; font-weight:bold; '>return</span> t<span style='color:#0000ff; '>;</span>  <span style='color:#008000; '>// deduces return type to int for T = int</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// [[ using attribute-namespace : attribute-list ]]</span>
+		<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>[</span>nodiscard<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>int</span> StandardAttributes<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>bool</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>		<span style='color:#008000; '>// caller should read return value</span>
+
+		DEPRECATED<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Method has been deprecated</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> DeprecatedMethod<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>long</span> Preprocessor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>unsigned</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StaticAssert<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdAny<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdByte<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdFileSystem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>					<span style='color:#008000; '>// alternative to boost filesystetm</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdOptional<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdSharedPtr<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>delete</span><span style='color:#0000ff; '>;</span>			<span style='color:#008000; '>// not fully supported until C++20</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdVariant<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdConjunction<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdDisjunction<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdNegation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StdUncaughtExceptions<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> StructuredBindingDeclaration<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> IfSwitchInitializer<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> InlineVariable<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> FoldExpression<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> RemovedTrigraphs<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>				<span style='color:#008000; '>// unable to output special characters</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> Utf8Literals<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> HexFloatingPointLiterals<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> TemplateDeductionConstructor<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> SpecialMathFunctions<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>private</span><span style='color:#e34adc; '>:</span>
+
+		<span style='color:#008000; '>// optional can be used as the return type of a factory that may fail</span>
+		std<span style='color:#0000ff; '>::</span>optional<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> create1<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>bool</span> b<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>b<span style='color:#0000ff; '>)</span>
+				<span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Godzilla</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// std::nullopt can be used to create any (empty) std::optional</span>
+		<span style='color:#0000ff; font-weight:bold; '>auto</span> create2<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>bool</span> b<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> b <span style='color:#0000ff; '>?</span> std<span style='color:#0000ff; '>::</span>optional<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>{</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Godzilla</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>}</span> <span style='color:#0000ff; '>:</span> std<span style='color:#0000ff; '>::</span>nullopt<span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// std::reference_wrapper may be used to return a reference</span>
+		<span style='color:#0000ff; font-weight:bold; '>auto</span> create_ref<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>bool</span> b<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>static</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span> value <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Godzilla</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> b <span style='color:#0000ff; '>?</span> std<span style='color:#0000ff; '>::</span>optional<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span>reference_wrapper<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>{</span>value<span style='color:#0000ff; '>}</span>
+			<span style='color:#0000ff; '>:</span> std<span style='color:#0000ff; '>::</span>nullopt<span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// As of C++17, a structured binding declaration can be used to simplify splitting multiple</span>
+		<span style='color:#008000; '>// returned values into separate variables:</span>
+		std<span style='color:#0000ff; '>::</span>tuple<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>double</span><span style='color:#0000ff; '>></span> returnTuple<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#008000; '>// return a tuple that contains an int and a double</span>
+		<span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> std<span style='color:#0000ff; '>::</span>make_tuple<span style='color:#0000ff; '>(</span><span style='color:#800000; '>5</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>6.7</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// use std::make_tuple() as shortcut to make a tuple to return</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// Fold Expressions</span>
+		<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span>Args<span style='color:#0000ff; '>></span> <span style='color:#0000ff; font-weight:bold; '>auto</span> sum1<span style='color:#0000ff; '>(</span>Args <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span>args<span style='color:#0000ff; '>)</span>
+		<span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span>args <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span> <span style='color:#0000ff; '>+</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span>Args<span style='color:#0000ff; '>></span> <span style='color:#0000ff; font-weight:bold; '>auto</span> sum2<span style='color:#0000ff; '>(</span>Args <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span>args<span style='color:#0000ff; '>)</span>
+		<span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span>args <span style='color:#0000ff; '>+</span> <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span>Args<span style='color:#0000ff; '>></span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> FoldPrint<span style='color:#0000ff; '>(</span>Args<span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span> args<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> forward<span style='color:#0000ff; '>&lt;</span>Args<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#000080; '>'\n'</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> T<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>typename</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span> Args<span style='color:#0000ff; '>></span>
+		<span style='color:#0000ff; font-weight:bold; '>void</span> FoldPushBack<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>vector</span><span style='color:#0000ff; '>&lt;</span>T<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>&amp;</span> v<span style='color:#0000ff; '>,</span> Args<span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>&amp;</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span> args<span style='color:#0000ff; '>)</span>
+		<span style='color:#0000ff; '>{</span>
+			<span style='color:#0000ff; '>(</span>v<span style='color:#0000ff; '>.</span>push_back<span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// conjunction</span>
+		<span style='color:#008000; '>// func is enabled if all Ts... have the same type as T</span>
+		<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> T<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>typename</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span> Ts<span style='color:#0000ff; '>></span>
+		std<span style='color:#0000ff; '>::</span>enable_if_t<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span>conjunction_v<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span>is_same<span style='color:#0000ff; '>&lt;</span>T<span style='color:#0000ff; '>,</span> Ts<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span>
+			func<span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>,</span> Ts<span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>all types in pack are T</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+		<span style='color:#008000; '>// otherwise</span>
+		<span style='color:#0000ff; font-weight:bold; '>template</span><span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>typename</span> T<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>typename</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span> Ts<span style='color:#0000ff; '>></span>
+		std<span style='color:#0000ff; '>::</span>enable_if_t<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>!</span>std<span style='color:#0000ff; '>::</span>conjunction_v<span style='color:#0000ff; '>&lt;</span>std<span style='color:#0000ff; '>::</span>is_same<span style='color:#0000ff; '>&lt;</span>T<span style='color:#0000ff; '>,</span> Ts<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>></span>
+			func<span style='color:#0000ff; '>(</span>T<span style='color:#0000ff; '>,</span> Ts<span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>.</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+			std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>cout</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>not all types in pack are T</span><span style='color:#0000e6; '>\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+		<span style='color:#0000ff; '>}</span>
+
+<span style='color:#e34adc; '>	</span><span style='color:#0000ff; font-weight:bold; '>private</span><span style='color:#e34adc; '>:</span>
+
+		<span style='color:#0000ff; font-weight:bold; '>inline</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>const</span> std<span style='color:#0000ff; '>::</span><span style='color:#0000ff; font-weight:bold; '>string</span> inline_variable <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>This is an inline variable!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-23 07:05:47 UTC -->
