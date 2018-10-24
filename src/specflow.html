@@ -1,0 +1,181 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Drawing<span style='color:#0000ff; '>.</span>Imaging<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> OpenQA<span style='color:#0000ff; '>.</span>Selenium<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> OpenQA<span style='color:#0000ff; '>.</span>Selenium<span style='color:#0000ff; '>.</span>Edge<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> OpenQA<span style='color:#0000ff; '>.</span>Selenium<span style='color:#0000ff; '>.</span>Chrome<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> OpenQA<span style='color:#0000ff; '>.</span>Selenium<span style='color:#0000ff; '>.</span>Remote<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> OpenQA<span style='color:#0000ff; '>.</span>Selenium<span style='color:#0000ff; '>.</span>Support<span style='color:#0000ff; '>.</span>UI<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> OpenQA<span style='color:#0000ff; '>.</span>Selenium<span style='color:#0000ff; '>.</span>Interactions<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> TechTalk<span style='color:#0000ff; '>.</span>SpecFlow<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Testing<span style='color:#0000ff; '>.</span>Api<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>Dynamics365<span style='color:#0000ff; '>.</span>UIAutomation<span style='color:#0000ff; '>.</span>Api<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>Dynamics365<span style='color:#0000ff; '>.</span>UIAutomation<span style='color:#0000ff; '>.</span>Browser<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Testing<span style='color:#0000ff; '>.</span>Specs
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;// PUT THE ROLLOW IN FEATURE FILE (LandingPage.feature)</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Feature: LandingPage</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;In order to avoid silly mistakes</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;As a math idiot</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;I want to be told the sum of two numbers</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;@mytag</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Scenario: Login with special credential</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Given I have logged in as 'User01.Test'</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;And I navigate to 'Landing Page'</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;And I click button 'MeFlex'</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;When I click link 'My account'</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Then I click link 'Personal info'</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Then I take a screen shot</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Then I click link 'Subscriptions'</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Then I take a screen shot</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#0000ff; '>[</span>Binding<span style='color:#0000ff; '>]</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> LandingPageSteps
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>string</span> _userdomain <span style='color:#0000ff; '>=</span> System<span style='color:#0000ff; '>.</span>Configuration<span style='color:#0000ff; '>.</span>ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>OnlineUserDomain</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> SecureString _password <span style='color:#0000ff; '>=</span> System<span style='color:#0000ff; '>.</span>Configuration<span style='color:#0000ff; '>.</span>ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>OnlinePassword</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToSecureString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> Uri _baseUri <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Uri<span style='color:#0000ff; '>(</span>System<span style='color:#0000ff; '>.</span>Configuration<span style='color:#0000ff; '>.</span>ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>OnlineBaseUrl</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> SharePointBrowser _browser<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; '>[</span>Given<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I have logged in as '(.*)'</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> GivenIHaveLoggedInAs<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> p0<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _browser<span style='color:#0000ff; '>.</span>LoginPage<span style='color:#0000ff; '>.</span>Login<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> Uri<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>https://portal.office.com</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0}@{1}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> p0<span style='color:#0000ff; '>,</span> _userdomain<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToSecureString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> _password<span style='color:#0000ff; '>,</span> ADFSLoginAction<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>Given<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I navigate to '(.*)'</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> GivenINavigateTo<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> p0<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _browser<span style='color:#0000ff; '>.</span>Navigate<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Format<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>{0}{1}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> _baseUri<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/sites/pppdev</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ADFSLoginAction<span style='color:#0000ff; '>(</span>LoginRedirectEventArgs args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> d <span style='color:#0000ff; '>=</span> args<span style='color:#0000ff; '>.</span>Driver<span style='color:#0000ff; '>;</span>
+            d<span style='color:#0000ff; '>.</span>FindElement<span style='color:#0000ff; '>(</span>By<span style='color:#0000ff; '>.</span>Id<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>passwordInput</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>SendKeys<span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>.</span>Password<span style='color:#0000ff; '>.</span>ToUnsecureString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            d<span style='color:#0000ff; '>.</span>ClickWhenAvailable<span style='color:#0000ff; '>(</span>By<span style='color:#0000ff; '>.</span>Id<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>submitButton</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>new</span> TimeSpan<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            d<span style='color:#0000ff; '>.</span>WaitForPageToLoad<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>Given<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I click button '(.*)'</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> GivenIClickButton<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> p0<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>When<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I click link '(.*)'</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> WhenIClickLink<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> p0<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>Then<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I click link '(.*)'</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ThenIClickLink<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> p0<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>Then<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I take a screen shot</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ThenITakeAScreenShot<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> fileNameTimestap <span style='color:#0000ff; '>=</span> DateTime<span style='color:#0000ff; '>.</span>Now<span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>yyyyMMddhhmmss</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            _browser<span style='color:#0000ff; '>.</span>Driver<span style='color:#0000ff; '>.</span>WaitForPageToLoad<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            _browser<span style='color:#0000ff; '>.</span>TakeWindowScreenShot<span style='color:#0000ff; '>(</span>
+                <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>C:\\Temp\\screenshot_</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> fileNameTimestap <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.png</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+            ScreenshotImageFormat<span style='color:#0000ff; '>.</span>Png<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;// PUT THE ROLLOW IN FEATURE FILE (Google.feature)</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Feature: Google</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;In order to use PPM site</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;As a normal user</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;I want to be able to browse the site</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;@mytag</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Scenario: Test Google Search</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Given I go to Google website</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;And I search for Avanade wiki</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;And I click on first link</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Then I am at the Avanade wiki page</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Then I capture screenshot</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;@mytag</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Scenario: Login to PPM</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Given I login as </span><span style='color:#7144c4; '>User05.Test@whinniy.com</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Then I am at the landing page</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;@mytag</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;Scenario: Check Project Team Portfolio Management</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Given I am on the landing page</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;And I click on Project Portfolio Management for Project Team</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Then I see a list of projects</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#0000ff; '>[</span>Binding<span style='color:#0000ff; '>]</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> GoogleSearch
+    <span style='color:#0000ff; '>{</span>
+        IWebDriver driver <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; '>[</span>Given<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I go to Google website</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> GivenIGoToGoogleWebsite<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            driver <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ChromeDriver<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            driver<span style='color:#0000ff; '>.</span>Url <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>http://www.google.com/</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            driver<span style='color:#0000ff; '>.</span>Manage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Window<span style='color:#0000ff; '>.</span>Maximize<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            driver<span style='color:#0000ff; '>.</span>Manage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Timeouts<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ImplicitWait <span style='color:#0000ff; '>=</span> TimeSpan<span style='color:#0000ff; '>.</span>FromSeconds<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>Given<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I search for Avanade wiki</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> GivenISearchForAvanade<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            driver<span style='color:#0000ff; '>.</span>FindElement<span style='color:#0000ff; '>(</span>By<span style='color:#0000ff; '>.</span>Id<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>lst-ib</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>SendKeys<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Avanade wiki</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            driver<span style='color:#0000ff; '>.</span>FindElement<span style='color:#0000ff; '>(</span>By<span style='color:#0000ff; '>.</span>Id<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>lst-ib</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>SendKeys<span style='color:#0000ff; '>(</span>Keys<span style='color:#0000ff; '>.</span>Enter<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>Given<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I click on first link</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> GivenIClickOnFirstLink<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            driver<span style='color:#0000ff; '>.</span>FindElement<span style='color:#0000ff; '>(</span>By<span style='color:#0000ff; '>.</span>LinkText<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Avanade - Wikipedia</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>//IWebElement ele = driver.FindElement(By.LinkText("Avanade - Wikipedia"));</span>
+            <span style='color:#008000; '>//Actions actions = new Actions(driver);</span>
+            <span style='color:#008000; '>//actions.Click(ele).Perform();</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>Then<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I am at the Avanade wiki page</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ThenIGoToTheAvanadeWikiPage<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            driver<span style='color:#0000ff; '>.</span>FindElement<span style='color:#0000ff; '>(</span>By<span style='color:#0000ff; '>.</span>ClassName<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>firstHeading</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// able to land/find this page</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; '>[</span>Then<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>I capture screenshot</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> ThenICaptureScreenshot<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Screenshot ss <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>ITakesScreenshot<span style='color:#0000ff; '>)</span>driver<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>GetScreenshot<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            ss<span style='color:#0000ff; '>.</span>SaveAsFile<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>@"</span><span style='color:#0000e6; '>C:\Temp\Screenshot.jpg</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> ScreenshotImageFormat<span style='color:#0000ff; '>.</span>Jpeg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>  
+<span style='color:#0000ff; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-24 07:02:03 UTC -->
