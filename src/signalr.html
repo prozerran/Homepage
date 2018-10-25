@@ -1,0 +1,197 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Concurrent<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> Microsoft<span style='color:#0000ff; '>.</span>AspNet<span style='color:#0000ff; '>.</span>SignalR<span style='color:#0000ff; '>.</span>Hubs<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Microsoft<span style='color:#0000ff; '>.</span>AspNet<span style='color:#0000ff; '>.</span>SignalR<span style='color:#0000ff; '>.</span>StockTicker
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> StockTicker
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// Singleton instance</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>static</span> Lazy<span style='color:#0000ff; '>&lt;</span>StockTicker<span style='color:#0000ff; '>></span> _instance <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Lazy<span style='color:#0000ff; '>&lt;</span>StockTicker<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>
+            <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; font-weight:bold; '>new</span> StockTicker<span style='color:#0000ff; '>(</span>GlobalHost<span style='color:#0000ff; '>.</span>ConnectionManager<span style='color:#0000ff; '>.</span>GetHubContext<span style='color:#0000ff; '>&lt;</span>StockTickerHub<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Clients<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>object</span> _marketStateLock <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>object</span> _updateStockPricesLock <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> ConcurrentDictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> Stock<span style='color:#0000ff; '>></span> _stocks <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ConcurrentDictionary<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>,</span> Stock<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// Stock can go up or down by a percentage of this factor on each change</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> <span style='color:#0000ff; font-weight:bold; '>double</span> _rangePercent <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0.002</span><span style='color:#0000ff; '>;</span>
+        
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> TimeSpan _updateInterval <span style='color:#0000ff; '>=</span> TimeSpan<span style='color:#0000ff; '>.</span>FromMilliseconds<span style='color:#0000ff; '>(</span><span style='color:#800000; '>250</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>readonly</span> Random _updateOrNotRandom <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Random<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> Timer _timer<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> volatile <span style='color:#0000ff; font-weight:bold; '>bool</span> _updatingStockPrices<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> volatile MarketState _marketState<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> StockTicker<span style='color:#0000ff; '>(</span>IHubConnectionContext<span style='color:#0000ff; '>&lt;</span>dynamic<span style='color:#0000ff; '>></span> clients<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Clients <span style='color:#0000ff; '>=</span> clients<span style='color:#0000ff; '>;</span>
+            LoadDefaultStocks<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> StockTicker Instance
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>get</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> _instance<span style='color:#0000ff; '>.</span>Value<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> IHubConnectionContext<span style='color:#0000ff; '>&lt;</span>dynamic<span style='color:#0000ff; '>></span> Clients
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> MarketState MarketState
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>get</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> _marketState<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>set</span> <span style='color:#0000ff; '>{</span> _marketState <span style='color:#0000ff; '>=</span> value<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> IEnumerable<span style='color:#0000ff; '>&lt;</span>Stock<span style='color:#0000ff; '>></span> GetAllStocks<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> _stocks<span style='color:#0000ff; '>.</span>Values<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> OpenMarket<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>lock</span> <span style='color:#0000ff; '>(</span>_marketStateLock<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>MarketState <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> MarketState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    _timer <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Timer<span style='color:#0000ff; '>(</span>UpdateStockPrices<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>,</span> _updateInterval<span style='color:#0000ff; '>,</span> _updateInterval<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                    MarketState <span style='color:#0000ff; '>=</span> MarketState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>;</span>
+
+                    BroadcastMarketStateChange<span style='color:#0000ff; '>(</span>MarketState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> CloseMarket<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>lock</span> <span style='color:#0000ff; '>(</span>_marketStateLock<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>MarketState <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> MarketState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>_timer <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        _timer<span style='color:#0000ff; '>.</span>Dispose<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    MarketState <span style='color:#0000ff; '>=</span> MarketState<span style='color:#0000ff; '>.</span>Closed<span style='color:#0000ff; '>;</span>
+
+                    BroadcastMarketStateChange<span style='color:#0000ff; '>(</span>MarketState<span style='color:#0000ff; '>.</span>Closed<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Reset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>lock</span> <span style='color:#0000ff; '>(</span>_marketStateLock<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>MarketState <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> MarketState<span style='color:#0000ff; '>.</span>Closed<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>throw</span> <span style='color:#0000ff; font-weight:bold; '>new</span> InvalidOperationException<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Market must be closed before it can be reset.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+                
+                LoadDefaultStocks<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                BroadcastMarketReset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> LoadDefaultStocks<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            _stocks<span style='color:#0000ff; '>.</span>Clear<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> stocks <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>Stock<span style='color:#0000ff; '>></span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>new</span> Stock <span style='color:#0000ff; '>{</span> Symbol <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>MSFT</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> Price <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>41.</span>68m <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>,</span>
+                <span style='color:#0000ff; font-weight:bold; '>new</span> Stock <span style='color:#0000ff; '>{</span> Symbol <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>AAPL</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> Price <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>92.</span>08m <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>,</span>
+                <span style='color:#0000ff; font-weight:bold; '>new</span> Stock <span style='color:#0000ff; '>{</span> Symbol <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>GOOG</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> Price <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>543.</span>01m <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+            stocks<span style='color:#0000ff; '>.</span>ForEach<span style='color:#0000ff; '>(</span>stock <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> _stocks<span style='color:#0000ff; '>.</span>TryAdd<span style='color:#0000ff; '>(</span>stock<span style='color:#0000ff; '>.</span>Symbol<span style='color:#0000ff; '>,</span> stock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> UpdateStockPrices<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> state<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// This function must be re-entrant as it's running as a timer interval handler</span>
+            <span style='color:#0000ff; font-weight:bold; '>lock</span> <span style='color:#0000ff; '>(</span>_updateStockPricesLock<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>_updatingStockPrices<span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    _updatingStockPrices <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> stock <span style='color:#0000ff; font-weight:bold; '>in</span> _stocks<span style='color:#0000ff; '>.</span>Values<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>TryUpdateStockPrice<span style='color:#0000ff; '>(</span>stock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            BroadcastStockPrice<span style='color:#0000ff; '>(</span>stock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    _updatingStockPrices <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> TryUpdateStockPrice<span style='color:#0000ff; '>(</span>Stock stock<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// Randomly choose whether to udpate this stock or not</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> r <span style='color:#0000ff; '>=</span> _updateOrNotRandom<span style='color:#0000ff; '>.</span>NextDouble<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>r <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0.1</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// Update the stock price by a random factor of the range percent</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> random <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Random<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span>Math<span style='color:#0000ff; '>.</span>Floor<span style='color:#0000ff; '>(</span>stock<span style='color:#0000ff; '>.</span>Price<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> percentChange <span style='color:#0000ff; '>=</span> random<span style='color:#0000ff; '>.</span>NextDouble<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> _rangePercent<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> pos <span style='color:#0000ff; '>=</span> random<span style='color:#0000ff; '>.</span>NextDouble<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>></span> <span style='color:#800000; '>0.51</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> change <span style='color:#0000ff; '>=</span> Math<span style='color:#0000ff; '>.</span>Round<span style='color:#0000ff; '>(</span>stock<span style='color:#0000ff; '>.</span>Price <span style='color:#0000ff; '>*</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>decimal</span><span style='color:#0000ff; '>)</span>percentChange<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>2</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            change <span style='color:#0000ff; '>=</span> pos ? change <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; '>-</span>change<span style='color:#0000ff; '>;</span>
+
+            stock<span style='color:#0000ff; '>.</span>Price <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> change<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> BroadcastMarketStateChange<span style='color:#0000ff; '>(</span>MarketState marketState<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>switch</span> <span style='color:#0000ff; '>(</span>marketState<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>case</span> MarketState<span style='color:#0000ff; '>.</span>Open<span style='color:#0000ff; '>:</span>
+                    Clients<span style='color:#0000ff; '>.</span>All<span style='color:#0000ff; '>.</span>marketOpened<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>case</span> MarketState<span style='color:#0000ff; '>.</span>Closed<span style='color:#0000ff; '>:</span>
+                    Clients<span style='color:#0000ff; '>.</span>All<span style='color:#0000ff; '>.</span>marketClosed<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>default</span><span style='color:#0000ff; '>:</span>
+                    <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> BroadcastMarketReset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Clients<span style='color:#0000ff; '>.</span>All<span style='color:#0000ff; '>.</span>marketReset<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>void</span> BroadcastStockPrice<span style='color:#0000ff; '>(</span>Stock stock<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Clients<span style='color:#0000ff; '>.</span>All<span style='color:#0000ff; '>.</span>updateStockPrice<span style='color:#0000ff; '>(</span>stock<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>enum</span> MarketState
+    <span style='color:#0000ff; '>{</span>
+        Closed<span style='color:#0000ff; '>,</span>
+        Open
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-24 10:05:49 UTC -->

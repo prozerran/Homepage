@@ -1,0 +1,130 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> WebSocketSharp<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> WebSocketSharp<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Example
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> Program
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#008000; '>// Create a new instance of the WebSocket class.</span>
+      <span style='color:#008000; '>//</span>
+      <span style='color:#008000; '>// The WebSocket class inherits the System.IDisposable interface, so you can</span>
+      <span style='color:#008000; '>// use the using statement. And the WebSocket connection will be closed with</span>
+      <span style='color:#008000; '>// close status 1001 (going away) when the control leaves the using block.</span>
+      <span style='color:#008000; '>//</span>
+      <span style='color:#008000; '>// If you would like to connect to the server with the secure connection,</span>
+      <span style='color:#008000; '>// you should create a new instance with a wss scheme WebSocket URL.</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> nf <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Notifier <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> ws <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> WebSocket <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ws://echo.websocket.org</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("wss://echo.websocket.org"))</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("ws://localhost:4649/Echo"))</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("wss://localhost:5963/Echo"))</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("ws://localhost:4649/Echo?name=nobita"))</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("wss://localhost:5963/Echo?name=nobita"))</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("ws://localhost:4649/Chat"))</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("wss://localhost:5963/Chat"))</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("ws://localhost:4649/Chat?name=nobita"))</span>
+      <span style='color:#008000; '>//using (var ws = new WebSocket ("wss://localhost:5963/Chat?name=nobita"))</span>
+      <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// Set the WebSocket events.</span>
+
+        ws<span style='color:#0000ff; '>.</span>OnOpen <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>sender<span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> ws<span style='color:#0000ff; '>.</span>Send <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Hi, there!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        ws<span style='color:#0000ff; '>.</span>OnMessage <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>sender<span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+            nf<span style='color:#0000ff; '>.</span>Notify <span style='color:#0000ff; '>(</span>
+              <span style='color:#0000ff; font-weight:bold; '>new</span> NotificationMessage <span style='color:#0000ff; '>{</span>
+                Summary <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WebSocket Message</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                Body <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>!</span>e<span style='color:#0000ff; '>.</span>IsPing ? e<span style='color:#0000ff; '>.</span>Data <span style='color:#0000ff; '>:</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Received a ping.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                Icon <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>notification-message-im</span><span style='color:#0000e6; '>"</span>
+              <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        ws<span style='color:#0000ff; '>.</span>OnError <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>sender<span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+            nf<span style='color:#0000ff; '>.</span>Notify <span style='color:#0000ff; '>(</span>
+              <span style='color:#0000ff; font-weight:bold; '>new</span> NotificationMessage <span style='color:#0000ff; '>{</span>
+                Summary <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WebSocket Error</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span>
+                Body <span style='color:#0000ff; '>=</span> e<span style='color:#0000ff; '>.</span>Message<span style='color:#0000ff; '>,</span>
+                Icon <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>notification-message-im</span><span style='color:#0000e6; '>"</span>
+              <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        ws<span style='color:#0000ff; '>.</span>OnClose <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>sender<span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+            nf<span style='color:#0000ff; '>.</span>Notify <span style='color:#0000ff; '>(</span>
+              <span style='color:#0000ff; font-weight:bold; '>new</span> NotificationMessage <span style='color:#0000ff; '>{</span>
+                Summary <span style='color:#0000ff; '>=</span> String<span style='color:#0000ff; '>.</span>Format <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>WebSocket Close ({0})</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>.</span>Code<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span>
+                Body <span style='color:#0000ff; '>=</span> e<span style='color:#0000ff; '>.</span>Reason<span style='color:#0000ff; '>,</span>
+                Icon <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>notification-message-im</span><span style='color:#0000e6; '>"</span>
+              <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#<span style='color:#0000ff; font-weight:bold; '>if</span> DEBUG
+        <span style='color:#008000; '>// To change the logging level.</span>
+        ws<span style='color:#0000ff; '>.</span>Log<span style='color:#0000ff; '>.</span>Level <span style='color:#0000ff; '>=</span> LogLevel<span style='color:#0000ff; '>.</span>Trace<span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// To change the wait time for the response to the Ping or Close.</span>
+        <span style='color:#008000; '>//ws.WaitTime = TimeSpan.FromSeconds (10);</span>
+
+        <span style='color:#008000; '>// To emit a WebSocket.OnMessage event when receives a ping.</span>
+        <span style='color:#008000; '>//ws.EmitOnPing = true;</span>
+#endif
+        <span style='color:#008000; '>// To enable the Per-message Compression extension.</span>
+        <span style='color:#008000; '>//ws.Compression = CompressionMethod.Deflate;</span>
+
+        <span style='color:#008000; '>// To validate the server certificate.</span>
+        <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;ws.SslConfiguration.ServerCertificateValidationCallback =</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;(sender, certificate, chain, sslPolicyErrors) => {</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;ws.Log.Debug (</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;String.Format (</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;"Certificate:\n- Issuer: {0}\n- Subject: {1}",</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;certificate.Issuer,</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;certificate.Subject</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;);</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;return true; // If the server certificate is valid.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;};</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+        <span style='color:#008000; '>// To send the credentials for the HTTP Authentication (Basic/Digest).</span>
+        <span style='color:#008000; '>//ws.SetCredentials ("nobita", "password", false);</span>
+
+        <span style='color:#008000; '>// To send the Origin header.</span>
+        <span style='color:#008000; '>//ws.Origin = "</span><span style='color:#5555dd; '>http://localhost:4649</span><span style='color:#008000; '>";</span>
+
+        <span style='color:#008000; '>// To send the cookies.</span>
+        <span style='color:#008000; '>//ws.SetCookie (new Cookie ("name", "nobita"));</span>
+        <span style='color:#008000; '>//ws.SetCookie (new Cookie ("roles", "\"idiot, gunfighter\""));</span>
+
+        <span style='color:#008000; '>// To connect through the HTTP Proxy server.</span>
+        <span style='color:#008000; '>//ws.SetProxy ("</span><span style='color:#5555dd; '>http://localhost:3128</span><span style='color:#008000; '>", "nobita", "password");</span>
+
+        <span style='color:#008000; '>// To enable the redirection.</span>
+        <span style='color:#008000; '>//ws.EnableRedirection = true;</span>
+
+        <span style='color:#008000; '>// Connect to the server.</span>
+        ws<span style='color:#0000ff; '>.</span>Connect <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// Connect to the server asynchronously.</span>
+        <span style='color:#008000; '>//ws.ConnectAsync ();</span>
+
+        Console<span style='color:#0000ff; '>.</span>WriteLine <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\nType exit to exit.\n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+          Thread<span style='color:#0000ff; '>.</span>Sleep <span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          Console<span style='color:#0000ff; '>.</span>Write <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>> </span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; font-weight:bold; '>var</span> msg <span style='color:#0000ff; '>=</span> Console<span style='color:#0000ff; '>.</span>ReadLine <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>msg <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>exit</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+
+          <span style='color:#008000; '>// Send a text message.</span>
+          ws<span style='color:#0000ff; '>.</span>Send <span style='color:#0000ff; '>(</span>msg<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+      <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-25 02:54:26 UTC -->

@@ -1,0 +1,168 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Configuration<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Security<span style='color:#0000ff; '>.</span>Cryptography<span style='color:#0000ff; '>.</span>X509Certificates<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> WebSocketSharp<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> WebSocketSharp<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> WebSocketSharp<span style='color:#0000ff; '>.</span>Server<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Example3
+<span style='color:#0000ff; '>{</span>
+  <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>class</span> Program
+  <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+    <span style='color:#0000ff; '>{</span>
+      <span style='color:#008000; '>// Create a new instance of the HttpServer class.</span>
+      <span style='color:#008000; '>//</span>
+      <span style='color:#008000; '>// If you would like to provide the secure connection, you should</span>
+      <span style='color:#008000; '>// create a new instance with the 'secure' parameter set to true,</span>
+      <span style='color:#008000; '>// or an https scheme HTTP URL.</span>
+
+      <span style='color:#0000ff; font-weight:bold; '>var</span> httpsv <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> HttpServer <span style='color:#0000ff; '>(</span><span style='color:#800000; '>4649</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer (5963, true);</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer (System.Net.IPAddress.Any, 4649);</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer (System.Net.IPAddress.Any, 5963, true);</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer (System.Net.IPAddress.IPv6Any, 4649);</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer (System.Net.IPAddress.IPv6Any, 5963, true);</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>http://0.0.0.0:4649</span><span style='color:#008000; '>");</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>https://0.0.0.0:5963</span><span style='color:#008000; '>");</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>http://[::0]:4649</span><span style='color:#008000; '>");</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>https://[::0]:5963</span><span style='color:#008000; '>");</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer (System.Net.IPAddress.Loopback, 4649);</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer (System.Net.IPAddress.Loopback, 5963, true);</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer (System.Net.IPAddress.IPv6Loopback, 4649);</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer (System.Net.IPAddress.IPv6Loopback, 5963, true);</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>http://localhost:4649</span><span style='color:#008000; '>");</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>https://localhost:5963</span><span style='color:#008000; '>");</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>http://127.0.0.1:4649</span><span style='color:#008000; '>");</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>https://127.0.0.1:5963</span><span style='color:#008000; '>");</span>
+
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>http://[::1]:4649</span><span style='color:#008000; '>");</span>
+      <span style='color:#008000; '>//var httpsv = new HttpServer ("</span><span style='color:#5555dd; '>https://[::1]:5963</span><span style='color:#008000; '>");</span>
+#<span style='color:#0000ff; font-weight:bold; '>if</span> DEBUG
+      <span style='color:#008000; '>// To change the logging level.</span>
+      httpsv<span style='color:#0000ff; '>.</span>Log<span style='color:#0000ff; '>.</span>Level <span style='color:#0000ff; '>=</span> LogLevel<span style='color:#0000ff; '>.</span>Trace<span style='color:#0000ff; '>;</span>
+
+      <span style='color:#008000; '>// To change the wait time for the response to the WebSocket Ping or Close.</span>
+      <span style='color:#008000; '>//httpsv.WaitTime = TimeSpan.FromSeconds (2);</span>
+
+      <span style='color:#008000; '>// Not to remove the inactive WebSocket sessions periodically.</span>
+      <span style='color:#008000; '>//httpsv.KeepClean = false;</span>
+#endif
+      <span style='color:#008000; '>// To provide the secure connection.</span>
+      <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var cert = ConfigurationManager.AppSettings["ServerCertFile"];</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var passwd = ConfigurationManager.AppSettings["CertFilePassword"];</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;httpsv.SslConfiguration.ServerCertificate = new X509Certificate2 (cert, passwd);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+      <span style='color:#008000; '>// To provide the HTTP Authentication (Basic/Digest).</span>
+      <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;httpsv.AuthenticationSchemes = AuthenticationSchemes.Basic;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;httpsv.Realm = "WebSocket Test";</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;httpsv.UserCredentialsFinder = id => {</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;var name = id.Name;</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// Return user name, password, and roles.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;return name == "nobita"</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;? new NetworkCredential (name, "password", "gunfighter")</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;: null; // If the user credentials aren't found.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;};</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+      <span style='color:#008000; '>// To resolve to wait for socket in TIME_WAIT state.</span>
+      <span style='color:#008000; '>//httpsv.ReuseAddress = true;</span>
+
+      <span style='color:#008000; '>// Set the document root path.</span>
+      httpsv<span style='color:#0000ff; '>.</span>DocumentRootPath <span style='color:#0000ff; '>=</span> ConfigurationManager<span style='color:#0000ff; '>.</span>AppSettings<span style='color:#0000ff; '>[</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>DocumentRootPath</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+      <span style='color:#008000; '>// Set the HTTP GET request event.</span>
+      httpsv<span style='color:#0000ff; '>.</span>OnGet <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>sender<span style='color:#0000ff; '>,</span> e<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+          <span style='color:#0000ff; font-weight:bold; '>var</span> req <span style='color:#0000ff; '>=</span> e<span style='color:#0000ff; '>.</span>Request<span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; font-weight:bold; '>var</span> res <span style='color:#0000ff; '>=</span> e<span style='color:#0000ff; '>.</span>Response<span style='color:#0000ff; '>;</span>
+
+          <span style='color:#0000ff; font-weight:bold; '>var</span> path <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>RawUrl<span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>path <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+            path <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>index.html</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+
+          <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> contents<span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>e<span style='color:#0000ff; '>.</span>TryReadFile <span style='color:#0000ff; '>(</span>path<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>out</span> contents<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            res<span style='color:#0000ff; '>.</span>StatusCode <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span> HttpStatusCode<span style='color:#0000ff; '>.</span>NotFound<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; '>}</span>
+
+          <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>path<span style='color:#0000ff; '>.</span>EndsWith <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.html</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            res<span style='color:#0000ff; '>.</span>ContentType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>text/html</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>ContentEncoding <span style='color:#0000ff; '>=</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; '>}</span>
+          <span style='color:#0000ff; font-weight:bold; '>else</span> <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>path<span style='color:#0000ff; '>.</span>EndsWith <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.js</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            res<span style='color:#0000ff; '>.</span>ContentType <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>application/javascript</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+            res<span style='color:#0000ff; '>.</span>ContentEncoding <span style='color:#0000ff; '>=</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>;</span>
+          <span style='color:#0000ff; '>}</span>
+
+          res<span style='color:#0000ff; '>.</span>WriteContent <span style='color:#0000ff; '>(</span>contents<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+      <span style='color:#008000; '>// Add the WebSocket services.</span>
+      httpsv<span style='color:#0000ff; '>.</span>AddWebSocketService<span style='color:#0000ff; '>&lt;</span>Echo<span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/Echo</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      httpsv<span style='color:#0000ff; '>.</span>AddWebSocketService<span style='color:#0000ff; '>&lt;</span>Chat<span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>/Chat</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+      <span style='color:#008000; '>// Add the WebSocket service with initializing.</span>
+      <span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;httpsv.AddWebSocketService&lt;Chat> (</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;"/Chat",</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;() =></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;new Chat ("Anon#") {</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// To send the Sec-WebSocket-Protocol header that has a subprotocol name.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Protocol = "chat",</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// To ignore the Sec-WebSocket-Extensions header.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;IgnoreExtensions = true,</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// To emit a WebSocket.OnMessage event when receives a ping.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;EmitOnPing = true,</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// To validate the Origin header.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;OriginValidator = val => {</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// Check the value of the Origin header, and return true if valid.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Uri origin;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;return !val.IsNullOrEmpty ()</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&amp;&amp; Uri.TryCreate (val, UriKind.Absolute, out origin)</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&amp;&amp; origin.Host == "localhost";</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;},</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// To validate the cookies.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;CookiesValidator = (req, res) => {</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// Check the cookies in req, and set the cookies to send to</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;// the client with res if necessary.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;foreach (Cookie cookie in req) {</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;cookie.Expired = true;</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;res.Add (cookie);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;return true; // If valid.</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;);</span>
+<span style='color:#008000; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+      httpsv<span style='color:#0000ff; '>.</span>Start <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>httpsv<span style='color:#0000ff; '>.</span>IsListening<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+        Console<span style='color:#0000ff; '>.</span>WriteLine <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Listening on port {0}, and providing WebSocket services:</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> httpsv<span style='color:#0000ff; '>.</span>Port<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> path <span style='color:#0000ff; font-weight:bold; '>in</span> httpsv<span style='color:#0000ff; '>.</span>WebSocketServices<span style='color:#0000ff; '>.</span>Paths<span style='color:#0000ff; '>)</span>
+          Console<span style='color:#0000ff; '>.</span>WriteLine <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>- {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      <span style='color:#0000ff; '>}</span>
+
+      Console<span style='color:#0000ff; '>.</span>WriteLine <span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>\nPress Enter key to stop the server...</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+      Console<span style='color:#0000ff; '>.</span>ReadLine <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+      httpsv<span style='color:#0000ff; '>.</span>Stop <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span>
+  <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-25 02:57:22 UTC -->
