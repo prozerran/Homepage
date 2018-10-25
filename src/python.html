@@ -1,0 +1,162 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>#!/usr/bin/env python</span>
+
+<span style='color:#008000; '>#</span>
+<span style='color:#008000; '># Sort large text files in a minimum amount of memory</span>
+<span style='color:#008000; '>#</span>
+<span style='color:#0000ff; font-weight:bold; '>import</span> os
+<span style='color:#0000ff; font-weight:bold; '>import</span> argparse
+
+<span style='color:#0000ff; font-weight:bold; '>class</span> FileSplitter<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+    BLOCK_FILENAME_FORMAT <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>'block_{0}.dat'</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> <span style='color:#074726; '>__init__</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        self<span style='color:#0000ff; '>.</span>filename <span style='color:#0000ff; '>=</span> filename
+        self<span style='color:#0000ff; '>.</span>block_filenames <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> write_block<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> data<span style='color:#0000ff; '>,</span> block_number<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        filename <span style='color:#0000ff; '>=</span> self<span style='color:#0000ff; '>.</span>BLOCK_FILENAME_FORMAT<span style='color:#0000ff; '>.</span>format<span style='color:#0000ff; '>(</span>block_number<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>file</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>open</span><span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>'w'</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>file</span><span style='color:#0000ff; '>.</span>write<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; font-weight:bold; '>file</span><span style='color:#0000ff; '>.</span>close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        self<span style='color:#0000ff; '>.</span>block_filenames<span style='color:#0000ff; '>.</span>append<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>)</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> get_block_filenames<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> self<span style='color:#0000ff; '>.</span>block_filenames
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> split<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> block_size<span style='color:#0000ff; '>,</span> sort_key<span style='color:#0000ff; '>=</span><span style='color:#074726; '>None</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>file</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>open</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>'r'</span><span style='color:#0000ff; '>)</span>
+        i <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#074726; '>True</span><span style='color:#0000ff; '>:</span>
+            lines <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>file</span><span style='color:#0000ff; '>.</span>readlines<span style='color:#0000ff; '>(</span>block_size<span style='color:#0000ff; '>)</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> lines <span style='color:#0000ff; font-weight:bold; '>==</span> <span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>:</span>
+                <span style='color:#0000ff; font-weight:bold; '>break</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> sort_key <span style='color:#0000ff; font-weight:bold; '>is</span> <span style='color:#074726; '>None</span><span style='color:#0000ff; '>:</span>
+                lines<span style='color:#0000ff; '>.</span>sort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span><span style='color:#0000ff; '>:</span>
+                lines<span style='color:#0000ff; '>.</span>sort<span style='color:#0000ff; '>(</span>key<span style='color:#0000ff; '>=</span>sort_key<span style='color:#0000ff; '>)</span>
+
+            self<span style='color:#0000ff; '>.</span>write_block<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>''</span><span style='color:#0000ff; '>.</span>join<span style='color:#0000ff; '>(</span>lines<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> i<span style='color:#0000ff; '>)</span>
+            i <span style='color:#0000ff; font-weight:bold; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> cleanup<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>map</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>lambda</span> f<span style='color:#0000ff; '>:</span> os<span style='color:#0000ff; '>.</span>remove<span style='color:#0000ff; '>(</span>f<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> self<span style='color:#0000ff; '>.</span>block_filenames<span style='color:#0000ff; '>)</span>
+
+
+<span style='color:#0000ff; font-weight:bold; '>class</span> NWayMerge<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+    <span style='color:#0000ff; font-weight:bold; '>def</span> select<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> choices<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        min_index <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>-</span><span style='color:#800000; '>1</span>
+        min_str <span style='color:#0000ff; '>=</span> <span style='color:#074726; '>None</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> i <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>range</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>len</span><span style='color:#0000ff; '>(</span>choices<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> min_str <span style='color:#0000ff; font-weight:bold; '>is</span> <span style='color:#074726; '>None</span> <span style='color:#0000ff; font-weight:bold; '>or</span> choices<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>&lt;</span> min_str<span style='color:#0000ff; '>:</span>
+                min_index <span style='color:#0000ff; '>=</span> i
+
+        <span style='color:#0000ff; font-weight:bold; '>return</span> min_index
+
+
+<span style='color:#0000ff; font-weight:bold; '>class</span> FilesArray<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+    <span style='color:#0000ff; font-weight:bold; '>def</span> <span style='color:#074726; '>__init__</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> files<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        self<span style='color:#0000ff; '>.</span>files <span style='color:#0000ff; '>=</span> files
+        self<span style='color:#0000ff; '>.</span>empty <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        self<span style='color:#0000ff; '>.</span>num_buffers <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>len</span><span style='color:#0000ff; '>(</span>files<span style='color:#0000ff; '>)</span>
+        self<span style='color:#0000ff; '>.</span>buffers <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span>i<span style='color:#0000ff; '>:</span> <span style='color:#074726; '>None</span> <span style='color:#0000ff; font-weight:bold; '>for</span> i <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>range</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>.</span>num_buffers<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> get_dict<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>{</span>i<span style='color:#0000ff; '>:</span> self<span style='color:#0000ff; '>.</span>buffers<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>for</span> i <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>range</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>.</span>num_buffers<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>if</span> i <span style='color:#0000ff; font-weight:bold; '>not</span> <span style='color:#0000ff; font-weight:bold; '>in</span> self<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> refresh<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>for</span> i <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>range</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>.</span>num_buffers<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> self<span style='color:#0000ff; '>.</span>buffers<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>is</span> <span style='color:#074726; '>None</span> <span style='color:#0000ff; font-weight:bold; '>and</span> i <span style='color:#0000ff; font-weight:bold; '>not</span> <span style='color:#0000ff; font-weight:bold; '>in</span> self<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>:</span>
+                self<span style='color:#0000ff; '>.</span>buffers<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> self<span style='color:#0000ff; '>.</span>files<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>readline<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>if</span> self<span style='color:#0000ff; '>.</span>buffers<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; font-weight:bold; '>==</span> <span style='color:#0000e6; '>''</span><span style='color:#0000ff; '>:</span>
+                    self<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>.</span>add<span style='color:#0000ff; '>(</span>i<span style='color:#0000ff; '>)</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; font-weight:bold; '>len</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>.</span>empty<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>==</span> self<span style='color:#0000ff; '>.</span>num_buffers<span style='color:#0000ff; '>:</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#074726; '>False</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#074726; '>True</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> unshift<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> index<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        value <span style='color:#0000ff; '>=</span> self<span style='color:#0000ff; '>.</span>buffers<span style='color:#0000ff; '>[</span>index<span style='color:#0000ff; '>]</span>
+        self<span style='color:#0000ff; '>.</span>buffers<span style='color:#0000ff; '>[</span>index<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#074726; '>None</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>return</span> value
+
+
+<span style='color:#0000ff; font-weight:bold; '>class</span> FileMerger<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+    <span style='color:#0000ff; font-weight:bold; '>def</span> <span style='color:#074726; '>__init__</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> merge_strategy<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        self<span style='color:#0000ff; '>.</span>merge_strategy <span style='color:#0000ff; '>=</span> merge_strategy
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> merge<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> filenames<span style='color:#0000ff; '>,</span> outfilename<span style='color:#0000ff; '>,</span> buffer_size<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        outfile <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>open</span><span style='color:#0000ff; '>(</span>outfilename<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>'w'</span><span style='color:#0000ff; '>,</span> buffer_size<span style='color:#0000ff; '>)</span>
+        buffers <span style='color:#0000ff; '>=</span> FilesArray<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>.</span>get_file_handles<span style='color:#0000ff; '>(</span>filenames<span style='color:#0000ff; '>,</span> buffer_size<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>while</span> buffers<span style='color:#0000ff; '>.</span>refresh<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+            min_index <span style='color:#0000ff; '>=</span> self<span style='color:#0000ff; '>.</span>merge_strategy<span style='color:#0000ff; '>.</span>select<span style='color:#0000ff; '>(</span>buffers<span style='color:#0000ff; '>.</span>get_dict<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            outfile<span style='color:#0000ff; '>.</span>write<span style='color:#0000ff; '>(</span>buffers<span style='color:#0000ff; '>.</span>unshift<span style='color:#0000ff; '>(</span>min_index<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> get_file_handles<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> filenames<span style='color:#0000ff; '>,</span> buffer_size<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        files <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>for</span> i <span style='color:#0000ff; font-weight:bold; '>in</span> <span style='color:#0000ff; font-weight:bold; '>range</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>len</span><span style='color:#0000ff; '>(</span>filenames<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+            files<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>open</span><span style='color:#0000ff; '>(</span>filenames<span style='color:#0000ff; '>[</span>i<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>'r'</span><span style='color:#0000ff; '>,</span> buffer_size<span style='color:#0000ff; '>)</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>return</span> files
+
+
+
+<span style='color:#0000ff; font-weight:bold; '>class</span> ExternalSort<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+    <span style='color:#0000ff; font-weight:bold; '>def</span> <span style='color:#074726; '>__init__</span><span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> block_size<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        self<span style='color:#0000ff; '>.</span>block_size <span style='color:#0000ff; '>=</span> block_size
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> sort<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> filename<span style='color:#0000ff; '>,</span> sort_key<span style='color:#0000ff; '>=</span><span style='color:#074726; '>None</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        num_blocks <span style='color:#0000ff; '>=</span> self<span style='color:#0000ff; '>.</span>get_number_blocks<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>,</span> self<span style='color:#0000ff; '>.</span>block_size<span style='color:#0000ff; '>)</span>
+        splitter <span style='color:#0000ff; '>=</span> FileSplitter<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>)</span>
+        splitter<span style='color:#0000ff; '>.</span>split<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>.</span>block_size<span style='color:#0000ff; '>,</span> sort_key<span style='color:#0000ff; '>)</span>
+
+        merger <span style='color:#0000ff; '>=</span> FileMerger<span style='color:#0000ff; '>(</span>NWayMerge<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+        buffer_size <span style='color:#0000ff; '>=</span> self<span style='color:#0000ff; '>.</span>block_size <span style='color:#0000ff; font-weight:bold; '>/</span> <span style='color:#0000ff; '>(</span>num_blocks <span style='color:#0000ff; font-weight:bold; '>+</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+        merger<span style='color:#0000ff; '>.</span>merge<span style='color:#0000ff; '>(</span>splitter<span style='color:#0000ff; '>.</span>get_block_filenames<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> filename <span style='color:#0000ff; font-weight:bold; '>+</span> <span style='color:#0000e6; '>'.out'</span><span style='color:#0000ff; '>,</span> buffer_size<span style='color:#0000ff; '>)</span>
+
+        splitter<span style='color:#0000ff; '>.</span>cleanup<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>def</span> get_number_blocks<span style='color:#0000ff; '>(</span>self<span style='color:#0000ff; '>,</span> filename<span style='color:#0000ff; '>,</span> block_size<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; '>(</span>os<span style='color:#0000ff; '>.</span>stat<span style='color:#0000ff; '>(</span>filename<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>st_size <span style='color:#0000ff; font-weight:bold; '>/</span> block_size<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>+</span> <span style='color:#800000; '>1</span>
+
+
+<span style='color:#0000ff; font-weight:bold; '>def</span> parse_memory<span style='color:#0000ff; '>(</span>string<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+    <span style='color:#0000ff; font-weight:bold; '>if</span> string<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>lower<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>==</span> <span style='color:#0000e6; '>'k'</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>(</span>string<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>:</span><span style='color:#0000ff; font-weight:bold; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>*</span> <span style='color:#800000; '>1024</span>
+    <span style='color:#0000ff; font-weight:bold; '>elif</span> string<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>lower<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>==</span> <span style='color:#0000e6; '>'m'</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>(</span>string<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>:</span><span style='color:#0000ff; font-weight:bold; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>*</span> <span style='color:#800000; '>1024</span> <span style='color:#0000ff; font-weight:bold; '>*</span> <span style='color:#800000; '>1024</span>
+    <span style='color:#0000ff; font-weight:bold; '>elif</span> string<span style='color:#0000ff; '>[</span><span style='color:#0000ff; font-weight:bold; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>.</span>lower<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>==</span> <span style='color:#0000e6; '>'g'</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>(</span>string<span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>:</span><span style='color:#0000ff; font-weight:bold; '>-</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; font-weight:bold; '>*</span> <span style='color:#800000; '>1024</span> <span style='color:#0000ff; font-weight:bold; '>*</span> <span style='color:#800000; '>1024</span> <span style='color:#0000ff; font-weight:bold; '>*</span> <span style='color:#800000; '>1024</span>
+    <span style='color:#0000ff; font-weight:bold; '>else</span><span style='color:#0000ff; '>:</span>
+        <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>(</span>string<span style='color:#0000ff; '>)</span>
+
+
+
+<span style='color:#0000ff; font-weight:bold; '>def</span> main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>:</span>
+    parser <span style='color:#0000ff; '>=</span> argparse<span style='color:#0000ff; '>.</span>ArgumentParser<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+    parser<span style='color:#0000ff; '>.</span>add_argument<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'-m'</span><span style='color:#0000ff; '>,</span>
+                        <span style='color:#0000e6; '>'--mem'</span><span style='color:#0000ff; '>,</span>
+                        <span style='color:#0000ff; font-weight:bold; '>help</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>'amount of memory to use for sorting'</span><span style='color:#0000ff; '>,</span>
+                        default<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>'100M'</span><span style='color:#0000ff; '>)</span>
+    parser<span style='color:#0000ff; '>.</span>add_argument<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'filename'</span><span style='color:#0000ff; '>,</span>
+                        metavar<span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>'&lt;filename>'</span><span style='color:#0000ff; '>,</span>
+                        nargs<span style='color:#0000ff; '>=</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>,</span>
+                        <span style='color:#0000ff; font-weight:bold; '>help</span><span style='color:#0000ff; '>=</span><span style='color:#0000e6; '>'name of file to sort'</span><span style='color:#0000ff; '>)</span>
+    args <span style='color:#0000ff; '>=</span> parser<span style='color:#0000ff; '>.</span>parse_args<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+
+    sorter <span style='color:#0000ff; '>=</span> ExternalSort<span style='color:#0000ff; '>(</span>parse_memory<span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>.</span>mem<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+    sorter<span style='color:#0000ff; '>.</span>sort<span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>.</span>filename<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span>
+
+
+<span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#074726; '>__name__</span> <span style='color:#0000ff; font-weight:bold; '>==</span> <span style='color:#0000e6; '>'__main__'</span><span style='color:#0000ff; '>:</span>
+    main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-25 08:30:28 UTC -->
