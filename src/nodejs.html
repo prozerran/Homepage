@@ -1,0 +1,115 @@
+<pre style='color:#000000;background:#ffffff;'>
+<span style='color:#008000; '>// http://localhost:3000/#/</span>
+
+<span style='color:#0000ff; font-weight:bold; '>const</span> express <span style='color:#0000ff; '>=</span> require<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>express</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>const</span> app <span style='color:#0000ff; '>=</span> express<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>const</span> bodyParser <span style='color:#0000ff; '>=</span> require<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>body-parser</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#008000; '>//const mongoose = require('mongoose');</span>
+
+app<span style='color:#0000ff; '>.</span>use<span style='color:#0000ff; '>(</span>express<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>static</span><span style='color:#0000ff; '>(</span>__dirname <span style='color:#0000ff; '>+</span> <span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/client</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+app<span style='color:#0000ff; '>.</span>use<span style='color:#0000ff; '>(</span>bodyParser<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+Genre <span style='color:#0000ff; '>=</span> require<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>./models/genre</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+Book <span style='color:#0000ff; '>=</span> require<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>./models/book</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>// Connect to Mongoose</span>
+<span style='color:#008000; '>//mongoose.connect('mongodb://localhost/bookstore');</span>
+<span style='color:#008000; '>//var db = mongoose.connection;</span>
+
+app<span style='color:#0000ff; '>.</span>get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    res<span style='color:#0000ff; '>.</span>send<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>Please use /api/books or /api/genres</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span>get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/genres</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    Genre<span style='color:#0000ff; '>.</span>getGenres<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> genres<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>genres<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span>post<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/genres</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>var</span> genre <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>body<span style='color:#0000ff; '>;</span>
+    Genre<span style='color:#0000ff; '>.</span>addGenre<span style='color:#0000ff; '>(</span>genre<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> genre<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>genre<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span>put<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/genres/:_id</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>var</span> id <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>.</span>_id<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>var</span> genre <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>body<span style='color:#0000ff; '>;</span>
+    Genre<span style='color:#0000ff; '>.</span>updateGenre<span style='color:#0000ff; '>(</span>id<span style='color:#0000ff; '>,</span> genre<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> genre<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>genre<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>delete</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/genres/:_id</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>var</span> id <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>.</span>_id<span style='color:#0000ff; '>;</span>
+    Genre<span style='color:#0000ff; '>.</span>removeGenre<span style='color:#0000ff; '>(</span>id<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> genre<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>genre<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span>get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/books</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    Book<span style='color:#0000ff; '>.</span>getBooks<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> books<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>books<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span>get<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/books/:_id</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    Book<span style='color:#0000ff; '>.</span>getBookById<span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>.</span>_id<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> book<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>book<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span>post<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/books</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>var</span> book <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>body<span style='color:#0000ff; '>;</span>
+    Book<span style='color:#0000ff; '>.</span>addBook<span style='color:#0000ff; '>(</span>book<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> book<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>book<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span>put<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/books/:_id</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>var</span> id <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>.</span>_id<span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; font-weight:bold; '>var</span> book <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>body<span style='color:#0000ff; '>;</span>
+    Book<span style='color:#0000ff; '>.</span>updateBook<span style='color:#0000ff; '>(</span>id<span style='color:#0000ff; '>,</span> book<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>{</span><span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> book<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>book<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>delete</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>/api/books/:_id</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>req<span style='color:#0000ff; '>,</span> res<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>var</span> id <span style='color:#0000ff; '>=</span> req<span style='color:#0000ff; '>.</span>params<span style='color:#0000ff; '>.</span>_id<span style='color:#0000ff; '>;</span>
+    Book<span style='color:#0000ff; '>.</span>removeBook<span style='color:#0000ff; '>(</span>id<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>,</span> book<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>err<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>throw</span> err<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+        res<span style='color:#0000ff; '>.</span>json<span style='color:#0000ff; '>(</span>book<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+    <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+app<span style='color:#0000ff; '>.</span>listen<span style='color:#0000ff; '>(</span><span style='color:#800000; '>3000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+console<span style='color:#0000ff; '>.</span><span style='color:#0000ff; font-weight:bold; '>log</span><span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>'</span><span style='color:#0000e6; '>Running on port 3000...</span><span style='color:#0000e6; '>'</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-25 07:47:37 UTC -->
