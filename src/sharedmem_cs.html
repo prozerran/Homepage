@@ -1,0 +1,202 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// SharedMemory (File: SingleProcess\Program.cs)</span>
+<span style='color:#008000; '>// Copyright (c) 2014 Justin Stenning</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://spazzarama.com</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// Permission is hereby granted, free of charge, to any person obtaining a copy</span>
+<span style='color:#008000; '>// of this software and associated documentation files (the "Software"), to deal</span>
+<span style='color:#008000; '>// in the Software without restriction, including without limitation the rights</span>
+<span style='color:#008000; '>// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</span>
+<span style='color:#008000; '>// copies of the Software, and to permit persons to whom the Software is</span>
+<span style='color:#008000; '>// furnished to do so, subject to the following conditions:</span>
+<span style='color:#008000; '>// </span>
+<span style='color:#008000; '>// The above copyright notice and this permission notice shall be included in</span>
+<span style='color:#008000; '>// all copies or substantial portions of the Software.</span>
+<span style='color:#008000; '>// </span>
+<span style='color:#008000; '>// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
+<span style='color:#008000; '>// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
+<span style='color:#008000; '>// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE</span>
+<span style='color:#008000; '>// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</span>
+<span style='color:#008000; '>// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</span>
+<span style='color:#008000; '>// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN</span>
+<span style='color:#008000; '>// THE SOFTWARE.</span>
+<span style='color:#008000; '>//</span>
+<span style='color:#008000; '>// The SharedMemory library is inspired by the following Code Project article:</span>
+<span style='color:#008000; '>//   "Fast IPC Communication Using Shared Memory and InterlockedCompareExchange"</span>
+<span style='color:#008000; '>//   </span><span style='color:#5555dd; '>http://www.codeproject.com/Articles/14740/Fast-IPC-Communication-Using-Shared-Memory-and-Int</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Diagnostics<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Runtime<span style='color:#0000ff; '>.</span>InteropServices<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> CommandLine<span style='color:#0000ff; '>;</span>
+#<span style='color:#0000ff; font-weight:bold; '>if</span> NET40Plus
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+#endif
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> SingleProcess
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Program
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>class</span> AppArguments
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; '>[</span>Argument<span style='color:#0000ff; '>(</span>ArgumentType<span style='color:#0000ff; '>.</span>AtMostOnce<span style='color:#0000ff; '>,</span> ShortName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>b</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> DefaultValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1048576</span><span style='color:#0000ff; '>,</span> HelpText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>The buffer size.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+            <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> bufferSize <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>[</span>Argument<span style='color:#0000ff; '>(</span>ArgumentType<span style='color:#0000ff; '>.</span>AtMostOnce<span style='color:#0000ff; '>,</span> ShortName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>n</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> DefaultValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>50</span><span style='color:#0000ff; '>,</span> HelpText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>The number of nodes.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+            <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> nodeCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>[</span>Argument<span style='color:#0000ff; '>(</span>ArgumentType<span style='color:#0000ff; '>.</span>Required<span style='color:#0000ff; '>,</span> ShortName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>w</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> HelpText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>The number of writers.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+            <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> writers <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>[</span>Argument<span style='color:#0000ff; '>(</span>ArgumentType<span style='color:#0000ff; '>.</span>Required<span style='color:#0000ff; '>,</span> ShortName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>r</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> HelpText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>The number of readers.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+            <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> readers <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>[</span>Argument<span style='color:#0000ff; '>(</span>ArgumentType<span style='color:#0000ff; '>.</span>AtMostOnce<span style='color:#0000ff; '>,</span> ShortName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>e</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> DefaultValue <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>100000</span><span style='color:#0000ff; '>,</span> HelpText <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>The number of elements to process.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span>
+            <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> elements <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> elements <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>100000</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> writeCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> clientWaitCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> readCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> serverWaitCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>long</span> lastTick <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> bufferSize <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1048576</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> size <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> bufferSize<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> count <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>50</span><span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// node count within buffer</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>int</span> serverCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> clientCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Process command line</span>
+            AppArguments parsedArgs <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> AppArguments<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> validArgs <span style='color:#0000ff; '>=</span> Parser<span style='color:#0000ff; '>.</span>ParseArgumentsWithUsage<span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>,</span> parsedArgs<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>validArgs<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                elements <span style='color:#0000ff; '>=</span> parsedArgs<span style='color:#0000ff; '>.</span>elements<span style='color:#0000ff; '>;</span>
+                bufferSize <span style='color:#0000ff; '>=</span> parsedArgs<span style='color:#0000ff; '>.</span>bufferSize<span style='color:#0000ff; '>;</span>
+                serverCount <span style='color:#0000ff; '>=</span> parsedArgs<span style='color:#0000ff; '>.</span>writers<span style='color:#0000ff; '>;</span>
+                clientCount <span style='color:#0000ff; '>=</span> parsedArgs<span style='color:#0000ff; '>.</span>readers<span style='color:#0000ff; '>;</span>
+                size <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>sizeof</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> bufferSize<span style='color:#0000ff; '>;</span>
+                count <span style='color:#0000ff; '>=</span> parsedArgs<span style='color:#0000ff; '>.</span>nodeCount<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Node buffer size: {0}, count: {1}, writers: {2}, readers {3}, elements: {4}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> size<span style='color:#0000ff; '>,</span> count<span style='color:#0000ff; '>,</span> serverCount<span style='color:#0000ff; '>,</span> clientCount<span style='color:#0000ff; '>,</span> elements<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>int</span> dataListCount <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>256</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#008000; '>// Generate random data to be written</span>
+            Random random <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Random<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> dataList <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span>dataListCount<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> j <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> j <span style='color:#0000ff; '>&lt;</span> dataListCount<span style='color:#0000ff; '>;</span> j<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>var</span> data <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span>size<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+                random<span style='color:#0000ff; '>.</span>NextBytes<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                dataList<span style='color:#0000ff; '>[</span>j<span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span> data<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>long</span> bytesWritten <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>long</span> bytesRead <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span> name <span style='color:#0000ff; '>=</span> Guid<span style='color:#0000ff; '>.</span>NewGuid<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ToString<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> server <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SharedMemory<span style='color:#0000ff; '>.</span>CircularBuffer<span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>,</span> count<span style='color:#0000ff; '>,</span> size<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            
+            Stopwatch sw <span style='color:#0000ff; '>=</span> Stopwatch<span style='color:#0000ff; '>.</span>StartNew<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            Action clientAction <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> testData <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> <span style='color:#0000ff; font-weight:bold; '>byte</span><span style='color:#0000ff; '>[</span>size<span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>var</span> client <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SharedMemory<span style='color:#0000ff; '>.</span>CircularBuffer<span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                Stopwatch clientTime <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Stopwatch<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                clientTime<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>long</span> startTick <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>long</span> stopTick <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    startTick <span style='color:#0000ff; '>=</span> clientTime<span style='color:#0000ff; '>.</span>ElapsedTicks<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>int</span> amount <span style='color:#0000ff; '>=</span> client<span style='color:#0000ff; '>.</span>Read<span style='color:#0000ff; '>(</span>testData<span style='color:#0000ff; '>,</span> <span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    bytesRead <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> amount<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>amount <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                        Interlocked<span style='color:#0000ff; '>.</span>Increment<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> clientWaitCount<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>else</span>
+                        Interlocked<span style='color:#0000ff; '>.</span>Increment<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> readCount<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    stopTick <span style='color:#0000ff; '>=</span> clientTime<span style='color:#0000ff; '>.</span>ElapsedTicks<span style='color:#0000ff; '>;</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>writeCount <span style='color:#0000ff; '>></span> elements &amp;&amp; writeCount <span style='color:#0000ff; '>-</span> readCount <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> c <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> c <span style='color:#0000ff; '>&lt;</span> clientCount<span style='color:#0000ff; '>;</span> c<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+#<span style='color:#0000ff; font-weight:bold; '>if</span> NET40Plus
+                Task c1 <span style='color:#0000ff; '>=</span> Task<span style='color:#0000ff; '>.</span>Factory<span style='color:#0000ff; '>.</span>StartNew<span style='color:#0000ff; '>(</span>clientAction<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#<span style='color:#0000ff; font-weight:bold; '>else</span>
+                ThreadPool<span style='color:#0000ff; '>.</span>QueueUserWorkItem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>o<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span> clientAction<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#endif
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>bool</span> wait <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>int</span> index <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+            Action serverWrite <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>int</span> serverIndex <span style='color:#0000ff; '>=</span> Interlocked<span style='color:#0000ff; '>.</span>Increment<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> index<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>var</span> writer <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>serverIndex <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span> ? server <span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>new</span> SharedMemory<span style='color:#0000ff; '>.</span>CircularBuffer<span style='color:#0000ff; '>(</span>name<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>bool</span> done <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+                TimeSpan doneTime <span style='color:#0000ff; '>=</span> TimeSpan<span style='color:#0000ff; '>.</span>MinValue<span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>writeCount <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>=</span> elements<span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>int</span> amount <span style='color:#0000ff; '>=</span> writer<span style='color:#0000ff; '>.</span>Write<span style='color:#0000ff; '>(</span>dataList<span style='color:#0000ff; '>[</span>random<span style='color:#0000ff; '>.</span>Next<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>,</span> dataListCount<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        bytesWritten <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> amount<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>amount <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                            Interlocked<span style='color:#0000ff; '>.</span>Increment<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> serverWaitCount<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>else</span>
+                            Interlocked<span style='color:#0000ff; '>.</span>Increment<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> writeCount<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; font-weight:bold; '>else</span>
+                    <span style='color:#0000ff; '>{</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>!</span>done &amp;&amp; serverIndex <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            doneTime <span style='color:#0000ff; '>=</span> sw<span style='color:#0000ff; '>.</span>Elapsed<span style='color:#0000ff; '>;</span>
+                            done <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+
+                    <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>serverIndex <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>1</span> &amp;&amp; sw<span style='color:#0000ff; '>.</span>ElapsedTicks <span style='color:#0000ff; '>-</span> lastTick <span style='color:#0000ff; '>></span> <span style='color:#800000; '>1000000</span><span style='color:#0000ff; '>)</span>
+                    <span style='color:#0000ff; '>{</span>
+                        Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Write: {0}, Read: {1}, Diff: {5}, Wait(cli/svr): {3}/{2}, {4}MB/s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> writeCount<span style='color:#0000ff; '>,</span> readCount<span style='color:#0000ff; '>,</span> serverWaitCount<span style='color:#0000ff; '>,</span> clientWaitCount<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>bytesWritten <span style='color:#0000ff; '>+</span> bytesRead<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> <span style='color:#800000; '>1048576.0</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>/</span> sw<span style='color:#0000ff; '>.</span>ElapsedMilliseconds<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>*</span> <span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>,</span> writeCount <span style='color:#0000ff; '>-</span> readCount<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                        lastTick <span style='color:#0000ff; '>=</span> sw<span style='color:#0000ff; '>.</span>ElapsedTicks<span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>writeCount <span style='color:#0000ff; '>></span> elements &amp;&amp; writeCount <span style='color:#0000ff; '>-</span> readCount <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span>
+                        <span style='color:#0000ff; '>{</span>
+                            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Total Time: </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>+</span> doneTime<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                            wait <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+                            <span style='color:#0000ff; font-weight:bold; '>break</span><span style='color:#0000ff; '>;</span>
+                        <span style='color:#0000ff; '>}</span>
+                    <span style='color:#0000ff; '>}</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> s <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> s <span style='color:#0000ff; '>&lt;</span> serverCount<span style='color:#0000ff; '>;</span> s<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+#<span style='color:#0000ff; font-weight:bold; '>if</span> NET40Plus
+                Task s1 <span style='color:#0000ff; '>=</span> Task<span style='color:#0000ff; '>.</span>Factory<span style='color:#0000ff; '>.</span>StartNew<span style='color:#0000ff; '>(</span>serverWrite<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#<span style='color:#0000ff; font-weight:bold; '>else</span>
+                ThreadPool<span style='color:#0000ff; '>.</span>QueueUserWorkItem<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span>o<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span> serverWrite<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+#endif
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span>wait<span style='color:#0000ff; '>)</span>
+                Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-25 03:23:49 UTC -->

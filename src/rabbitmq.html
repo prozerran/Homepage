@@ -1,0 +1,131 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>using</span> RabbitMQ<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> RabbitMQ<span style='color:#0000ff; '>.</span>Client<span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>// Need to install RabbitMQ Server</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://www.rabbitmq.com/</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> RabbitClientCS
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Program
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Send<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> factory <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ConnectionFactory<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> HostName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> connection <span style='color:#0000ff; '>=</span> factory<span style='color:#0000ff; '>.</span>CreateConnection<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> channel <span style='color:#0000ff; '>=</span> connection<span style='color:#0000ff; '>.</span>CreateModel<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                channel<span style='color:#0000ff; '>.</span>QueueDeclare<span style='color:#0000ff; '>(</span>queue<span style='color:#0000ff; '>:</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>hello</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> durable<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> exclusive<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> autoDelete<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> arguments<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>string</span> message <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Hello World from TIM!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>var</span> body <span style='color:#0000ff; '>=</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>.</span>GetBytes<span style='color:#0000ff; '>(</span>message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                channel<span style='color:#0000ff; '>.</span>BasicPublish<span style='color:#0000ff; '>(</span>exchange<span style='color:#0000ff; '>:</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> routingKey<span style='color:#0000ff; '>:</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>hello</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> basicProperties<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>,</span> body<span style='color:#0000ff; '>:</span> body<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> [x] Sent {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Receive<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> factory <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ConnectionFactory<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> HostName <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> connection <span style='color:#0000ff; '>=</span> factory<span style='color:#0000ff; '>.</span>CreateConnection<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> channel <span style='color:#0000ff; '>=</span> connection<span style='color:#0000ff; '>.</span>CreateModel<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                channel<span style='color:#0000ff; '>.</span>QueueDeclare<span style='color:#0000ff; '>(</span>queue<span style='color:#0000ff; '>:</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>hello</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> durable<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> exclusive<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> autoDelete<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> arguments<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#0000ff; font-weight:bold; '>var</span> consumer <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> RabbitMQ<span style='color:#0000ff; '>.</span>Client<span style='color:#0000ff; '>.</span>Events<span style='color:#0000ff; '>.</span>EventingBasicConsumer<span style='color:#0000ff; '>(</span>channel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                consumer<span style='color:#0000ff; '>.</span>Received <span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>model<span style='color:#0000ff; '>,</span> ea<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span>
+                <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>var</span> body <span style='color:#0000ff; '>=</span> ea<span style='color:#0000ff; '>.</span>Body<span style='color:#0000ff; '>;</span>
+                    <span style='color:#0000ff; font-weight:bold; '>var</span> message <span style='color:#0000ff; '>=</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span>body<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                    Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '> [x] Received {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> message<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+                channel<span style='color:#0000ff; '>.</span>BasicConsume<span style='color:#0000ff; '>(</span>queue<span style='color:#0000ff; '>:</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>hello</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> autoAck<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>,</span> consumer<span style='color:#0000ff; '>:</span> consumer<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>            
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            CRabbitMQ rmq <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> CRabbitMQ<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            rmq<span style='color:#0000ff; '>.</span>Connect<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>localhost</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>[</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>]</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>-s</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                rmq<span style='color:#0000ff; '>.</span>Send<span style='color:#0000ff; '>(</span>args<span style='color:#0000ff; '>[</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>]</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>else</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>string</span> reply <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>;</span>
+                rmq<span style='color:#0000ff; '>.</span>Recv<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> reply<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>reply<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>class</span> CRabbitMQ
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>string</span> queue <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>TESTQ</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> ConnectionFactory connectionFactory <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> IConnection connection <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+
+        ~CRabbitMQ<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            Disconnect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> IConnection Connect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> host<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            connectionFactory <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ConnectionFactory<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            connectionFactory<span style='color:#0000ff; '>.</span>HostName <span style='color:#0000ff; '>=</span> host<span style='color:#0000ff; '>;</span>
+            <span style='color:#008000; '>//connectionFactory.Port = 5555;</span>
+            <span style='color:#008000; '>//connectionFactory.UserName = userName;</span>
+            <span style='color:#008000; '>//connectionFactory.Password = password;</span>
+            connection <span style='color:#0000ff; '>=</span> connectionFactory<span style='color:#0000ff; '>.</span>CreateConnection<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> connection<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Disconnect<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>connection<span style='color:#0000ff; '>.</span>IsOpen<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                connection<span style='color:#0000ff; '>.</span>Close<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                connection <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> Send<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span> str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>IModel channel <span style='color:#0000ff; '>=</span> connection<span style='color:#0000ff; '>.</span>CreateModel<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                channel<span style='color:#0000ff; '>.</span>QueueDeclare<span style='color:#0000ff; '>(</span>queue<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                channel<span style='color:#0000ff; '>.</span>BasicPublish<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>.</span>Empty<span style='color:#0000ff; '>,</span> queue<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>,</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>.</span>GetBytes<span style='color:#0000ff; '>(</span>str<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> str<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>int</span> Recv<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>ref</span> <span style='color:#0000ff; font-weight:bold; '>string</span> str<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span>IModel channel <span style='color:#0000ff; '>=</span> connection<span style='color:#0000ff; '>.</span>CreateModel<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                channel<span style='color:#0000ff; '>.</span>QueueDeclare<span style='color:#0000ff; '>(</span>queue<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>var</span> consumer <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> RabbitMQ<span style='color:#0000ff; '>.</span>Client<span style='color:#0000ff; '>.</span>Events<span style='color:#0000ff; '>.</span>EventingBasicConsumer<span style='color:#0000ff; '>(</span>channel<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                BasicGetResult result <span style='color:#0000ff; '>=</span> channel<span style='color:#0000ff; '>.</span>BasicGet<span style='color:#0000ff; '>(</span>queue<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; font-weight:bold; '>if</span> <span style='color:#0000ff; '>(</span>result <span style='color:#0000ff; '>!</span><span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span>
+                <span style='color:#0000ff; '>{</span>
+                    str <span style='color:#0000ff; '>=</span> Encoding<span style='color:#0000ff; '>.</span>UTF8<span style='color:#0000ff; '>.</span>GetString<span style='color:#0000ff; '>(</span>result<span style='color:#0000ff; '>.</span>Body<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> str<span style='color:#0000ff; '>.</span>Length<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2018-10-25 05:13:06 UTC -->
