@@ -1,0 +1,134 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#008000; '>// ZeroPublisher.cpp : This file contains the 'main' function. Program execution begins and ends there.</span>
+<span style='color:#008000; '>//</span>
+
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>pch.h</span><span style='color:#0000e6; '>"</span>
+
+<span style='color:#008000; '>// C/C++ guide to ZeroMQ</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://zguide.zeromq.org/page:all</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://zguide.zeromq.org/cpp:_start</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>http://zguide.zeromq.org/cs:_start</span>
+
+<span style='color:#008000; '>//#define USE_BOOST_ASIO</span>
+#ifdef USE_BOOST_ASIO
+
+#include <span style='color:#0000ff; '>&lt;</span>array<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>azmq<span style='color:#0000ff; '>/</span>socket<span style='color:#0000ff; '>.</span>hpp<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>boost<span style='color:#0000ff; '>/</span>asio<span style='color:#0000ff; '>.</span>hpp<span style='color:#0000ff; '>></span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> asio <span style='color:#0000ff; '>=</span> boost<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>asio<span style='color:#0000ff; '>;</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> argc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span> argv<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+	asio<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>io_service ios<span style='color:#0000ff; '>;</span>
+	azmq<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>sub_socket subscriber<span style='color:#0000ff; '>(</span>ios<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+	subscriber<span style='color:#0000ff; '>.</span>connect<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>tcp://192.168.55.112:5556</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+	subscriber<span style='color:#0000ff; '>.</span>connect<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>tcp://192.168.55.201:7721</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+	subscriber<span style='color:#0000ff; '>.</span>set_option<span style='color:#0000ff; '>(</span>azmq<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>socket<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>subscribe<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>NASDAQ</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+	azmq<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>pub_socket publisher<span style='color:#0000ff; '>(</span>ios<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+	publisher<span style='color:#0000ff; '>.</span>bind<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>ipc://nasdaq-feed</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+	std<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>array<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>256</span><span style='color:#0000ff; '>></span> buf<span style='color:#0000ff; '>;</span>
+
+	<span style='color:#0000ff; font-weight:bold; '>while</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>)</span>
+	<span style='color:#0000ff; '>{</span>
+		auto size <span style='color:#0000ff; '>=</span> subscriber<span style='color:#0000ff; '>.</span>receive<span style='color:#0000ff; '>(</span>asio<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>buffer<span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		publisher<span style='color:#0000ff; '>.</span>send<span style='color:#0000ff; '>(</span>asio<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>buffer<span style='color:#0000ff; '>(</span>buf<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+	<span style='color:#0000ff; '>}</span>
+	<span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; '>}</span>
+
+#<span style='color:#0000ff; font-weight:bold; '>else</span>
+
+#include <span style='color:#0000ff; '>&lt;</span>iostream<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>chrono<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>thread<span style='color:#0000ff; '>></span>
+#include <span style='color:#0000ff; '>&lt;</span>stdint<span style='color:#0000ff; '>.</span>h<span style='color:#0000ff; '>></span>
+
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>zmq.hpp</span><span style='color:#0000e6; '>"</span>
+#include <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>zhelpers.hpp</span><span style='color:#0000e6; '>"</span>
+<span style='color:#008000; '>//#include "date.h"</span>
+
+<span style='color:#0000ff; font-weight:bold; '>int</span> main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> argc<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>char</span><span style='color:#0000ff; '>*</span><span style='color:#0000ff; '>*</span> argv<span style='color:#0000ff; '>)</span>
+<span style='color:#0000ff; '>{</span>
+	zmq<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>context_t context<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#008000; '>//  Subscriber tells us when it's ready here</span>
+	zmq<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>socket_t sync<span style='color:#0000ff; '>(</span>context<span style='color:#0000ff; '>,</span> ZMQ_PULL<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+	sync<span style='color:#0000ff; '>.</span>bind<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>tcp://*:5564</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#008000; '>//  We send updates via this socket</span>
+	zmq<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>socket_t publisher<span style='color:#0000ff; '>(</span>context<span style='color:#0000ff; '>,</span> ZMQ_PUB<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>	HWM (SNDHWM) on the producer limits how many messages can be queued in memory, </span>
+<span style='color:#008000; '>	not counting any messages in transit over the network, or any messages waiting in the receiver's queue. </span>
+<span style='color:#008000; '>	If you want to limit how many messages are permitted on the receiver's incoming queue,</span>
+<span style='color:#008000; '>	you would set RCVHWM on the receiver. In general, it's not a good idea to use HWM for flow control. </span>
+<span style='color:#008000; '>	Hitting HWM should typically be considered an exceptional state to recover from, </span>
+<span style='color:#008000; '>	and not normal behavior.	</span>
+<span style='color:#008000; '>	*/</span>
+	<span style='color:#008000; '>////  Prevent publisher overflow from slow subscribers</span>
+	<span style='color:#008000; '>//uint64_t hwm = 1;</span>
+	<span style='color:#008000; '>//publisher.setsockopt(ZMQ_HWM, &amp;hwm, sizeof(hwm));</span>
+
+	<span style='color:#008000; '>////  Specify swap space in bytes, this covers all subscribers</span>
+	<span style='color:#008000; '>//uint64_t swap = 25000000;</span>
+	<span style='color:#008000; '>//publisher.setsockopt(ZMQ_SWAP, &amp;swap, sizeof(swap));</span>
+
+	publisher<span style='color:#0000ff; '>.</span>bind<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>tcp://*:5565</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#008000; '>//  Wait for synchronization request</span>
+	s_recv<span style='color:#0000ff; '>(</span>sync<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#008000; '>//  Now broadcast exactly 10 updates with pause</span>
+	<span style='color:#0000ff; font-weight:bold; '>int</span> update_nbr<span style='color:#0000ff; '>;</span>
+	<span style='color:#0000ff; font-weight:bold; '>for</span> <span style='color:#0000ff; '>(</span>update_nbr <span style='color:#0000ff; '>=</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span> update_nbr <span style='color:#0000ff; '>&lt;</span> <span style='color:#800000; '>1000</span><span style='color:#0000ff; '>;</span> update_nbr<span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>+</span><span style='color:#0000ff; '>)</span> 
+	<span style='color:#0000ff; '>{</span>
+		std<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>ostringstream oss<span style='color:#0000ff; '>;</span>
+		oss <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Update </span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; '>&lt;</span> update_nbr<span style='color:#0000ff; '>;</span>
+
+		s_sendmore<span style='color:#0000ff; '>(</span>publisher<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>TOPICS1</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		s_send<span style='color:#0000ff; '>(</span>publisher<span style='color:#0000ff; '>,</span> oss<span style='color:#0000ff; '>.</span>str<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+		
+		std<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>this_thread<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>sleep_for<span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>chrono<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>milliseconds<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+	<span style='color:#0000ff; '>}</span>
+
+	s_send<span style='color:#0000ff; '>(</span>publisher<span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>END</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#008000; '>//  Give 0MQ/2.0.x time to flush output</span>
+	std<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>this_thread<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>sleep_for<span style='color:#0000ff; '>(</span>std<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>chrono<span style='color:#0000ff; '>:</span><span style='color:#0000ff; '>:</span>milliseconds<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1000</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+	<span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>0</span><span style='color:#0000ff; '>;</span>
+
+	<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>	// Pure C</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>	//  Prepare our context and publisher</span>
+<span style='color:#008000; '>	void *context = zmq_ctx_new();</span>
+<span style='color:#008000; '>	void *publisher = zmq_socket(context, ZMQ_PUB);</span>
+<span style='color:#008000; '>	zmq_bind(publisher, "tcp://*:5563");</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>	while (1) </span>
+<span style='color:#008000; '>	{</span>
+<span style='color:#008000; '>		DateTime dt;</span>
+<span style='color:#008000; '>		dt.setNow();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>		//  Write two messages, each with an envelope and content</span>
+<span style='color:#008000; '>		std::string sdt = dt.formatDateTime();</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>		zmq_send(publisher, sdt.c_str(), sdt.length(), 0);</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>		std::this_thread::sleep_for(std::chrono::milliseconds(1000));</span>
+<span style='color:#008000; '>	}</span>
+<span style='color:#008000; '>	//  We never get here, but clean up anyhow</span>
+<span style='color:#008000; '>	zmq_close(publisher);</span>
+<span style='color:#008000; '>	zmq_ctx_destroy(context);</span>
+<span style='color:#008000; '>	return 0;</span>
+<span style='color:#008000; '>	*/</span>
+<span style='color:#0000ff; '>}</span>
+
+#endif
+
+
+</pre>
+<!--Created using ToHtml.com on 2018-11-01 07:34:58 UTC -->

@@ -10,6 +10,11 @@ wget --recursive --html-extension --page-requisites --convert-links http://websi
 - web api 2
 https://www.youtube.com/watch?v=0pcM6teVdKk&list=PL6n9fhu94yhW7yoUOGNOfHurUE6bpOO2b
 
+- vcpkg
+https://docs.microsoft.com/en-us/cpp/vcpkg?view=vs-2017
+https://github.com/Microsoft/vcpkg
+
+
 ===================================================================================================================
 
 https://docs.microsoft.com/en-us/aspnet/web-api/overview/getting-started-with-aspnet-web-api/tutorial-your-first-web-api
