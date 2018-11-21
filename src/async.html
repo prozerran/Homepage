@@ -1,0 +1,240 @@
+<pre style='color:#000000;background:#ffffff;'><span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Concurrent<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Collections<span style='color:#0000ff; '>.</span>Generic<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>IO<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Linq<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Net<span style='color:#0000ff; '>.</span>Http<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Text<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>;</span>
+<span style='color:#0000ff; font-weight:bold; '>using</span> System<span style='color:#0000ff; '>.</span>Threading<span style='color:#0000ff; '>.</span>Tasks<span style='color:#0000ff; '>;</span>
+
+<span style='color:#008000; '>/*</span>
+<span style='color:#008000; '>Name                    Description                                             Exceptions</span>
+<span style='color:#ffffff; background:#808000; '>====================================================================================================================</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>Avoid async void        Prefer async Task methods over async void methods       Event handlers</span>
+<span style='color:#008000; '>Async all the way       Don’t mix blocking and async code                       Console main method</span>
+<span style='color:#008000; '>Configure context       Use ConfigureAwait(false) when you can                  Methods that require con­text</span>
+<span style='color:#008000; '></span>
+<span style='color:#008000; '>To Do This                                  Instead of This                     Use This</span>
+<span style='color:#ffffff; background:#808000; '>====================================================================================================================</span><span style='color:#008000; '></span>
+<span style='color:#008000; '>Retrieve the result of a background task	Task.Wait or Task.Result	        await</span>
+<span style='color:#008000; '>Wait for any task to complete	            Task.WaitAny	                    await Task.WhenAny</span>
+<span style='color:#008000; '>Retrieve the results of multiple tasks	    Task.WaitAll	                    await Task.WhenAll</span>
+<span style='color:#008000; '>Wait a period of time	                    Thread.Sleep	                    await Task.Delay</span>
+<span style='color:#008000; '>*/</span>
+
+<span style='color:#008000; '>// Sample demostration on asynchronous calls</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>https://medium.com/bynder-tech/c-why-you-should-use-configureawait-false-in-your-library-code-d7837dce3d7f</span>
+<span style='color:#008000; '>// </span><span style='color:#5555dd; '>https://msdn.microsoft.com/en-us/magazine/jj991977.aspx</span>
+
+<span style='color:#0000ff; font-weight:bold; '>namespace</span> Asynchronous
+<span style='color:#0000ff; '>{</span>
+    <span style='color:#0000ff; font-weight:bold; '>class</span> MyButton
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>bool</span> Enabled <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>get</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; font-weight:bold; '>set</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>class</span> AsyncMethods
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#008000; '>// sample only text output</span>
+        <span style='color:#008000; '>//private string url = "</span><span style='color:#5555dd; '>https://tibmanus.keybase.pub/hello.txt</span><span style='color:#008000; '>";</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>string</span> url <span style='color:#0000ff; '>=</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>https://os.mbed.com/media/uploads/alonsoflxestevez/hello2.txt.txt</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span>
+        MyButton button1 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> MyButton<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> async Task DelayAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>  <span style='color:#008000; '>// NEW asynchronous method</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// Code here runs in the original context.</span>
+
+            await Task<span style='color:#0000ff; '>.</span>Delay<span style='color:#0000ff; '>(</span><span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>     <span style='color:#008000; '>// Do asynchronous work.</span>
+
+            <span style='color:#008000; '>// Code here runs in the original context.</span>
+
+            await Task<span style='color:#0000ff; '>.</span>FromResult<span style='color:#0000ff; '>(</span><span style='color:#800000; '>1</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            await Task<span style='color:#0000ff; '>.</span>Delay<span style='color:#0000ff; '>(</span><span style='color:#800000; '>0</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ConfigureAwait<span style='color:#0000ff; '>(</span>continueOnCapturedContext<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Code here runs in the original context.</span>
+
+            await Task<span style='color:#0000ff; '>.</span>Delay<span style='color:#0000ff; '>(</span><span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ConfigureAwait<span style='color:#0000ff; '>(</span>continueOnCapturedContext<span style='color:#0000ff; '>:</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Code here runs without the original context (in this case, on the thread pool).</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// OK to return void ONLY if [asynchronous event handlers]</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> async <span style='color:#0000ff; font-weight:bold; '>void</span> button1_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            button1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>try</span>
+            <span style='color:#0000ff; '>{</span>            
+                await DelayAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>         <span style='color:#008000; '>// Can't use ConfigureAwait here. Inside, YES!</span>
+            <span style='color:#0000ff; '>}</span>
+            <span style='color:#0000ff; font-weight:bold; '>finally</span>
+            <span style='color:#0000ff; '>{</span>
+                button1<span style='color:#0000ff; '>.</span>Enabled <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>true</span><span style='color:#0000ff; '>;</span>     <span style='color:#008000; '>// Because we need the context here.</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// AVOID Task.Run at ALL cost in ASP.NET applications</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> async <span style='color:#0000ff; font-weight:bold; '>void</span> button2_Click<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> sender<span style='color:#0000ff; '>,</span> EventArgs e<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// Conclusion: do not use Task.Run in the implementation of the method; instead, </span>
+            <span style='color:#008000; '>// use Task.Run to call the method.</span>
+            await Task<span style='color:#0000ff; '>.</span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> DoExpensiveCalculation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>null</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> async Task<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> DoCurlAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// Execution is synchronous here</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> client <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> HttpClient<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#008000; '>// Execution of GetFirstCharactersCountAsync() is yielded to the caller here</span>
+                <span style='color:#008000; '>// GetStringAsync returns a Task&lt;string>, which is *awaited*</span>
+                <span style='color:#0000ff; font-weight:bold; '>var</span> page <span style='color:#0000ff; '>=</span> await client<span style='color:#0000ff; '>.</span>GetStringAsync<span style='color:#0000ff; '>(</span>url<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+                <span style='color:#008000; '>// Execution resumes when the client.GetStringAsync task completes,</span>
+                <span style='color:#008000; '>// becoming synchronous again.</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> page<span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// use Async Await for I/O bound job. a example code</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> async Task<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> DoCurlAsyncConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> httpClient <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> HttpClient<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; font-weight:bold; '>using</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> httpResponse <span style='color:#0000ff; '>=</span> await httpClient<span style='color:#0000ff; '>.</span>GetAsync<span style='color:#0000ff; '>(</span>url<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                <span style='color:#0000ff; font-weight:bold; '>return</span> await httpResponse<span style='color:#0000ff; '>.</span>Content<span style='color:#0000ff; '>.</span>ReadAsStringAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#008000; '>// use Task.Run for CPU bound job. a example</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> async Task<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span> CalculateResult<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> data<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// This queues up the work on the threadpool.</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> expensiveResultTask <span style='color:#0000ff; '>=</span> Task<span style='color:#0000ff; '>.</span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> DoExpensiveCalculation<span style='color:#0000ff; '>(</span>data<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Note that at this point, you can do some other work concurrently,</span>
+            <span style='color:#008000; '>// as CalculateResult() is still executing!</span>
+
+            <span style='color:#008000; '>// Execution of CalculateResult is yielded here!</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> result <span style='color:#0000ff; '>=</span> await expensiveResultTask<span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>return</span> result<span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>int</span> DoExpensiveCalculation<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>object</span> data<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#800000; '>1</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> DoTaskList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> list <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> ConcurrentBag<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> dirNames <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>{</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>.</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>..</span><span style='color:#0000e6; '>"</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            List<span style='color:#0000ff; '>&lt;</span>Task<span style='color:#0000ff; '>></span> tasks <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> List<span style='color:#0000ff; '>&lt;</span>Task<span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> dirName <span style='color:#0000ff; font-weight:bold; '>in</span> dirNames<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Task t <span style='color:#0000ff; '>=</span> Task<span style='color:#0000ff; '>.</span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span>
+                    <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>var</span> path <span style='color:#0000ff; font-weight:bold; '>in</span> Directory<span style='color:#0000ff; '>.</span>GetFiles<span style='color:#0000ff; '>(</span>dirName<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span>
+                        list<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>path<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+                tasks<span style='color:#0000ff; '>.</span>Add<span style='color:#0000ff; '>(</span>t<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+
+            <span style='color:#008000; '>// BAD way, use [await Task.WhenAll], and make method [async]</span>
+            Task<span style='color:#0000ff; '>.</span>WaitAll<span style='color:#0000ff; '>(</span>tasks<span style='color:#0000ff; '>.</span>ToArray<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>foreach</span> <span style='color:#0000ff; '>(</span>Task t <span style='color:#0000ff; font-weight:bold; '>in</span> tasks<span style='color:#0000ff; '>)</span>
+            <span style='color:#0000ff; '>{</span>
+                Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Task {0} Status: {1}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> t<span style='color:#0000ff; '>.</span>Id<span style='color:#0000ff; '>,</span> t<span style='color:#0000ff; '>.</span>Status<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            <span style='color:#0000ff; '>}</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Number of files read: {0}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>,</span> list<span style='color:#0000ff; '>.</span>Count<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+
+    <span style='color:#0000ff; font-weight:bold; '>class</span> Program
+    <span style='color:#0000ff; '>{</span>
+        <span style='color:#0000ff; font-weight:bold; '>private</span> <span style='color:#0000ff; font-weight:bold; '>static</span> AsyncMethods am <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> AsyncMethods<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#008000; '>// lamba function pointer declaration</span>
+        <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>delegate</span> <span style='color:#0000ff; font-weight:bold; '>int</span> LambdaFunc<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>int</span> x<span style='color:#0000ff; '>,</span> <span style='color:#0000ff; font-weight:bold; '>int</span> y<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>public</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Delay<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>      <span style='color:#008000; '>// OLD synchronous method</span>
+        <span style='color:#0000ff; '>{</span>
+            Thread<span style='color:#0000ff; '>.</span>Sleep<span style='color:#0000ff; '>(</span><span style='color:#800000; '>100</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>          <span style='color:#008000; '>// Do synchronous work.</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> async Task<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> AsyncWrapper<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> await am<span style='color:#0000ff; '>.</span>DoCurlAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                          <span style='color:#008000; '>// can only be used in async method</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> async Task<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>></span> AsyncWrapperConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#0000ff; font-weight:bold; '>return</span> await am<span style='color:#0000ff; '>.</span>DoCurlAsyncConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>ConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>false</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>    <span style='color:#008000; '>// prefered</span><span style='color:#ffffff; background:#808000; '>!!</span>
+        <span style='color:#0000ff; '>}</span>
+
+        <span style='color:#0000ff; font-weight:bold; '>static</span> <span style='color:#0000ff; font-weight:bold; '>void</span> Main<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>string</span><span style='color:#0000ff; '>[</span><span style='color:#0000ff; '>]</span> args<span style='color:#0000ff; '>)</span>
+        <span style='color:#0000ff; '>{</span>
+            <span style='color:#008000; '>// unconventional, use if no return value       // DEADLOCK possible in GUI or ASP.NET</span>
+            am<span style='color:#0000ff; '>.</span>DoCurlAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Wait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                        <span style='color:#008000; '>// BAD: ignore return</span>
+            am<span style='color:#0000ff; '>.</span>DoCurlAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Wait<span style='color:#0000ff; '>(</span><span style='color:#800000; '>200</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                     <span style='color:#008000; '>// BAD: imeout the async funtion within time</span>
+
+            <span style='color:#008000; '>// get result immediately</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> v1 <span style='color:#0000ff; '>=</span> am<span style='color:#0000ff; '>.</span>DoCurlAsync<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Result<span style='color:#0000ff; '>;</span>               <span style='color:#008000; '>// NOT good in UI, such as button click</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>v1: {v1}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>                 <span style='color:#008000; '>// WILL DEADLOCK</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> v2 <span style='color:#0000ff; '>=</span> am<span style='color:#0000ff; '>.</span>DoCurlAsyncConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Result<span style='color:#0000ff; '>;</span> <span style='color:#008000; '>// OK, code within configuresawait</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>v2: {v2}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> v3 <span style='color:#0000ff; '>=</span> Program<span style='color:#0000ff; '>.</span>AsyncWrapper<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Result<span style='color:#0000ff; '>;</span>         <span style='color:#008000; '>// NOT good in UI, Deadlock</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>v3: {v3}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> v4 <span style='color:#0000ff; '>=</span> Program<span style='color:#0000ff; '>.</span>AsyncWrapperConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>.</span>Result<span style='color:#0000ff; '>;</span>   <span style='color:#008000; '>// PREFERRED!</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>v4: {v4}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Task related</span>
+            <span style='color:#0000ff; font-weight:bold; '>var</span> v5 <span style='color:#0000ff; '>=</span> Task<span style='color:#0000ff; '>.</span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> <span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Task.Run</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>v5: {v5.Result}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> v6 <span style='color:#0000ff; '>=</span> Program<span style='color:#0000ff; '>.</span>AsyncWrapper<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            v6<span style='color:#0000ff; '>.</span>Wait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>      <span style='color:#008000; '>// BAD IDEA!</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>v6: {v6.Result}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> v7 <span style='color:#0000ff; '>=</span> Program<span style='color:#0000ff; '>.</span>AsyncWrapperConfigureAwait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            v7<span style='color:#0000ff; '>.</span>Wait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>      <span style='color:#008000; '>// better</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>v7: {v7.Result}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Task LIST</span>
+            am<span style='color:#0000ff; '>.</span>DoTaskList<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>        <span style='color:#008000; '>// BAD way, use [await Task.WhenAll]</span>
+
+            <span style='color:#008000; '>// WAYS to start as Task</span>
+            <span style='color:#008000; '>// most direct way</span>
+            Task<span style='color:#0000ff; '>.</span>Factory<span style='color:#0000ff; '>.</span>StartNew<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span> Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span><span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>Hello Task library!</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// using action!</span>
+            Task t1 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Task<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>new</span> Action<span style='color:#0000ff; '>(</span>Program<span style='color:#0000ff; '>.</span>Delay<span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            t1<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// using delegate</span>
+            Task t2 <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Task<span style='color:#0000ff; '>(</span><span style='color:#0000ff; font-weight:bold; '>delegate</span> <span style='color:#0000ff; '>{</span> Program<span style='color:#0000ff; '>.</span>Delay<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            t2<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// lambda</span>
+            Task task <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; font-weight:bold; '>new</span> Task<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> Program<span style='color:#0000ff; '>.</span>Delay<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            task<span style='color:#0000ff; '>.</span>Start<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#008000; '>// Using Task.Run in .NET4.5</span>
+            Task<span style='color:#0000ff; '>.</span>Run<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> Program<span style='color:#0000ff; '>.</span>Delay<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>        <span style='color:#008000; '>// need await/async</span>
+
+            <span style='color:#008000; '>// Using Task.FromResult from lambda</span>
+            LambdaFunc GetSum <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>x<span style='color:#0000ff; '>,</span> y<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> x <span style='color:#0000ff; '>+</span> y<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            LambdaFunc GetMin <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>x<span style='color:#0000ff; '>,</span> y<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> x <span style='color:#0000ff; '>-</span> y<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            LambdaFunc GetMut <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>x<span style='color:#0000ff; '>,</span> y<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> x <span style='color:#0000ff; '>*</span> y<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+            LambdaFunc GetDiv <span style='color:#0000ff; '>=</span> <span style='color:#0000ff; '>(</span>x<span style='color:#0000ff; '>,</span> y<span style='color:#0000ff; '>)</span> <span style='color:#0000ff; '>=</span><span style='color:#0000ff; '>></span> <span style='color:#0000ff; '>{</span> <span style='color:#0000ff; font-weight:bold; '>return</span> x <span style='color:#0000ff; '>*</span> y<span style='color:#0000ff; '>;</span> <span style='color:#0000ff; '>}</span><span style='color:#0000ff; '>;</span>
+
+            <span style='color:#0000ff; font-weight:bold; '>var</span> v8 <span style='color:#0000ff; '>=</span> Task<span style='color:#0000ff; '>.</span>FromResult<span style='color:#0000ff; '>&lt;</span><span style='color:#0000ff; font-weight:bold; '>int</span><span style='color:#0000ff; '>></span><span style='color:#0000ff; '>(</span>GetSum<span style='color:#0000ff; '>(</span><span style='color:#800000; '>2</span><span style='color:#0000ff; '>,</span> <span style='color:#800000; '>6</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>       <span style='color:#008000; '>// need await/async</span>
+            v8<span style='color:#0000ff; '>.</span>Wait<span style='color:#0000ff; '>(</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+            Console<span style='color:#0000ff; '>.</span>WriteLine<span style='color:#0000ff; '>(</span>$<span style='color:#0000e6; '>"</span><span style='color:#0000e6; '>v8: {v8.Result}</span><span style='color:#0000e6; '>"</span><span style='color:#0000ff; '>)</span><span style='color:#0000ff; '>;</span>
+        <span style='color:#0000ff; '>}</span>
+    <span style='color:#0000ff; '>}</span>
+<span style='color:#0000ff; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2018-11-21 09:37:48 UTC -->
