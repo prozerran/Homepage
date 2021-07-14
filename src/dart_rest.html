@@ -1,0 +1,117 @@
+<pre style='color:#000020;background:#f6f8ff;'>    
+
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>dart:async</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>dart:convert</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>package:http/http.dart</span><span style='color:#800000; '>'</span> as http<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>../AccessRight/accessrightmodels.dart</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>../restmodels.dart</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+    
+<span style='color:#200080; font-weight:bold; '>class</span> AccessRight
+<span style='color:#406080; '>{</span>
+    <span style='color:#007d45; '>String</span> restUri <span style='color:#308080; '>=</span> <span style='color:#800000; '>'</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+    LoginRespData loginResp <span style='color:#308080; '>=</span> <span style='color:#0f4d75; '>null</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> <span style='color:#007d45; '>Function</span><span style='color:#308080; '>(</span>LoginRespData<span style='color:#308080; '>)</span> onLoginResp <span style='color:#308080; '>=</span> <span style='color:#0f4d75; '>null</span><span style='color:#406080; '>;</span>
+
+    AccessRight<span style='color:#308080; '>(</span><span style='color:#007d45; '>String</span> restUri<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>restUri <span style='color:#308080; '>=</span> restUri<span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    Future<span style='color:#308080; '>&lt;</span>LoginRespData<span style='color:#308080; '>></span> UserLogin<span style='color:#308080; '>(</span><span style='color:#007d45; '>String</span> userId<span style='color:#308080; '>,</span> <span style='color:#007d45; '>String</span> password<span style='color:#308080; '>)</span> async <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>var</span> resturl <span style='color:#308080; '>=</span> restUri <span style='color:#308080; '>+</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>/apiCustomer/accessRight/userLogin</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+
+        final response <span style='color:#308080; '>=</span> await http<span style='color:#308080; '>.</span>post<span style='color:#308080; '>(</span>
+          Uri<span style='color:#308080; '>.</span><span style='color:#200080; font-weight:bold; '>parse</span><span style='color:#308080; '>(</span>resturl<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+          headers<span style='color:#406080; '>:</span> <span style='color:#308080; '>&lt;</span><span style='color:#007d45; '>String</span><span style='color:#308080; '>,</span> <span style='color:#007d45; '>String</span><span style='color:#308080; '>></span><span style='color:#406080; '>{</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>Content-Type</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>application/json; charset=UTF-8</span><span style='color:#800000; '>'</span><span style='color:#308080; '>,</span>
+          <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span>
+          body<span style='color:#406080; '>:</span> jsonEncode<span style='color:#308080; '>(</span><span style='color:#308080; '>&lt;</span><span style='color:#007d45; '>String</span><span style='color:#308080; '>,</span> <span style='color:#007d45; '>String</span><span style='color:#308080; '>></span><span style='color:#406080; '>{</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>userId</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> userId<span style='color:#308080; '>,</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>password</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> password
+          <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+        <span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> RestLoginResp<span style='color:#308080; '>.</span>fromJson<span style='color:#308080; '>(</span>jsonDecode<span style='color:#308080; '>(</span>response<span style='color:#308080; '>.</span>body<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dd <span style='color:#308080; '>!=</span> <span style='color:#0f4d75; '>null</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            loginResp <span style='color:#308080; '>=</span> dd<span style='color:#308080; '>.</span>data<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>onLoginResp <span style='color:#308080; '>!=</span> <span style='color:#0f4d75; '>null</span><span style='color:#308080; '>)</span> onLoginResp<span style='color:#308080; '>(</span>loginResp<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> loginResp<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#0f4d75; '>null</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    Future<span style='color:#308080; '>&lt;</span>LoginRespData<span style='color:#308080; '>></span> UserLogin2FA<span style='color:#308080; '>(</span>int code<span style='color:#308080; '>,</span> <span style='color:#406080; '>{</span>int mode <span style='color:#308080; '>=</span> <span style='color:#008c00; '>3</span><span style='color:#406080; '>}</span><span style='color:#308080; '>)</span> async <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>var</span> resturl <span style='color:#308080; '>=</span> restUri <span style='color:#308080; '>+</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>/apiCustomer/accessRight/userLogin2FA</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+
+        final response <span style='color:#308080; '>=</span> await http<span style='color:#308080; '>.</span>post<span style='color:#308080; '>(</span>
+          Uri<span style='color:#308080; '>.</span><span style='color:#200080; font-weight:bold; '>parse</span><span style='color:#308080; '>(</span>resturl<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+          headers<span style='color:#406080; '>:</span> <span style='color:#308080; '>&lt;</span><span style='color:#007d45; '>String</span><span style='color:#308080; '>,</span> <span style='color:#007d45; '>String</span><span style='color:#308080; '>></span><span style='color:#406080; '>{</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>Content-Type</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>application/json; charset=UTF-8</span><span style='color:#800000; '>'</span><span style='color:#308080; '>,</span>
+          <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span>
+          body<span style='color:#406080; '>:</span> jsonEncode<span style='color:#308080; '>(</span><span style='color:#308080; '>&lt;</span><span style='color:#007d45; '>String</span><span style='color:#308080; '>,</span> dynamic<span style='color:#308080; '>></span><span style='color:#406080; '>{</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>accNo</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> loginResp<span style='color:#308080; '>.</span>accNo<span style='color:#308080; '>,</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>code</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> code<span style='color:#308080; '>,</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>mode</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> mode<span style='color:#308080; '>,</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>systemId</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> loginResp<span style='color:#308080; '>.</span>systemId<span style='color:#308080; '>,</span>
+            <span style='color:#800000; '>'</span><span style='color:#1060b6; '>userId</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> loginResp<span style='color:#308080; '>.</span>userId<span style='color:#308080; '>,</span>
+          <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+        <span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> RestLoginResp<span style='color:#308080; '>.</span>fromJson<span style='color:#308080; '>(</span>jsonDecode<span style='color:#308080; '>(</span>response<span style='color:#308080; '>.</span>body<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dd <span style='color:#308080; '>!=</span> <span style='color:#0f4d75; '>null</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            loginResp <span style='color:#308080; '>=</span> dd<span style='color:#308080; '>.</span>data<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>onLoginResp <span style='color:#308080; '>!=</span> <span style='color:#0f4d75; '>null</span><span style='color:#308080; '>)</span> onLoginResp<span style='color:#308080; '>(</span>loginResp<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> loginResp<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#0f4d75; '>null</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>    
+
+     Future<span style='color:#308080; '>&lt;</span>bool<span style='color:#308080; '>></span> SessionTokenHeartbeat<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> async  <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>var</span> resturl <span style='color:#308080; '>=</span> restUri <span style='color:#308080; '>+</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>/apiCustomer/accessRight/sessionTokenHeartbeat</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+
+        final response <span style='color:#308080; '>=</span> await http<span style='color:#308080; '>.</span>post<span style='color:#308080; '>(</span>
+            Uri<span style='color:#308080; '>.</span><span style='color:#200080; font-weight:bold; '>parse</span><span style='color:#308080; '>(</span>resturl<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+            headers<span style='color:#406080; '>:</span> <span style='color:#308080; '>&lt;</span><span style='color:#007d45; '>String</span><span style='color:#308080; '>,</span> <span style='color:#007d45; '>String</span><span style='color:#308080; '>></span><span style='color:#406080; '>{</span>
+              <span style='color:#800000; '>'</span><span style='color:#1060b6; '>Content-Type</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>application/json; charset=UTF-8</span><span style='color:#800000; '>'</span><span style='color:#308080; '>,</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span>
+            body<span style='color:#406080; '>:</span> jsonEncode<span style='color:#308080; '>(</span><span style='color:#308080; '>&lt;</span><span style='color:#007d45; '>String</span><span style='color:#308080; '>,</span> <span style='color:#007d45; '>String</span><span style='color:#308080; '>></span><span style='color:#406080; '>{</span>
+              <span style='color:#800000; '>'</span><span style='color:#1060b6; '>sessionToken</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> loginResp<span style='color:#308080; '>.</span>sessionToken<span style='color:#308080; '>,</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+        <span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> RestGenResp<span style='color:#308080; '>.</span>fromJson<span style='color:#308080; '>(</span>jsonDecode<span style='color:#308080; '>(</span>response<span style='color:#308080; '>.</span>body<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dd<span style='color:#308080; '>.</span>result_code <span style='color:#308080; '>==</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>0</span><span style='color:#800000; '>'</span><span style='color:#308080; '>)</span>
+          <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#0f4d75; '>true</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#0f4d75; '>false</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+     Future<span style='color:#308080; '>&lt;</span>bool<span style='color:#308080; '>></span> UserLogout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> async  <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>var</span> resturl <span style='color:#308080; '>=</span> restUri <span style='color:#308080; '>+</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>/apiCustomer/accessRight/userLogout</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+
+        final response <span style='color:#308080; '>=</span> await http<span style='color:#308080; '>.</span>post<span style='color:#308080; '>(</span>
+            Uri<span style='color:#308080; '>.</span><span style='color:#200080; font-weight:bold; '>parse</span><span style='color:#308080; '>(</span>resturl<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+            headers<span style='color:#406080; '>:</span> <span style='color:#308080; '>&lt;</span><span style='color:#007d45; '>String</span><span style='color:#308080; '>,</span> <span style='color:#007d45; '>String</span><span style='color:#308080; '>></span><span style='color:#406080; '>{</span>
+              <span style='color:#800000; '>'</span><span style='color:#1060b6; '>Content-Type</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>application/json; charset=UTF-8</span><span style='color:#800000; '>'</span><span style='color:#308080; '>,</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span>
+            body<span style='color:#406080; '>:</span> jsonEncode<span style='color:#308080; '>(</span><span style='color:#308080; '>&lt;</span><span style='color:#007d45; '>String</span><span style='color:#308080; '>,</span> <span style='color:#007d45; '>String</span><span style='color:#308080; '>></span><span style='color:#406080; '>{</span>
+              <span style='color:#800000; '>'</span><span style='color:#1060b6; '>sessionToken</span><span style='color:#800000; '>'</span><span style='color:#406080; '>:</span> loginResp<span style='color:#308080; '>.</span>sessionToken<span style='color:#308080; '>,</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+        <span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> RestGenResp<span style='color:#308080; '>.</span>fromJson<span style='color:#308080; '>(</span>jsonDecode<span style='color:#308080; '>(</span>response<span style='color:#308080; '>.</span>body<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dd<span style='color:#308080; '>.</span>result_code <span style='color:#308080; '>==</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>0</span><span style='color:#800000; '>'</span><span style='color:#308080; '>)</span>
+          <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#0f4d75; '>true</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#0f4d75; '>false</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-07-14 02:20:47 UTC -->

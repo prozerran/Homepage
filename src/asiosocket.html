@@ -1,0 +1,316 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>"</span><span style='color:#40015a; '>SPSocketClient.h</span><span style='color:#800000; '>"</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>iostream</span><span style='color:#800000; '>></span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPSocket
+<span style='color:#406080; '>{</span>
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>Connect<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> host<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> port<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		status <span style='color:#308080; '>=</span> S_CLOSED<span style='color:#406080; '>;</span>
+		start<span style='color:#308080; '>(</span>resolver_<span style='color:#308080; '>.</span>resolve<span style='color:#308080; '>(</span>host<span style='color:#308080; '>,</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>to_string<span style='color:#308080; '>(</span>port<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>start<span style='color:#308080; '>(</span>tcp<span style='color:#406080; '>::</span>resolver<span style='color:#406080; '>::</span>results_type endpoints<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#595979; '>// Start the connect actor.</span>
+		endpoints_ <span style='color:#308080; '>=</span> endpoints<span style='color:#406080; '>;</span>
+		start_connect<span style='color:#308080; '>(</span>endpoints_<span style='color:#308080; '>.</span>begin<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+		<span style='color:#595979; '>// Start the deadline actor. You will note that we're not setting any</span>
+		<span style='color:#595979; '>// particular deadline here. Instead, the connect and input actors will</span>
+		<span style='color:#595979; '>// update the deadline prior to each asynchronous operation.</span>
+		deadline_<span style='color:#308080; '>.</span>async_wait<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>SPSocketClient<span style='color:#406080; '>::</span>check_deadline<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> _1<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>UseReadUntil<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>char</span> terminator<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		use_read_until <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+		read_terminator <span style='color:#308080; '>=</span> terminator<span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>UseSendHeartBeat<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> sec_interval<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> heartbeat<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		hb_interval <span style='color:#308080; '>=</span> sec_interval<span style='color:#406080; '>;</span>
+		heartbeat_str_ <span style='color:#308080; '>=</span> heartbeat<span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		status <span style='color:#308080; '>=</span> S_CLOSED<span style='color:#406080; '>;</span>
+		boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code ignored_error<span style='color:#406080; '>;</span>
+		socket_<span style='color:#308080; '>.</span>close<span style='color:#308080; '>(</span>ignored_error<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		deadline_<span style='color:#308080; '>.</span>cancel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		heartbeat_timer_<span style='color:#308080; '>.</span>cancel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+		OnDisconnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		running_ <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>StartRun<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>running_<span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			running_ <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>use_read_until<span style='color:#308080; '>)</span>
+				start_read_until<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#200080; font-weight:bold; '>else</span>
+				start_read<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>heartbeat_str_<span style='color:#308080; '>.</span>length<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+				send_heartbeat<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>start_connect<span style='color:#308080; '>(</span>tcp<span style='color:#406080; '>::</span>resolver<span style='color:#406080; '>::</span>results_type<span style='color:#406080; '>::</span><span style='color:#003060; '>iterator</span> endpoint_iter<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>endpoint_iter <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> endpoints_<span style='color:#308080; '>.</span>end<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			status <span style='color:#308080; '>=</span> S_CONNECTING<span style='color:#406080; '>;</span>
+			OnConnecting<span style='color:#308080; '>(</span>endpoint_iter<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>endpoint<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+			<span style='color:#595979; '>// Set a deadline for the connect operation.</span>
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>read_timeout <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+			<span style='color:#406080; '>{</span>
+				deadline_<span style='color:#308080; '>.</span>expires_after<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>chrono<span style='color:#406080; '>::</span>seconds<span style='color:#308080; '>(</span>read_timeout<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#406080; '>}</span>
+
+			<span style='color:#595979; '>// Start the asynchronous connect operation.</span>
+			socket_<span style='color:#308080; '>.</span>async_connect<span style='color:#308080; '>(</span>endpoint_iter<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>endpoint<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+				<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>SPSocketClient<span style='color:#406080; '>::</span>handle_connect<span style='color:#308080; '>,</span>
+					<span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> _1<span style='color:#308080; '>,</span> endpoint_iter<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+		<span style='color:#200080; font-weight:bold; '>else</span>
+		<span style='color:#406080; '>{</span>
+			<span style='color:#595979; '>// There are no more endpoints to try. Shut down the client.</span>
+			Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>handle_connect<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>,</span>
+		tcp<span style='color:#406080; '>::</span>resolver<span style='color:#406080; '>::</span>results_type<span style='color:#406080; '>::</span><span style='color:#003060; '>iterator</span> endpoint_iter<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#595979; '>// The async_connect() function automatically opens the socket at the start</span>
+		<span style='color:#595979; '>// of the asynchronous operation. If the socket is closed at this time then</span>
+		<span style='color:#595979; '>// the timeout handler must have run first.</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>socket_<span style='color:#308080; '>.</span>is_open<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			status <span style='color:#308080; '>=</span> S_CONNECT_ERROR<span style='color:#406080; '>;</span>
+			OnConnectTimedOut<span style='color:#308080; '>(</span>endpoint_iter<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>endpoint<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>			
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+			<span style='color:#595979; '>// Try the next available endpoint.</span>
+			<span style='color:#595979; '>//start_connect(++endpoint_iter);</span>
+		<span style='color:#406080; '>}</span>
+
+		<span style='color:#595979; '>// Check if the connect operation failed before the deadline expired.</span>
+		<span style='color:#200080; font-weight:bold; '>else</span> <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>error<span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			status <span style='color:#308080; '>=</span> S_CONNECT_ERROR<span style='color:#406080; '>;</span>
+			OnConnectionError<span style='color:#308080; '>(</span>error<span style='color:#308080; '>.</span>message<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+			<span style='color:#595979; '>// We need to close the socket used in the previous connection attempt</span>
+			<span style='color:#595979; '>// before starting a new one.</span>
+			socket_<span style='color:#308080; '>.</span>close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+			<span style='color:#595979; '>// Try the next available endpoint.</span>
+			<span style='color:#595979; '>//start_connect(++endpoint_iter);</span>
+		<span style='color:#406080; '>}</span>
+
+		<span style='color:#595979; '>// Otherwise we have successfully established a connection.</span>
+		<span style='color:#200080; font-weight:bold; '>else</span>
+		<span style='color:#406080; '>{</span>
+			status <span style='color:#308080; '>=</span> S_CONNECTED<span style='color:#406080; '>;</span>
+			OnConnected<span style='color:#308080; '>(</span>endpoint_iter<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>endpoint<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+			<span style='color:#595979; '>// Start the input actor.</span>
+			<span style='color:#595979; '>//start_read();</span>
+
+			<span style='color:#595979; '>// Start the heartbeat actor.</span>
+			<span style='color:#595979; '>//send_heartbeat();</span>
+		<span style='color:#406080; '>}</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>start_read<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+		
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>read_timeout <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			<span style='color:#595979; '>// Set a deadline for the read operation.</span>
+			deadline_<span style='color:#308080; '>.</span>expires_after<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>chrono<span style='color:#406080; '>::</span>seconds<span style='color:#308080; '>(</span>read_timeout<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+
+		<span style='color:#595979; '>// simulate memset 0</span>
+		recv_buffer_<span style='color:#308080; '>.</span>consume<span style='color:#308080; '>(</span>recv_buffer_<span style='color:#308080; '>.</span>size<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+		boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>async_read<span style='color:#308080; '>(</span>socket_<span style='color:#308080; '>,</span> recv_buffer_<span style='color:#308080; '>,</span>
+			boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>transfer_at_least<span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+			<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>SPSocketClient<span style='color:#406080; '>::</span>handle_read<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> _1<span style='color:#308080; '>,</span> _2<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>start_read_until<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>read_timeout <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			<span style='color:#595979; '>// Set a deadline for the read operation.</span>
+			deadline_<span style='color:#308080; '>.</span>expires_after<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>chrono<span style='color:#406080; '>::</span>seconds<span style='color:#308080; '>(</span>read_timeout<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>	
+
+		<span style='color:#595979; '>// Start an asynchronous operation to read a newline-delimited message.</span>
+		boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>async_read_until<span style='color:#308080; '>(</span>socket_<span style='color:#308080; '>,</span>
+			boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>dynamic_buffer<span style='color:#308080; '>(</span>input_buffer_<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> read_terminator<span style='color:#308080; '>,</span>
+			<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>SPSocketClient<span style='color:#406080; '>::</span>handle_read_until<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> _1<span style='color:#308080; '>,</span> _2<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>handle_read<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>,</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>size_t</span> n<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>error<span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			<span style='color:#595979; '>// Empty messages are heartbeats and so ignored.</span>
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>n <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+			<span style='color:#406080; '>{</span>
+				boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span><span style='color:#003060; '>streambuf</span><span style='color:#406080; '>::</span>const_buffers_type bufs <span style='color:#308080; '>=</span> recv_buffer_<span style='color:#308080; '>.</span>data<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+				<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> str<span style='color:#308080; '>(</span>boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>buffers_begin<span style='color:#308080; '>(</span>bufs<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+					boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>buffers_begin<span style='color:#308080; '>(</span>bufs<span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> recv_buffer_<span style='color:#308080; '>.</span>size<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+				<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>use_recv_polling<span style='color:#308080; '>)</span>
+					push<span style='color:#308080; '>(</span>str<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+				<span style='color:#200080; font-weight:bold; '>else</span>
+					OnReceive<span style='color:#308080; '>(</span>str<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#406080; '>}</span>
+			start_read<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+		<span style='color:#200080; font-weight:bold; '>else</span>
+		<span style='color:#406080; '>{</span>
+			OnReceiveError<span style='color:#308080; '>(</span>error<span style='color:#308080; '>.</span>message<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>handle_read_until<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>,</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>size_t</span> n<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>error<span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			<span style='color:#595979; '>// Extract the delimited message from the buffer.</span>
+			<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> line<span style='color:#308080; '>(</span>input_buffer_<span style='color:#308080; '>.</span>substr<span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> n <span style='color:#308080; '>-</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			input_buffer_<span style='color:#308080; '>.</span>erase<span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> n<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+			<span style='color:#595979; '>// Empty messages are heartbeats and so ignored.</span>
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>line<span style='color:#308080; '>.</span>empty<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+			<span style='color:#406080; '>{</span>
+				<span style='color:#595979; '>//std::thread([=] { OnReceive(line); }).detach();		// use async callback instead, maybe dangerous</span>
+				<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>use_recv_polling<span style='color:#308080; '>)</span>
+					push<span style='color:#308080; '>(</span>line<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+				<span style='color:#200080; font-weight:bold; '>else</span>
+					OnReceive<span style='color:#308080; '>(</span>line<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#406080; '>}</span>
+			start_read_until<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+		<span style='color:#200080; font-weight:bold; '>else</span>
+		<span style='color:#406080; '>{</span>
+			OnReceiveError<span style='color:#308080; '>(</span>error<span style='color:#308080; '>.</span>message<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span><span style='color:#400000; '>send</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> content<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+		<span style='color:#595979; '>// Start an asynchronous operation to send a heartbeat message.</span>
+		boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>async_write<span style='color:#308080; '>(</span>socket_<span style='color:#308080; '>,</span> boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>buffer<span style='color:#308080; '>(</span>content<span style='color:#308080; '>,</span> content<span style='color:#308080; '>.</span>length<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+			<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>SPSocketClient<span style='color:#406080; '>::</span>handle_send<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> _1<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>handle_send<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>error<span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			OnSendError<span style='color:#308080; '>(</span>error<span style='color:#308080; '>.</span>message<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>send_heartbeat<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+		<span style='color:#595979; '>// Start an asynchronous operation to send a heartbeat message.</span>
+		boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>async_write<span style='color:#308080; '>(</span>socket_<span style='color:#308080; '>,</span> boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>buffer<span style='color:#308080; '>(</span>heartbeat_str_<span style='color:#308080; '>,</span> heartbeat_str_<span style='color:#308080; '>.</span>length<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+			<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>SPSocketClient<span style='color:#406080; '>::</span>handle_send_heartbeat<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> _1<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>handle_send_heartbeat<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>error<span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			<span style='color:#595979; '>// Wait X seconds before sending the next heartbeat.</span>
+			heartbeat_timer_<span style='color:#308080; '>.</span>expires_after<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>chrono<span style='color:#406080; '>::</span>seconds<span style='color:#308080; '>(</span>hb_interval<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			heartbeat_timer_<span style='color:#308080; '>.</span>async_wait<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>SPSocketClient<span style='color:#406080; '>::</span>send_heartbeat<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+		<span style='color:#200080; font-weight:bold; '>else</span>
+		<span style='color:#406080; '>{</span>
+			OnHeartBeatError<span style='color:#308080; '>(</span>error<span style='color:#308080; '>.</span>message<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>check_deadline<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#595979; '>// Check whether the deadline has passed. We compare the deadline against</span>
+		<span style='color:#595979; '>// the current time since a new asynchronous operation may have moved the</span>
+		<span style='color:#595979; '>// deadline before this actor had a chance to run.</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>deadline_<span style='color:#308080; '>.</span>expiry<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>=</span> steady_timer<span style='color:#406080; '>::</span>clock_type<span style='color:#406080; '>::</span>now<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+		<span style='color:#406080; '>{</span>
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>error<span style='color:#308080; '>)</span>
+			<span style='color:#406080; '>{</span>
+				OnReceiveTimeOut<span style='color:#308080; '>(</span>error<span style='color:#308080; '>.</span>message<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+				<span style='color:#595979; '>// The deadline has passed. The socket is closed so that any outstanding</span>
+				<span style='color:#595979; '>// asynchronous operations are cancelled.</span>
+				socket_<span style='color:#308080; '>.</span>close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#406080; '>}</span>
+
+			<span style='color:#595979; '>// There is no longer an active deadline. The expiry is set to the</span>
+			<span style='color:#595979; '>// maximum time point so that the actor takes no action until a new</span>
+			<span style='color:#595979; '>// deadline is set.</span>
+			deadline_<span style='color:#308080; '>.</span>expires_at<span style='color:#308080; '>(</span>steady_timer<span style='color:#406080; '>::</span>time_point<span style='color:#406080; '>::</span><span style='color:#003060; '>max</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+
+		<span style='color:#595979; '>// Put the actor back to sleep.</span>
+		deadline_<span style='color:#308080; '>.</span>async_wait<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>SPSocketClient<span style='color:#406080; '>::</span>check_deadline<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> _1<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>push<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> data<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>lock_guard<span style='color:#406080; '>&lt;</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>mutex<span style='color:#406080; '>></span> lock<span style='color:#308080; '>(</span>mtx_<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		recv_queue_<span style='color:#308080; '>.</span>push<span style='color:#308080; '>(</span>data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>void</span> SPSocketClient<span style='color:#406080; '>::</span>pop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> data <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>{</span>	<span style='color:#595979; '>// RAII</span>
+			<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>lock_guard<span style='color:#406080; '>&lt;</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>mutex<span style='color:#406080; '>></span> lock<span style='color:#308080; '>(</span>mtx_<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>recv_queue_<span style='color:#308080; '>.</span>empty<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+			data <span style='color:#308080; '>=</span> recv_queue_<span style='color:#308080; '>.</span>front<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			recv_queue_<span style='color:#308080; '>.</span>pop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+		OnReceive<span style='color:#308080; '>(</span>data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>			
+	<span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+
+</pre>
+<!--Created using ToHtml.com on 2021-04-20 02:48:53 UTC -->

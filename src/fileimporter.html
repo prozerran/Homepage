@@ -1,0 +1,247 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>package</span><span style='color:#004a43; '> com</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>sp</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>app</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>io</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>File</span><span style='color:#406080; '>;</span>
+
+<span style='color:#3f7f8f; '>/**</span>
+<span style='color:#3f7f8f; '>&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f7f8f; '> LogTailerListener interface. Implement this interface to create listener object</span>
+<span style='color:#3f7f8f; '>&#xa0;*/</span>
+<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>interface</span> LogTailerListener <span style='color:#406080; '>{</span>
+	
+    <span style='color:#3f7f8f; '>/**</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f7f8f; '> This method when reading starts</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#7779bb; '>void</span> OnStarted<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	
+	
+    <span style='color:#3f7f8f; '>/**</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f7f8f; '> This method when reading stopped</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#7779bb; '>void</span> OnStopped<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	
+    
+    <span style='color:#3f7f8f; '>/**</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f7f8f; '> This method is called if the tailed file is not found.</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#7779bb; '>void</span> OnFileNotFound<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>File</span> file<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#3f7f8f; '>/**</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f7f8f; '> This method handles the response from tailer</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#7779bb; '>void</span> OnUpdate<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>String</span> line<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#3f7f8f; '>/**</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f7f8f; '> This method handles any exception</span><span style='color:#7f9fbf; font-weight:bold; '>,</span><span style='color:#3f7f8f; '> except IOException (file not found)</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#7779bb; '>void</span> OnError<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>Exception</span> exception<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#3f7f8f; '>/**</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#7f9fbf; font-weight:bold; '>*</span><span style='color:#3f7f8f; '> This method is called if tailed file was deleted and tailer is termination</span>
+<span style='color:#3f7f8f; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+    <span style='color:#7779bb; '>void</span> OnFileDeleted<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>File</span> file<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+
+
+<span style='color:#595979; '>///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</span>
+
+
+<span style='color:#200080; font-weight:bold; '>package</span><span style='color:#004a43; '> com</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>sp</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>app</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>io</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>File</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>util</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>Date</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> org</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>springframework</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>scheduling</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>annotation</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>Async</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>time</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>DayOfWeek</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>time</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>LocalDate</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>time</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>ZoneId</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> com</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>sp</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>app</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>LogTailer</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>ReadOrder</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>abstract</span> <span style='color:#200080; font-weight:bold; '>class</span> BaseImporter <span style='color:#200080; font-weight:bold; '>implements</span> LogTailerListener <span style='color:#406080; '>{</span>
+
+	<span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#6679aa; font-weight:bold; '>Boolean</span> isDone <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>	
+	
+	<span style='color:#200080; font-weight:bold; '>protected</span> LogTailer tailer <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+	<span style='color:#200080; font-weight:bold; '>protected</span> DBImporter dba <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+	
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#7779bb; '>void</span> OnFileNotFound<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>File</span> file<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+		SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"FileNotFound: %s"</span><span style='color:#308080; '>,</span> file<span style='color:#308080; '>.</span>getName<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>		
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#7779bb; '>void</span> OnError<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>Exception</span> ex<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+		SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"Error: %s"</span><span style='color:#308080; '>,</span> ex<span style='color:#308080; '>.</span>getMessage<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>		
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#7779bb; '>void</span> OnFileDeleted<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>File</span> file<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+		SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"File Deleted: %s"</span><span style='color:#308080; '>,</span> file<span style='color:#308080; '>.</span>getName<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+	
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#7779bb; '>void</span> OnStarted<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>	
+		
+		SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"Trying to connect to DB..."</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>			
+		
+		dba <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DBImporter<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	    
+    		
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dba<span style='color:#308080; '>.</span>Connect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+			SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"Connected to DB."</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>		
+		<span style='color:#406080; '>}</span> <span style='color:#200080; font-weight:bold; '>else</span> <span style='color:#406080; '>{</span>
+			SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"Unable to connect to DB."</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	
+		<span style='color:#406080; '>}</span>			
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#7779bb; '>void</span> OnStopped<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dba <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+			dba<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+		dba <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+		isDone <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>		
+	<span style='color:#406080; '>}</span>	
+	
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#6679aa; font-weight:bold; '>Boolean</span> IsDone<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+		<span style='color:#200080; font-weight:bold; '>return</span> isDone<span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+	
+	<span style='color:#7f9fbf; font-weight:bold; '>@Async</span>
+	<span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#7779bb; '>void</span> Start<span style='color:#308080; '>(</span>LocalDate ld<span style='color:#308080; '>,</span> <span style='color:#6679aa; font-weight:bold; '>String</span> filepath<span style='color:#308080; '>,</span> ReadOrder readorder<span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>throws</span> <span style='color:#6679aa; font-weight:bold; '>InterruptedException</span> <span style='color:#406080; '>{</span>	
+				
+		<span style='color:#6679aa; font-weight:bold; '>File</span> file <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>File</span><span style='color:#308080; '>(</span>filepath<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+				
+		<span style='color:#595979; '>// file may not exist yet, so need to check</span>
+		<span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>	
+				
+			<span style='color:#595979; '>// continuously check if file exist for today, if not, break out</span>
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>readorder <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> ReadOrder<span style='color:#308080; '>.</span>UNTIL_EOF<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+				<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>ld<span style='color:#308080; '>.</span>compareTo<span style='color:#308080; '>(</span>LocalDate<span style='color:#308080; '>.</span>now<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+					isDone <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+					<span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>	
+				<span style='color:#406080; '>}</span>
+			<span style='color:#406080; '>}</span>			
+			
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>file<span style='color:#308080; '>.</span>exists<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&amp;</span><span style='color:#308080; '>&amp;</span> <span style='color:#308080; '>!</span>file<span style='color:#308080; '>.</span>isDirectory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> 
+				<span style='color:#595979; '>// file finally exist, get out and start parsing</span>
+				isDone <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>						
+				<span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+			<span style='color:#406080; '>}</span>
+			
+			<span style='color:#595979; '>// file doesn't exist and user manual consolidation parsing, return immediately!</span>
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>readorder <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> ReadOrder<span style='color:#308080; '>.</span>UNTIL_EOF<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+				isDone <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+				<span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+			<span style='color:#406080; '>}</span>				
+			
+			<span style='color:#6679aa; font-weight:bold; '>Thread</span><span style='color:#308080; '>.</span>sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>60000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	
+			SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"Searching for file: %s"</span><span style='color:#308080; '>,</span> filepath<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+		
+		<span style='color:#595979; '>// done, or file not found, do nothing!</span>
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isDone <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+			SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"File doesn't exist: %s"</span><span style='color:#308080; '>,</span> filepath<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+				
+		<span style='color:#595979; '>// start parsing</span>
+		tailer <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> LogTailer<span style='color:#308080; '>(</span>file<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	
+		tailer<span style='color:#308080; '>.</span>setReadOrder<span style='color:#308080; '>(</span>readorder<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		tailer<span style='color:#308080; '>.</span>RegisterCallback<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>		
+		
+		<span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>Thread</span><span style='color:#308080; '>(</span>tailer<span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>start<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>	
+	
+	<span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#7779bb; '>void</span> Stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>	
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>tailer <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+			tailer<span style='color:#308080; '>.</span>setStopped<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>
+		tailer <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+	
+	<span style='color:#595979; '>// to be implemented on child classes</span>
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>abstract</span> <span style='color:#6679aa; font-weight:bold; '>String</span> GetFileName<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#7779bb; '>void</span> StartService<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+		
+		<span style='color:#6679aa; font-weight:bold; '>Date</span> date <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>Date</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		LocalDate ld <span style='color:#308080; '>=</span> date<span style='color:#308080; '>.</span>toInstant<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>atZone<span style='color:#308080; '>(</span>ZoneId<span style='color:#308080; '>.</span>systemDefault<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>toLocalDate<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		
+		<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>ld<span style='color:#308080; '>.</span>getDayOfWeek<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> DayOfWeek<span style='color:#308080; '>.</span>SUNDAY<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+			SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"Skip Sunday: %s"</span><span style='color:#308080; '>,</span> ld<span style='color:#308080; '>.</span>toString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			isDone <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>			
+			<span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+		<span style='color:#406080; '>}</span>						
+		
+		StartOnDate<span style='color:#308080; '>(</span>ld<span style='color:#308080; '>,</span> ReadOrder<span style='color:#308080; '>.</span>FORWARD<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>		
+	<span style='color:#406080; '>}</span>
+	
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#7779bb; '>void</span> StartOnDate<span style='color:#308080; '>(</span>LocalDate ld<span style='color:#308080; '>,</span> ReadOrder readorder<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+		
+		<span style='color:#7779bb; '>int</span> year  <span style='color:#308080; '>=</span> ld<span style='color:#308080; '>.</span>getYear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#7779bb; '>int</span> month <span style='color:#308080; '>=</span> ld<span style='color:#308080; '>.</span>getMonthValue<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#7779bb; '>int</span> day   <span style='color:#308080; '>=</span> ld<span style='color:#308080; '>.</span>getDayOfMonth<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> 		
+		
+	    <span style='color:#6679aa; font-weight:bold; '>String</span> ticker_dir <span style='color:#308080; '>=</span> SPConfig<span style='color:#308080; '>.</span>getInstance<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>GetProperty<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"ticker.dir"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>    	  		
+		<span style='color:#6679aa; font-weight:bold; '>String</span> filename <span style='color:#308080; '>=</span> <span style='color:#6679aa; font-weight:bold; '>String</span><span style='color:#308080; '>.</span>format<span style='color:#308080; '>(</span>GetFileName<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> <span style='color:#1060b6; '>"_%04d%02d%02d.csv"</span><span style='color:#308080; '>,</span>  year<span style='color:#308080; '>,</span> month<span style='color:#308080; '>,</span> day<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	    
+		<span style='color:#6679aa; font-weight:bold; '>String</span> filepath <span style='color:#308080; '>=</span> <span style='color:#6679aa; font-weight:bold; '>String</span><span style='color:#308080; '>.</span>format<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"%s/%04d%02d/%s"</span><span style='color:#308080; '>,</span> ticker_dir<span style='color:#308080; '>,</span> year<span style='color:#308080; '>,</span> month<span style='color:#308080; '>,</span> filename<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>		
+		SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"Start Importing: %s"</span><span style='color:#308080; '>,</span> filepath<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	  
+		
+		<span style='color:#200080; font-weight:bold; '>try</span> <span style='color:#406080; '>{</span>			
+			<span style='color:#595979; '>// stop previous running</span>
+			Stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			
+			<span style='color:#595979; '>// add some lead time</span>
+			<span style='color:#6679aa; font-weight:bold; '>Thread</span><span style='color:#308080; '>.</span>sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>1000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			
+			<span style='color:#595979; '>// start new</span>
+			Start<span style='color:#308080; '>(</span>ld<span style='color:#308080; '>,</span> filepath<span style='color:#308080; '>,</span> readorder<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			
+		<span style='color:#406080; '>}</span> <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>Exception</span> e<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+			<span style='color:#6679aa; font-weight:bold; '>System</span><span style='color:#308080; '>.</span>err<span style='color:#308080; '>.</span>println<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>getMessage<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>				
+		<span style='color:#406080; '>}</span>
+	<span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+
+
+<span style='color:#595979; '>///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</span>
+
+<span style='color:#200080; font-weight:bold; '>package</span><span style='color:#004a43; '> com</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>sp</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>app</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> TickerFileImporter <span style='color:#200080; font-weight:bold; '>extends</span> BaseImporter <span style='color:#406080; '>{</span>
+	
+    <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> TickerFileImporter _instance <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span> 	
+	  
+    <span style='color:#200080; font-weight:bold; '>private</span> TickerFileImporter<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span><span style='color:#406080; '>}</span> 
+  
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> TickerFileImporter getInstance<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> 
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>_instance <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span> 
+        	_instance <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TickerFileImporter<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> 
+  
+        <span style='color:#200080; font-weight:bold; '>return</span> _instance<span style='color:#406080; '>;</span> 
+    <span style='color:#406080; '>}</span>	
+    
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#6679aa; font-weight:bold; '>String</span> GetFileName<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>			
+		<span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>String</span><span style='color:#308080; '>(</span><span style='color:#1060b6; '>"ticker"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>    
+
+	<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#7779bb; '>void</span> OnUpdate<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>String</span> line<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>		
+			
+		<span style='color:#200080; font-weight:bold; '>try</span> <span style='color:#406080; '>{</span>
+			
+			<span style='color:#6679aa; font-weight:bold; '>String</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> col <span style='color:#308080; '>=</span> line<span style='color:#308080; '>.</span>split<span style='color:#308080; '>(</span><span style='color:#1060b6; '>","</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>		
+			<span style='color:#7779bb; '>long</span> rec_id <span style='color:#308080; '>=</span> <span style='color:#6679aa; font-weight:bold; '>Long</span><span style='color:#308080; '>.</span>parseUnsignedLong<span style='color:#308080; '>(</span>col<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#7779bb; '>int</span> date <span style='color:#308080; '>=</span> <span style='color:#6679aa; font-weight:bold; '>Integer</span><span style='color:#308080; '>.</span>parseInt<span style='color:#308080; '>(</span>col<span style='color:#308080; '>[</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#7779bb; '>int</span> time <span style='color:#308080; '>=</span> <span style='color:#6679aa; font-weight:bold; '>Integer</span><span style='color:#308080; '>.</span>parseInt<span style='color:#308080; '>(</span>col<span style='color:#308080; '>[</span><span style='color:#008c00; '>2</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#6679aa; font-weight:bold; '>String</span> prodcode <span style='color:#308080; '>=</span> col<span style='color:#308080; '>[</span><span style='color:#008c00; '>3</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+			<span style='color:#7779bb; '>double</span> price <span style='color:#308080; '>=</span> <span style='color:#6679aa; font-weight:bold; '>Double</span><span style='color:#308080; '>.</span>parseDouble<span style='color:#308080; '>(</span>col<span style='color:#308080; '>[</span><span style='color:#008c00; '>4</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#7779bb; '>int</span> qty <span style='color:#308080; '>=</span> <span style='color:#6679aa; font-weight:bold; '>Integer</span><span style='color:#308080; '>.</span>parseInt<span style='color:#308080; '>(</span>col<span style='color:#308080; '>[</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#7779bb; '>int</span> deal_src <span style='color:#308080; '>=</span> <span style='color:#6679aa; font-weight:bold; '>Integer</span><span style='color:#308080; '>.</span>parseInt<span style='color:#308080; '>(</span>col<span style='color:#308080; '>[</span><span style='color:#008c00; '>6</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+			<span style='color:#6679aa; font-weight:bold; '>String</span> side <span style='color:#308080; '>=</span> <span style='color:#1060b6; '>""</span><span style='color:#406080; '>;</span>
+			
+			<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>col<span style='color:#308080; '>.</span>length <span style='color:#308080; '>></span> <span style='color:#008c00; '>12</span><span style='color:#308080; '>)</span>
+				side <span style='color:#308080; '>=</span> col<span style='color:#308080; '>[</span><span style='color:#008c00; '>13</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+			
+			dba<span style='color:#308080; '>.</span>InsertTickerData<span style='color:#308080; '>(</span>rec_id<span style='color:#308080; '>,</span> date<span style='color:#308080; '>,</span> time<span style='color:#308080; '>,</span> prodcode<span style='color:#308080; '>,</span> price<span style='color:#308080; '>,</span> qty<span style='color:#308080; '>,</span> deal_src<span style='color:#308080; '>,</span> side<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>					
+		<span style='color:#406080; '>}</span>	
+		<span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>Exception</span> ex<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+			SPCommon<span style='color:#308080; '>.</span>ConsoleLog<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"Error: %s"</span><span style='color:#308080; '>,</span> ex<span style='color:#308080; '>.</span>getMessage<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>	
+		<span style='color:#406080; '>}</span>		
+	<span style='color:#406080; '>}</span>			
+<span style='color:#406080; '>}</span>
+
+</pre>
+<!--Created using ToHtml.com on 2021-06-08 06:38:37 UTC -->

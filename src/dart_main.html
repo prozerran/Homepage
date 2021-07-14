@@ -1,0 +1,110 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+
+<span style='color:#595979; '>//import 'dart:html';</span>
+<span style='color:#595979; '>//import 'package:http/http.dart';</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>dart:io</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>dart:convert</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>clientportalapi.dart</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>AccessRight/accessrightmodels.dart</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>MarketData/marketdatamodels.dart</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// NOTE: This is SAMPLE test project only. It's just to test simple functionality of ClientPortalApi</span>
+<span style='color:#595979; '>// and Price Update throgh sockets, please write your own application base on ideas here.</span>
+<span style='color:#595979; '>// DO NOT USE AS IS OR ANY MEANS FOR PRACTICAL APPLICATION.</span>
+
+<span style='color:#200080; font-weight:bold; '>class</span> Test1
+<span style='color:#406080; '>{</span>
+    ClientPortalApi obj<span style='color:#406080; '>;</span>
+    <span style='color:#007d45; '>String</span> targetAccNo <span style='color:#308080; '>=</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>TEST</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+    <span style='color:#007d45; '>String</span> userAccName <span style='color:#308080; '>=</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>ADMIN</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+    <span style='color:#007d45; '>String</span> userAccPass <span style='color:#308080; '>=</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>pass</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>
+    <span style='color:#007d45; '>String</span> targetSysId <span style='color:#308080; '>=</span> <span style='color:#800000; '>'</span><span style='color:#1060b6; '>SYS_F</span><span style='color:#800000; '>'</span><span style='color:#406080; '>;</span>    
+
+    <span style='color:#200080; font-weight:bold; '>void</span> OnLogin<span style='color:#308080; '>(</span>LoginRespData data<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        print<span style='color:#308080; '>(</span><span style='color:#800000; '>'</span><span style='color:#1060b6; '>LOGGED IN</span><span style='color:#800000; '>'</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        print<span style='color:#308080; '>(</span>jsonEncode<span style='color:#308080; '>(</span>data<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> OnLogout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>obj<span style='color:#308080; '>.</span>IsLoggedIn<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>          
+            obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>SessionTokenHeartbeat<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>whenComplete<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#0f4d75; '>null</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>UserLogout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>whenComplete<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#0f4d75; '>null</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> StartIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        obj <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ClientPortalApi<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>UserLogin<span style='color:#308080; '>(</span>userAccName<span style='color:#308080; '>,</span> userAccPass<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        dd<span style='color:#308080; '>.</span>then<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>value<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> OnLogin<span style='color:#308080; '>(</span>value<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> GetPrice<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> async
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>obj<span style='color:#308080; '>.</span>IsLoggedIn<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>var</span> channels <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#800000; '>'</span><span style='color:#1060b6; '>MarketData</span><span style='color:#800000; '>'</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+        obj<span style='color:#308080; '>.</span>SubscibeChannels<span style='color:#308080; '>(</span>channels<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        obj<span style='color:#308080; '>.</span>marketData<span style='color:#308080; '>.</span>OnPriceResp <span style='color:#308080; '>=</span> OnPriceUpdate<span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// offer some lead time connect to socket</span>
+        await Future<span style='color:#308080; '>.</span>delayed<span style='color:#308080; '>(</span>Duration<span style='color:#308080; '>(</span>seconds<span style='color:#406080; '>:</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>var</span> prodCodes <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#800000; '>'</span><span style='color:#1060b6; '>HSIN1</span><span style='color:#800000; '>'</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+        obj<span style='color:#308080; '>.</span>marketData<span style='color:#308080; '>.</span>SubcribePrice<span style='color:#308080; '>(</span>prodCodes<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>   
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> GetTicker<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> async
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>obj<span style='color:#308080; '>.</span>IsLoggedIn<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>var</span> channels <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#800000; '>'</span><span style='color:#1060b6; '>MarketData</span><span style='color:#800000; '>'</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+        obj<span style='color:#308080; '>.</span>SubscibeChannels<span style='color:#308080; '>(</span>channels<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        obj<span style='color:#308080; '>.</span>marketData<span style='color:#308080; '>.</span>OnTickerResp <span style='color:#308080; '>=</span> OnTickerUpdate<span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// offer some lead time connect to socket</span>
+        await Future<span style='color:#308080; '>.</span>delayed<span style='color:#308080; '>(</span>Duration<span style='color:#308080; '>(</span>seconds<span style='color:#406080; '>:</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>var</span> prodCodes <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#800000; '>'</span><span style='color:#1060b6; '>HSIN1</span><span style='color:#800000; '>'</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+        obj<span style='color:#308080; '>.</span>marketData<span style='color:#308080; '>.</span>SubcribeTicker<span style='color:#308080; '>(</span>prodCodes<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> OnPriceUpdate<span style='color:#308080; '>(</span>PriceResponse resp<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        print<span style='color:#308080; '>(</span>jsonEncode<span style='color:#308080; '>(</span>resp<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> OnTickerUpdate<span style='color:#308080; '>(</span>TickerResponse resp<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        print<span style='color:#308080; '>(</span>jsonEncode<span style='color:#308080; '>(</span>resp<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>    
+<span style='color:#406080; '>}</span>
+
+<span style='color:#200080; font-weight:bold; '>void</span> main<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> async
+<span style='color:#406080; '>{</span> 
+    <span style='color:#200080; font-weight:bold; '>var</span> t <span style='color:#308080; '>=</span> Test1<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> 
+    t<span style='color:#308080; '>.</span>StartIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> 
+    await Future<span style='color:#308080; '>.</span>delayed<span style='color:#308080; '>(</span>Duration<span style='color:#308080; '>(</span>seconds<span style='color:#406080; '>:</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// sample to display price, bid/ask/last, OHLC</span>
+    t<span style='color:#308080; '>.</span>GetPrice<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    await Future<span style='color:#308080; '>.</span>delayed<span style='color:#308080; '>(</span>Duration<span style='color:#308080; '>(</span>seconds<span style='color:#406080; '>:</span> <span style='color:#008c00; '>10</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// sample to display Ticker</span>
+    <span style='color:#595979; '>//t.GetTicker();</span>
+    <span style='color:#595979; '>//await Future.delayed(Duration(seconds: 10));</span>
+
+    <span style='color:#595979; '>// wait for ENTER then logout</span>
+    <span style='color:#595979; '>// somehow/maybe doesnt work, need to CTRL-C to terminate</span>
+    <span style='color:#595979; '>//stdin.readLineSync();</span>
+
+    t<span style='color:#308080; '>.</span>OnLogout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-07-14 02:24:42 UTC -->

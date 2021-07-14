@@ -1,0 +1,221 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Data<span style='color:#308080; '>.</span>SQLite<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Data<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Data<span style='color:#308080; '>.</span>Entity<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>ComponentModel<span style='color:#308080; '>.</span>DataAnnotations<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Diagnostics<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Serilog<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SQLite<span style='color:#308080; '>.</span>BusinessLayer
+<span style='color:#406080; '>{</span>
+    <span style='color:#595979; '>/// &lt;summary></span>
+    <span style='color:#595979; '>/// </span><span style='color:#5555dd; '>http://zetcode.com/csharp/sqlite/</span>
+    <span style='color:#595979; '>/// </span><span style='color:#5555dd; '>https://sqlite.org/cli.html</span>
+    <span style='color:#595979; '>/// </span>
+    <span style='color:#595979; '>/// &lt;/summary></span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>sealed</span> <span style='color:#200080; font-weight:bold; '>class</span> SPSQLite
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> SQLiteConnection conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>string</span> dbFilePath <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>string</span> table_name <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>readonly</span> Lazy<span style='color:#308080; '>&lt;</span>SPSQLite<span style='color:#308080; '>></span> lazy <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Lazy<span style='color:#308080; '>&lt;</span>SPSQLite<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#200080; font-weight:bold; '>new</span> SPSQLite<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> SPSQLite Instance <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> lazy<span style='color:#308080; '>.</span>Value<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> SPSQLite<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> 
+        <span style='color:#406080; '>{</span>
+            dbFilePath <span style='color:#308080; '>=</span> SPGlobal<span style='color:#308080; '>.</span>DB_PATH<span style='color:#406080; '>;</span>    
+          	table_name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TABLE_NAME</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>   
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> CreateTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> cmd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteCommand<span style='color:#308080; '>(</span>conn<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>try</span>
+                <span style='color:#406080; '>{</span>
+                    cmd<span style='color:#308080; '>.</span>CommandText <span style='color:#308080; '>=</span>
+                        $<span style='color:#800000; '>"</span><span style='color:#1060b6; '>CREATE TABLE IF NOT EXISTS {table_name}(window_id TEXT PRIMARY KEY, pos_x INT, pos_y INT, height INT, width INT)</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>return</span> cmd<span style='color:#308080; '>.</span>ExecuteNonQuery<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> InsertOrUpdateRecord<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> win_id<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> x<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> y<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> h<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> w<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>object</span> obj<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                Reconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> cmd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteCommand<span style='color:#308080; '>(</span>conn<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>try</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>string</span> commandTxt <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>REPLACE INTO {table_name}(window_id, pos_x, pos_y, height, width) </span><span style='color:#800000; '>"</span> <span style='color:#308080; '>+</span>
+                        $<span style='color:#800000; '>"</span><span style='color:#1060b6; '>VALUES('{win_id}', {x}, {y}, {h}, {w})</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    cmd<span style='color:#308080; '>.</span>CommandText <span style='color:#308080; '>=</span> commandTxt<span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> num <span style='color:#308080; '>=</span> cmd<span style='color:#308080; '>.</span>ExecuteNonQuery<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>num <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span>
+                        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span>
+                <span style='color:#406080; '>{</span>
+                    Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> UpdateRecord<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> win_id<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> x<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> y<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> h<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> w<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>object</span> obj<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                Reconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> cmd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteCommand<span style='color:#308080; '>(</span>conn<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>try</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>string</span> commandTxt <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>UPDATE {table_name} SET </span><span style='color:#800000; '>"</span> <span style='color:#308080; '>+</span>
+                        $<span style='color:#800000; '>"</span><span style='color:#1060b6; '>pos_x = {x}, pos_y = {y}, height = {h}, width = {w}, </span><span style='color:#800000; '>"</span> <span style='color:#308080; '>+</span>
+                        $<span style='color:#800000; '>"</span><span style='color:#1060b6; '>WHERE window_id = '{win_id}'</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    cmd<span style='color:#308080; '>.</span>CommandText <span style='color:#308080; '>=</span> commandTxt<span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> num <span style='color:#308080; '>=</span> cmd<span style='color:#308080; '>.</span>ExecuteNonQuery<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>num <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span>
+                        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span>
+                <span style='color:#406080; '>{</span>
+                    Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Initialize<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Connect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                CreateTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Terminate<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> DeleteRecord<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> win_id<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> DeleteTableRecord<span style='color:#308080; '>(</span>table_name<span style='color:#308080; '>,</span> win_id<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// protected members</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Connect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> cs <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span><span style='color:#800000; '>@"</span><span style='color:#1060b6; '>URI=file:{0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> dbFilePath<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>cs<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                conn<span style='color:#308080; '>.</span>Open<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception e<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Log<span style='color:#308080; '>.</span>Error<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>SPSQLite.Connect Exception: {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> e<span style='color:#308080; '>.</span>StackTrace<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>conn <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                conn<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#308080; '>(</span>conn <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> ? <span style='color:#200080; font-weight:bold; '>true</span> <span style='color:#308080; '>:</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> Reconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Connect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DropTable<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> table_name<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#200080; font-weight:bold; '>var</span> cmd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteCommand<span style='color:#308080; '>(</span>conn<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>string</span> commandTxt <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>DROP TABLE IF EXISTS {table_name}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            cmd<span style='color:#308080; '>.</span>CommandText <span style='color:#308080; '>=</span> commandTxt<span style='color:#406080; '>;</span>
+            cmd<span style='color:#308080; '>.</span>ExecuteNonQuery<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> DeleteTableRecord<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> table_name<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> win_id<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                Reconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> cmd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteCommand<span style='color:#308080; '>(</span>conn<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>try</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>string</span> commandTxt <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>DELETE FROM {table_name} WHERE window_id = '{win_id}'</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    cmd<span style='color:#308080; '>.</span>CommandText <span style='color:#308080; '>=</span> commandTxt<span style='color:#406080; '>;</span>
+                    cmd<span style='color:#308080; '>.</span>ExecuteNonQuery<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span>
+                <span style='color:#406080; '>{</span>
+                    Disconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// public members</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DataTable SelectTableRecord<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> win_id<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>IsConnected<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                Reconnect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> cmd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteCommand<span style='color:#308080; '>(</span>conn<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>try</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>string</span> commandTxt <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>SELECT * FROM {table_name} WHERE window_id = '{win_id}'</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    cmd<span style='color:#308080; '>.</span>CommandText <span style='color:#308080; '>=</span> commandTxt<span style='color:#406080; '>;</span>
+                    SQLiteDataReader dr <span style='color:#308080; '>=</span> cmd<span style='color:#308080; '>.</span>ExecuteReader<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>var</span> dt <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DataTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    dt<span style='color:#308080; '>.</span>Load<span style='color:#308080; '>(</span>dr<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>return</span> dt<span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>            
+        <span style='color:#406080; '>}</span>
+
+        
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-06-30 18:53:57 UTC -->

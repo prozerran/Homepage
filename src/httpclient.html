@@ -1,0 +1,97 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>package</span><span style='color:#004a43; '> com</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>sp</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>app</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>io</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>BufferedReader</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>io</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>DataOutputStream</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>io</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>Closeable</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>io</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>IOException</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>io</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>InputStream</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>io</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>InputStreamReader</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>net</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>HttpURLConnection</span><span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>import</span><span style='color:#004a43; '> java</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>net</span><span style='color:#308080; '>.</span><span style='color:#004a43; '>URL</span><span style='color:#406080; '>;</span>
+<span style='color:#595979; '>//import javax.net.ssl.HttpsURLConnection;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://juffalow.com/java/how-to-send-http-get-post-request-in-java</span>
+
+<span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> HttpClient <span style='color:#406080; '>{</span>
+
+	<span style='color:#595979; '>/*</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;public static void main(String[] args) {</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;try {</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;	HttpClient hce = new HttpClient();</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;String body = hce.get("</span><span style='color:#5555dd; '>http://httpbin.org/get</span><span style='color:#595979; '>");</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;String body = hce.post("</span><span style='color:#5555dd; '>http://httpbin.org/post</span><span style='color:#595979; '>", "data=test data");</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;System.out.println(body);</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;} catch(IOException ioe) {</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;ioe.printStackTrace();</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#6679aa; font-weight:bold; '>String</span> get<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>String</span> getUrl<span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>throws</span> <span style='color:#6679aa; font-weight:bold; '>IOException</span> <span style='color:#406080; '>{</span>
+        <span style='color:#6679aa; font-weight:bold; '>URL</span> url <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>URL</span><span style='color:#308080; '>(</span>getUrl<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#6679aa; font-weight:bold; '>HttpURLConnection</span> con <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>HttpURLConnection</span><span style='color:#308080; '>)</span> url<span style='color:#308080; '>.</span>openConnection<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        con<span style='color:#308080; '>.</span>setRequestMethod<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"GET"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>        
+        <span style='color:#595979; '>//con.setRequestProperty("Content-Type", "application/json");</span>
+
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>read<span style='color:#308080; '>(</span>con<span style='color:#308080; '>.</span>getInputStream<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+    
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#6679aa; font-weight:bold; '>String</span> post<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>String</span> postUrl<span style='color:#308080; '>,</span> <span style='color:#6679aa; font-weight:bold; '>String</span> data<span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>throws</span> <span style='color:#6679aa; font-weight:bold; '>IOException</span> <span style='color:#406080; '>{</span>
+        <span style='color:#6679aa; font-weight:bold; '>URL</span> url <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>URL</span><span style='color:#308080; '>(</span>postUrl<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#6679aa; font-weight:bold; '>HttpURLConnection</span> con <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>HttpURLConnection</span><span style='color:#308080; '>)</span> url<span style='color:#308080; '>.</span>openConnection<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        con<span style='color:#308080; '>.</span>setRequestMethod<span style='color:#308080; '>(</span><span style='color:#1060b6; '>"POST"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        con<span style='color:#308080; '>.</span>setDoOutput<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>sendData<span style='color:#308080; '>(</span>con<span style='color:#308080; '>,</span> data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>read<span style='color:#308080; '>(</span>con<span style='color:#308080; '>.</span>getInputStream<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#7779bb; '>void</span> sendData<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>HttpURLConnection</span> con<span style='color:#308080; '>,</span> <span style='color:#6679aa; font-weight:bold; '>String</span> data<span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>throws</span> <span style='color:#6679aa; font-weight:bold; '>IOException</span> <span style='color:#406080; '>{</span>
+        <span style='color:#6679aa; font-weight:bold; '>DataOutputStream</span> wr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>try</span> <span style='color:#406080; '>{</span>
+            wr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>DataOutputStream</span><span style='color:#308080; '>(</span>con<span style='color:#308080; '>.</span>getOutputStream<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            wr<span style='color:#308080; '>.</span>writeBytes<span style='color:#308080; '>(</span>data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            wr<span style='color:#308080; '>.</span>flush<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            wr<span style='color:#308080; '>.</span>close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span> <span style='color:#200080; font-weight:bold; '>catch</span><span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>IOException</span> exception<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>throw</span> exception<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span> <span style='color:#200080; font-weight:bold; '>finally</span> <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>closeQuietly<span style='color:#308080; '>(</span>wr<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>    
+
+    <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#6679aa; font-weight:bold; '>String</span> read<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>InputStream</span> is<span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>throws</span> <span style='color:#6679aa; font-weight:bold; '>IOException</span> <span style='color:#406080; '>{</span>
+        <span style='color:#6679aa; font-weight:bold; '>BufferedReader</span> in <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#6679aa; font-weight:bold; '>String</span> inputLine<span style='color:#406080; '>;</span>
+        <span style='color:#6679aa; font-weight:bold; '>StringBuilder</span> body<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>try</span> <span style='color:#406080; '>{</span>
+            in <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>BufferedReader</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>InputStreamReader</span><span style='color:#308080; '>(</span>is<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            body <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#6679aa; font-weight:bold; '>StringBuilder</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>inputLine <span style='color:#308080; '>=</span> in<span style='color:#308080; '>.</span>readLine<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+                body<span style='color:#308080; '>.</span>append<span style='color:#308080; '>(</span>inputLine<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            in<span style='color:#308080; '>.</span>close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>return</span> body<span style='color:#308080; '>.</span>toString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span> <span style='color:#200080; font-weight:bold; '>catch</span><span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>IOException</span> ioe<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>throw</span> ioe<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span> <span style='color:#200080; font-weight:bold; '>finally</span> <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>closeQuietly<span style='color:#308080; '>(</span>in<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#7779bb; '>void</span> closeQuietly<span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>Closeable</span> closeable<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>try</span> <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span><span style='color:#308080; '>(</span> closeable <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> <span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+                closeable<span style='color:#308080; '>.</span>close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span> <span style='color:#200080; font-weight:bold; '>catch</span><span style='color:#308080; '>(</span><span style='color:#6679aa; font-weight:bold; '>IOException</span> ex<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-06-08 06:42:45 UTC -->

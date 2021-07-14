@@ -1,0 +1,100 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>AspNetCore<span style='color:#308080; '>.</span>Mvc<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> NUnit<span style='color:#308080; '>.</span>Framework<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> WebSocketCore<span style='color:#308080; '>.</span>Controllers<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// NUnit3 Test setup/cases</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://nunit.org/</span>
+<span style='color:#595979; '>// TEST -> Right click, debug test [Test Explorer]</span>
+<span style='color:#595979; '>// Following sample test WebApi2 MVC endpoints</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> WebSocketTest
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> Tests
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> HomeController ctr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#308080; '>[</span>OneTimeSetUp<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OneTimeSetUp<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ctr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> HomeController<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>OneTimeSetUp</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>SetUp<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> SetUp<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>SetUp</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TearDown<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TearDown<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TearDown</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>OneTimeTearDown<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OneTimeTearDown<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>OneTimeTearDown</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>Test<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestGet<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+
+            <span style='color:#595979; '>// Act</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> ctr<span style='color:#308080; '>.</span>Get<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> okResult <span style='color:#308080; '>=</span> res <span style='color:#200080; font-weight:bold; '>as</span> OkObjectResult<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>IsNotNull<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span><span style='color:#008c00; '>200</span><span style='color:#308080; '>,</span> okResult<span style='color:#308080; '>.</span>StatusCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>Test<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestPost<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> req <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ReqMessage <span style='color:#406080; '>{</span> Name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TimHsu</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> Age <span style='color:#308080; '>=</span> <span style='color:#008c00; '>23</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Act</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> ctr<span style='color:#308080; '>.</span>GetJsonString<span style='color:#308080; '>(</span>req<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> okResult <span style='color:#308080; '>=</span> res <span style='color:#200080; font-weight:bold; '>as</span> OkObjectResult<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>IsNotNull<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span><span style='color:#008c00; '>200</span><span style='color:#308080; '>,</span> okResult<span style='color:#308080; '>.</span>StatusCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>IsTrue<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>is</span> ReqMessage<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#595979; '>//Assert.IsType&lt;ReqMessage>(okResult.Value);</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> val <span style='color:#308080; '>=</span> okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> ReqMessage<span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>val<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TimHsu</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>val<span style='color:#308080; '>.</span>Age<span style='color:#308080; '>,</span> <span style='color:#008c00; '>23</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>Test<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> async Task TestAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+
+            <span style='color:#595979; '>// Act</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> await ctr<span style='color:#308080; '>.</span>AsynchronousCall<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> okResult <span style='color:#308080; '>=</span> res <span style='color:#200080; font-weight:bold; '>as</span> OkObjectResult<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>IsNotNull<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span><span style='color:#008c00; '>200</span><span style='color:#308080; '>,</span> okResult<span style='color:#308080; '>.</span>StatusCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>IsTrue<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>is</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#595979; '>//Assert.IsType&lt;string>(okResult.Value);</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> val <span style='color:#308080; '>=</span> okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>val<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>this is async call</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-06-08 05:56:28 UTC -->

@@ -1,0 +1,179 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> Serilog<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Configuration<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>IO<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Net<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Net<span style='color:#308080; '>.</span>NetworkInformation<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Net<span style='color:#308080; '>.</span>Sockets<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Timers<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> CoinbaseEngine
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>sealed</span> <span style='color:#200080; font-weight:bold; '>class</span> RouterServer
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>readonly</span> Lazy<span style='color:#308080; '>&lt;</span>RouterServer<span style='color:#308080; '>></span> lazy <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Lazy<span style='color:#308080; '>&lt;</span>RouterServer<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#200080; font-weight:bold; '>new</span> RouterServer<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> RouterServer Instance <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> lazy<span style='color:#308080; '>.</span>Value<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> RouterRunning <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> List<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> tradingPairs <span style='color:#308080; '>=</span> CoinbaseConfig<span style='color:#308080; '>.</span>TradingPairs<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>int</span> LocalPort <span style='color:#308080; '>=</span> CoinbaseConfig<span style='color:#308080; '>.</span>LocalPort<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> PriceProt <span style='color:#308080; '>=</span> CoinbaseConfig<span style='color:#308080; '>.</span>PriceProt<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> volatile <span style='color:#200080; font-weight:bold; '>int</span> m_nConnections <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> TcpListener m_server <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> RouterServer<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> async <span style='color:#200080; font-weight:bold; '>void</span> Start<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>m_server <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TcpListener<span style='color:#308080; '>(</span>IPAddress<span style='color:#308080; '>.</span>Any<span style='color:#308080; '>,</span> LocalPort<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>m_server<span style='color:#308080; '>.</span>Start<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            RouterRunning <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+            Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Server start: {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>m_server<span style='color:#308080; '>.</span>LocalEndpoint<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// start listening to socket port and accept incoming device messages</span>
+            <span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span>RouterRunning<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>try</span>
+                <span style='color:#406080; '>{</span>
+                    TcpClient client <span style='color:#308080; '>=</span> await <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>m_server<span style='color:#308080; '>.</span>AcceptTcpClientAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    Thread t <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Thread<span style='color:#308080; '>(</span>HandleReadThread<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// possibly may need to decrease stack size</span>
+                    t<span style='color:#308080; '>.</span>IsBackground <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                    t<span style='color:#308080; '>.</span>Start<span style='color:#308080; '>(</span>client<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>SocketException ex<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>RouterRunning<span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    Log<span style='color:#308080; '>.</span>Error<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>SocketException Start: {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> ex<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception ex<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>RouterRunning<span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    Log<span style='color:#308080; '>.</span>Error<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Exception Start: {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> ex<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// listening at port ended, socket server stopped running</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>RouterRunning<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Server stop: {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>m_server<span style='color:#308080; '>.</span>LocalEndpoint<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            RouterRunning <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>m_server<span style='color:#308080; '>.</span>Stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Server stop.</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> async <span style='color:#200080; font-weight:bold; '>void</span> HandleReadThread<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> obj<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>byte</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> data <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#200080; font-weight:bold; '>byte</span><span style='color:#308080; '>[</span><span style='color:#008c00; '>128</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+            TcpClient remclient <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>TcpClient<span style='color:#308080; '>)</span>obj<span style='color:#406080; '>;</span>
+            NetworkStream netstream <span style='color:#308080; '>=</span> remclient<span style='color:#308080; '>.</span>GetStream<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Thread writeThr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+            Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Client Connected. Active Connections = {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#308080; '>+</span><span style='color:#308080; '>+</span>m_nConnections<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> thrId <span style='color:#308080; '>=</span> m_nConnections<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// main loop to service the client</span>
+            <span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span>netstream<span style='color:#308080; '>.</span>CanRead<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> stat <span style='color:#308080; '>=</span> remclient<span style='color:#308080; '>.</span>GetState<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>stat <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> TcpState<span style='color:#308080; '>.</span>Established<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Remote Client Disconnected</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>netstream<span style='color:#308080; '>.</span>DataAvailable<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    await Task<span style='color:#308080; '>.</span>Delay<span style='color:#308080; '>(</span><span style='color:#008c00; '>500</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>continue</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                <span style='color:#200080; font-weight:bold; '>try</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#595979; '>// clear buffer and read from network packet [blocking call]</span>
+                    Array<span style='color:#308080; '>.</span>Clear<span style='color:#308080; '>(</span>data<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> data<span style='color:#308080; '>.</span>Length<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> recv <span style='color:#308080; '>=</span> await netstream<span style='color:#308080; '>.</span>ReadAsync<span style='color:#308080; '>(</span>data<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> data<span style='color:#308080; '>.</span>Length<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#595979; '>// handle login and acknowledge client</span>
+                    <span style='color:#200080; font-weight:bold; '>string</span> str <span style='color:#308080; '>=</span> Encoding<span style='color:#308080; '>.</span>ASCII<span style='color:#308080; '>.</span>GetString<span style='color:#308080; '>(</span>data<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> recv<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>RECV[{thrId}]: {str}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>str<span style='color:#308080; '>.</span>StartsWith<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>1\r\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span> &amp;&amp; writeThr <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>var</span> reply <span style='color:#308080; '>=</span> String<span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>1,1,0\r\n{PriceProt}\r\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        netstream<span style='color:#308080; '>.</span>Write<span style='color:#308080; '>(</span>Encoding<span style='color:#308080; '>.</span>ASCII<span style='color:#308080; '>.</span>GetBytes<span style='color:#308080; '>(</span>reply<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> reply<span style='color:#308080; '>.</span>Length<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                        writeThr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Thread<span style='color:#308080; '>(</span>HandleSendThread<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// possibly may need to decrease stack size</span>
+                        writeThr<span style='color:#308080; '>.</span>IsBackground <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                        writeThr<span style='color:#308080; '>.</span>Name <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>Price Read/Write Thread [{thrId}]</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        writeThr<span style='color:#308080; '>.</span>Start<span style='color:#308080; '>(</span>netstream<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>SocketException ex<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    Log<span style='color:#308080; '>.</span>Error<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>HandleClientThread - SocketException: {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> ex<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception ex<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    Log<span style='color:#308080; '>.</span>Error<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>HandleClientThread - Exception: {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> ex<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+            netstream<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            remclient<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Client Disconnected. Active Connections = {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#308080; '>-</span><span style='color:#308080; '>-</span>m_nConnections<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> async <span style='color:#200080; font-weight:bold; '>void</span> HandleSendThread<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> obj<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            NetworkStream netstream <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>NetworkStream<span style='color:#308080; '>)</span>obj<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>bool</span> _canSend <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+            Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span>Thread<span style='color:#308080; '>.</span>CurrentThread<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span>_canSend<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#595979; '>// main loop to service the client</span>
+                tradingPairs<span style='color:#308080; '>.</span>ForEach<span style='color:#308080; '>(</span>p <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>try</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>var</span> cbProd <span style='color:#308080; '>=</span> CommonUtil<span style='color:#308080; '>.</span>GetCoinbasePairBySPTraderCode<span style='color:#308080; '>(</span>p<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        <span style='color:#200080; font-weight:bold; '>var</span> str <span style='color:#308080; '>=</span> CoinbasePrice<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>GetProductPrice<span style='color:#308080; '>(</span>cbProd<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        netstream<span style='color:#308080; '>.</span>WriteAsync<span style='color:#308080; '>(</span>Encoding<span style='color:#308080; '>.</span>ASCII<span style='color:#308080; '>.</span>GetBytes<span style='color:#308080; '>(</span>str<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> str<span style='color:#308080; '>.</span>Length<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                    <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>SocketException e<span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        Log<span style='color:#308080; '>.</span>Error<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>RouterServer.HandleSendThread.SocketException: {e.Message}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        _canSend <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>                        
+                    <span style='color:#406080; '>}</span>
+                    <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception e<span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        Log<span style='color:#308080; '>.</span>Error<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>RouterServer.HandleSendThread.Exception: {e.Message}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        _canSend <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                await Task<span style='color:#308080; '>.</span>Delay<span style='color:#308080; '>(</span>CoinbaseConfig<span style='color:#308080; '>.</span>PriceInterval<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            netstream<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-06-08 06:05:13 UTC -->
