@@ -1,0 +1,84 @@
+UNIX CODE
+-------------------------------------------------------------------------------
+#!/bin/sh
+# Simple input/output script
+
+echo "Please enter your name:"
+read name
+echo Hello $name!
+
+-------------------------------------------------------------------------------
+#!/bin/sh
+# Simple while script
+
+count=0
+limit=7
+
+while [ "$count" != "$limit" ]
+   do
+     echo "Hello World"
+     count =`expr $count + 1`
+done
+
+-------------------------------------------------------------------------------
+#!/bin/sh
+# Simple for script
+
+for user
+  do
+    finger $user | fgrep "On since"
+done
+
+-------------------------------------------------------------------------------
+#!/bin/sh
+# Simple for script
+
+users='userid1 userid2 userid3'
+
+for user in $users
+  do
+    finger $user | fgrep "On since"
+done
+
+-------------------------------------------------------------------------------
+#!/bin/sh
+# Simple case script
+
+case $1 in
+   sh)
+     echo "This is the Bourne Shell"
+   ;;
+   ksh)
+     echo "This is the Korn Shell"
+   ;;
+   csh)
+     echo "This is the C-Shell"
+   ;;
+   *)
+     echo "No item of that type in case list"
+   ;;
+esac
+
+-------------------------------------------------------------------------------
+#!/bin/sh
+# Simple if-then-else script
+
+if [ "$1" = "5" ]
+then
+   du $2
+else
+   ls $2
+fi
+
+-------------------------------------------------------------------------------
+#!/bin/sh
+# Simple until script
+
+count=0
+limit=7
+
+until [ "$count" = "$limit" ]
+   do
+     echo "Hello World"
+     count=`expr $count + 1`
+done

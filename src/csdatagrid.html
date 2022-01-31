@@ -1,0 +1,330 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>ObjectModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Net<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Web<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Mvvm<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Newtonsoft<span style='color:#308080; '>.</span>Json<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://coinmarketcap.com/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://coinmarketcap.com/api/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://pro.coinmarketcap.com/account</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://coinmarketcap.com/api/documentation/v1/#section/Quick-Start-Guide</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> CryptoSentiment
+<span style='color:#406080; '>{</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Models</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> ResponseStatus
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DateTime timestamp<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> error_code<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> error_message<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> elapsed<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> credit_count<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> notice<span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> Platform
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> id<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> name<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> symbol<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> slug<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> token_address<span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> QuoteData
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> price<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> volume_24h<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> percent_change_1h<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> percent_change_24h<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> percent_change_7d<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> percent_change_30d<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> percent_change_60d<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> percent_change_90d<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> market_cap<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> market_cap_dominance<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> fully_diluted_market_cap<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DateTime last_updated<span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> LatestQuoteResp
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> id<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> name<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> symbol<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> slug<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> num_market_pairs<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DateTime date_added<span style='color:#406080; '>;</span>
+        <span style='color:#595979; '>// tags</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span>? max_supply<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span>? circulating_supply<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span>? total_supply<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> Platform platform<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> is_active<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> cmc_rank<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DateTime last_updated<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> QuoteData<span style='color:#308080; '>></span> quote <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> QuoteData<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> LatestQuoteAsyncResponse
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> ResponseStatus status<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> LatestQuoteResp<span style='color:#308080; '>></span> data <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> LatestQuoteResp<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> DataGridQuoteData <span style='color:#308080; '>:</span> BindableBase
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> name<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> Name
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> name<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> name<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> longName<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> LongName
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> longName<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> longName<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>double</span> price<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> Price
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> price<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> price<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>double</span> marketCap<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> MarketCap
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> marketCap<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> marketCap<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>double</span> percentShare<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> PercentShare
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> percentShare<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> percentShare<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>double</span> volumn24h<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> Volumn24h
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> volumn24h<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> volumn24h<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>double</span> accumulativeMarketCap<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> AccumulativeMarketCap
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> accumulativeMarketCap<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> accumulativeMarketCap<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> partial <span style='color:#200080; font-weight:bold; '>class</span> StableCoin <span style='color:#308080; '>:</span> CrytoUserControl
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>readonly</span> Lazy<span style='color:#308080; '>&lt;</span>StableCoin<span style='color:#308080; '>></span> lazy <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Lazy<span style='color:#308080; '>&lt;</span>StableCoin<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#200080; font-weight:bold; '>new</span> StableCoin<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> StableCoin Instance <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> lazy<span style='color:#308080; '>.</span>Value<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> CoinMarketCapApiKey <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>31941fbb-01b9-4bad-bd52-d5aa9d875792</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> UriBuilder url <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> WebClient client <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ObservableCollection<span style='color:#308080; '>&lt;</span>DataGridQuoteData<span style='color:#308080; '>></span> DataGridQuoteData <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ObservableCollection<span style='color:#308080; '>&lt;</span>DataGridQuoteData<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> StableCoin<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            InitializeComponent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            DataContext <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+
+            LoadStableCoinMarketShare<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLoaded<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>override</span> <span style='color:#200080; font-weight:bold; '>void</span> OnInitChanged<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> DependencyPropertyChangedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            DataGridQuoteData<span style='color:#308080; '>.</span>Clear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            LoadStableCoinMarketShare<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// public static void Sort&lt;T>(this ObservableCollection&lt;T> collection, Comparison&lt;T> comparison)</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Sort<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>ObservableCollection<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span> collection<span style='color:#308080; '>,</span> Comparison<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span> comparison<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> sortableList <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>collection<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            sortableList<span style='color:#308080; '>.</span>Sort<span style='color:#308080; '>(</span>comparison<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>for</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> i <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span> i <span style='color:#308080; '>&lt;</span> sortableList<span style='color:#308080; '>.</span>Count<span style='color:#406080; '>;</span> i<span style='color:#308080; '>+</span><span style='color:#308080; '>+</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                collection<span style='color:#308080; '>.</span>Move<span style='color:#308080; '>(</span>collection<span style='color:#308080; '>.</span>IndexOf<span style='color:#308080; '>(</span>sortableList<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> i<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Binds data to properties in XAML</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> CalculateLatestStableCoinMarketShare<span style='color:#308080; '>(</span>LatestQuoteAsyncResponse resp<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> data <span style='color:#308080; '>=</span> resp<span style='color:#308080; '>.</span>data<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>double</span> totalmc <span style='color:#308080; '>=</span> <span style='color:#008000; '>0.0</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// populate our observable collection</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> d <span style='color:#200080; font-weight:bold; '>in</span> data<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> dg <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DataGridQuoteData<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                dg<span style='color:#308080; '>.</span>Name <span style='color:#308080; '>=</span> d<span style='color:#308080; '>.</span>Key<span style='color:#406080; '>;</span>
+                dg<span style='color:#308080; '>.</span>LongName <span style='color:#308080; '>=</span> d<span style='color:#308080; '>.</span>Value<span style='color:#308080; '>.</span>name<span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> qd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> QuoteData<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                d<span style='color:#308080; '>.</span>Value<span style='color:#308080; '>.</span>quote<span style='color:#308080; '>.</span>TryGetValue<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>USD</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>out</span> qd<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                dg<span style='color:#308080; '>.</span>MarketCap <span style='color:#308080; '>=</span> qd<span style='color:#308080; '>.</span>market_cap<span style='color:#406080; '>;</span>
+                dg<span style='color:#308080; '>.</span>Price <span style='color:#308080; '>=</span> qd<span style='color:#308080; '>.</span>price<span style='color:#406080; '>;</span>
+                dg<span style='color:#308080; '>.</span>Volumn24h <span style='color:#308080; '>=</span> qd<span style='color:#308080; '>.</span>volume_24h<span style='color:#406080; '>;</span>
+
+                totalmc <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> dg<span style='color:#308080; '>.</span>MarketCap<span style='color:#406080; '>;</span>
+                dg<span style='color:#308080; '>.</span>AccumulativeMarketCap <span style='color:#308080; '>=</span> totalmc<span style='color:#406080; '>;</span>
+
+                DataGridQuoteData<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>dg<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// calculate percent share</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> dg <span style='color:#200080; font-weight:bold; '>in</span> DataGridQuoteData<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+                dg<span style='color:#308080; '>.</span>PercentShare <span style='color:#308080; '>=</span> dg<span style='color:#308080; '>.</span>MarketCap <span style='color:#308080; '>/</span> totalmc<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// update bindable sources</span>
+            Sort<span style='color:#308080; '>(</span>DataGridQuoteData<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span>a<span style='color:#308080; '>,</span> b<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> a<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>.</span>CompareTo<span style='color:#308080; '>(</span>b<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            dgStableCoin<span style='color:#308080; '>.</span>ItemsSource <span style='color:#308080; '>=</span> DataGridQuoteData<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Testing list</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> LoadTestStableCoinMarketShare<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> LatestQuoteResp<span style='color:#308080; '>></span> data <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> LatestQuoteResp<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            data<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>USDC</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> LatestQuoteResp
+            <span style='color:#406080; '>{</span>
+                name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>USDC</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                quote <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> QuoteData<span style='color:#308080; '>></span> <span style='color:#406080; '>{</span>
+                <span style='color:#406080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>USD</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> QuoteData <span style='color:#406080; '>{</span> market_cap <span style='color:#308080; '>=</span> <span style='color:#008000; '>5000.0</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            data<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>DAI</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> LatestQuoteResp
+            <span style='color:#406080; '>{</span>
+                name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>DAI MONEY</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                quote <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> QuoteData<span style='color:#308080; '>></span> <span style='color:#406080; '>{</span>
+                <span style='color:#406080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>USD</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> QuoteData <span style='color:#406080; '>{</span> market_cap <span style='color:#308080; '>=</span> <span style='color:#008000; '>205.4</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            data<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>USDT</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> LatestQuoteResp
+            <span style='color:#406080; '>{</span>
+                name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Tether</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                quote <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> QuoteData<span style='color:#308080; '>></span> <span style='color:#406080; '>{</span>
+                <span style='color:#406080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>USD</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> QuoteData <span style='color:#406080; '>{</span> market_cap <span style='color:#308080; '>=</span> <span style='color:#008000; '>10000.0</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            LatestQuoteAsyncResponse resp <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> LatestQuoteAsyncResponse<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> data <span style='color:#308080; '>=</span> data <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            CalculateLatestStableCoinMarketShare<span style='color:#308080; '>(</span>resp<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// The real stable coin list</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> LoadStableCoinMarketShare<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            url <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> UriBuilder<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> queryString <span style='color:#308080; '>=</span> HttpUtility<span style='color:#308080; '>.</span>ParseQueryString<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            queryString<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>symbol</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>PAX,UST,DAI,GUSD,TUSD,BUSD,USDC,USDT</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            url<span style='color:#308080; '>.</span>Query <span style='color:#308080; '>=</span> queryString<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            client <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> WebClient<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            client<span style='color:#308080; '>.</span>Headers<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>X-CMC_PRO_API_KEY</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> CoinMarketCapApiKey<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            client<span style='color:#308080; '>.</span>Headers<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Accepts</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>application/json</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> json <span style='color:#308080; '>=</span> client<span style='color:#308080; '>.</span>DownloadString<span style='color:#308080; '>(</span>url<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> resp <span style='color:#308080; '>=</span> JsonConvert<span style='color:#308080; '>.</span>DeserializeObject<span style='color:#308080; '>&lt;</span>LatestQuoteAsyncResponse<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>json<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            CalculateLatestStableCoinMarketShare<span style='color:#308080; '>(</span>resp<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+
+<span style='color:#595979; '>////////////////////////////              XAML CODE            ///////////////////////////////////////</span>
+<span style='color:#595979; '>/**</span>
+<span style='color:#595979; '>&lt;local:CrytoUserControl x:Class="CryptoSentiment.StableCoin"</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;xmlns="</span><span style='color:#5555dd; '>http://schemas.microsoft.com/winfx/2006/xaml/presentation</span><span style='color:#595979; '>"</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;xmlns:x="</span><span style='color:#5555dd; '>http://schemas.microsoft.com/winfx/2006/xaml</span><span style='color:#595979; '>"</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;xmlns:mc="</span><span style='color:#5555dd; '>http://schemas.openxmlformats.org/markup-compatibility/2006</span><span style='color:#595979; '>" </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;xmlns:d="</span><span style='color:#5555dd; '>http://schemas.microsoft.com/expression/blend/2008</span><span style='color:#595979; '>" </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;xmlns:local="clr-namespace:CryptoSentiment"</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;mc:Ignorable="d" Loaded="OnLoaded"></span>
+<span style='color:#595979; '></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&lt;UserControl.Resources></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Style x:Key="DataGridStyle1" TargetType="DataGrid"></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="ColumnHeaderStyle" Value="{DynamicResource ColumnHeaderStyle}"/></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Style></span>
+<span style='color:#595979; '></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Style x:Key="CellAlignRight"></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="Control.HorizontalAlignment" Value="Right" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Style></span>
+<span style='color:#595979; '></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Style x:Key="ColumnHeaderStyle" TargetType="DataGridColumnHeader"></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="FontWeight" Value="Bold" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="Background" Value="Transparent" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="BorderThickness" Value="1"/></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="VerticalAlignment" Value="Center"/></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="HorizontalContentAlignment" Value="Center"/></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Style></span>
+<span style='color:#595979; '></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Style x:Key="DataGridCellStyle" TargetType="DataGridCell"></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Style.Triggers></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Trigger Property="IsSelected" Value="True"></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="Background" Value="LightSteelBlue" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="BorderThickness" Value="0" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Trigger></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Style.Triggers></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Style></span>
+<span style='color:#595979; '></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Style x:Key="DataGridRowStyle" TargetType="DataGridRow"></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Style.Triggers></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Trigger Property="IsMouseOver" Value="True"></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;Setter Property="Background" Value="Lavender" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Trigger></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Style.Triggers></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/Style></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&lt;/UserControl.Resources></span>
+<span style='color:#595979; '></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGrid x:Name="dgStableCoin" </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;AutoGenerateColumns="False" FontSize="18" </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;CellStyle="{StaticResource DataGridCellStyle}"</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;RowStyle="{StaticResource DataGridRowStyle}"</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;ColumnHeaderStyle="{StaticResource ColumnHeaderStyle}"              </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;AlternatingRowBackground="LightCyan"></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGrid.Columns></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGridTextColumn Header="Stable Coin" Binding="{Binding Name}" Foreground="Blue" Width="150" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGridTextColumn Header="Coin Name" Binding="{Binding LongName}" Foreground="DarkSlateGray" Width="200" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=N2}" Foreground="Sienna" Width="100" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGridTextColumn Header="Market Cap" Binding="{Binding MarketCap, StringFormat=N2}" </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Foreground="Purple" Width="300" ElementStyle="{StaticResource CellAlignRight}" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGridTextColumn Header="Percent Share" Binding="{Binding PercentShare, StringFormat=P2}" </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Foreground="Red" Width="200" ElementStyle="{StaticResource CellAlignRight}" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGridTextColumn Header="Volumn 24H" Binding="{Binding Volumn24h, StringFormat=N2}" </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Foreground="Chocolate" Width="300" ElementStyle="{StaticResource CellAlignRight}" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;DataGridTextColumn Header="Accumulative Market Cap" Binding="{Binding AccumulativeMarketCap, StringFormat=N2}" </span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;Foreground="Magenta" Width="300" ElementStyle="{StaticResource CellAlignRight}" /></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&lt;/DataGrid.Columns></span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&lt;/DataGrid></span>
+<span style='color:#595979; '>&lt;/local:CrytoUserControl></span>
+<span style='color:#595979; '>*/</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-13 09:09:44 UTC -->

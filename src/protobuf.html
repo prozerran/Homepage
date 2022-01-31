@@ -1,0 +1,74 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>IO<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Newtonsoft<span style='color:#308080; '>.</span>Json<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> ProtoBuf<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/protobuf-net/protobuf-net</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#308080; '>[</span>ProtoContract<span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>internal</span> <span style='color:#200080; font-weight:bold; '>class</span> Person
+    <span style='color:#406080; '>{</span>
+        <span style='color:#308080; '>[</span>ProtoMember<span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> Id <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#308080; '>[</span>ProtoMember<span style='color:#308080; '>(</span><span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> Name <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#308080; '>[</span>ProtoMember<span style='color:#308080; '>(</span><span style='color:#008c00; '>3</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> Address Address <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#308080; '>[</span>ProtoContract<span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>internal</span> <span style='color:#200080; font-weight:bold; '>class</span> Address
+    <span style='color:#406080; '>{</span>
+        <span style='color:#308080; '>[</span>ProtoMember<span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> Line1 <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#308080; '>[</span>ProtoMember<span style='color:#308080; '>(</span><span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> Line2 <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>// Sample usage of protocol buffers (from Google)</span>
+    <span style='color:#595979; '>// This is the simplified version using protobuf-net</span>
+    <span style='color:#595979; '>// Serializes data into a binary file, then deserialize into an object.</span>
+    <span style='color:#595979; '>// Usefull for cross platform, cross language communication of objects.</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainProtoBufDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> person <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Person
+            <span style='color:#406080; '>{</span>
+                Id <span style='color:#308080; '>=</span> <span style='color:#008c00; '>12345</span><span style='color:#308080; '>,</span>
+                Name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Fred</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                Address <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Address
+                <span style='color:#406080; '>{</span>
+                    Line1 <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Flat 1</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                    Line2 <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>The Meadows</span><span style='color:#800000; '>"</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            File<span style='color:#308080; '>.</span>Delete<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>person.bin</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Serialize binary data into file</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> file <span style='color:#308080; '>=</span> File<span style='color:#308080; '>.</span>Create<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>person.bin</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>                
+                Serializer<span style='color:#308080; '>.</span>Serialize<span style='color:#308080; '>(</span>file<span style='color:#308080; '>,</span> person<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// Deserialize binary data from file into object</span>
+            Person newPerson<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> file <span style='color:#308080; '>=</span> File<span style='color:#308080; '>.</span>OpenRead<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>person.bin</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                newPerson <span style='color:#308080; '>=</span> Serializer<span style='color:#308080; '>.</span>Deserialize<span style='color:#308080; '>&lt;</span>Person<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>file<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// now lets check it</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> json <span style='color:#308080; '>=</span> JsonConvert<span style='color:#308080; '>.</span>SerializeObject<span style='color:#308080; '>(</span>newPerson<span style='color:#308080; '>,</span> Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>json<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-02 05:09:43 UTC -->

@@ -1,0 +1,269 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#595979; '>// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)</span>
+<span style='color:#595979; '>//</span>
+<span style='color:#595979; '>// Distributed under the Boost Software License, Version 1.0. (See accompanying</span>
+<span style='color:#595979; '>// file LICENSE_1_0.txt or copy at </span><span style='color:#5555dd; '>http://www.boost.org/LICENSE_1_0.txt</span><span style='color:#595979; '>)</span>
+<span style='color:#595979; '>//</span>
+<span style='color:#595979; '>// Heavy modification by Tim Hsu, Sharp Point Ltd. 2022.</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>"</span><span style='color:#40015a; '>SPSocketServer.h</span><span style='color:#800000; '>"</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPSocket
+<span style='color:#406080; '>{</span>
+    TCP_Session<span style='color:#406080; '>::</span>TCP_Session<span style='color:#308080; '>(</span>tcp<span style='color:#406080; '>::</span><span style='color:#400000; '>socket</span> <span style='color:#400000; '>socket</span><span style='color:#308080; '>,</span> Channel<span style='color:#308080; '>&amp;</span> ch<span style='color:#308080; '>,</span> SPSocketServerPtr sp<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>:</span> channel_<span style='color:#308080; '>(</span>ch<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> socket_<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>move</span><span style='color:#308080; '>(</span><span style='color:#400000; '>socket</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> socket_server_<span style='color:#308080; '>(</span>sp<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        input_deadline_<span style='color:#308080; '>.</span>expires_at<span style='color:#308080; '>(</span>steady_timer<span style='color:#406080; '>::</span>time_point<span style='color:#406080; '>::</span><span style='color:#003060; '>max</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        output_deadline_<span style='color:#308080; '>.</span>expires_at<span style='color:#308080; '>(</span>steady_timer<span style='color:#406080; '>::</span>time_point<span style='color:#406080; '>::</span><span style='color:#003060; '>max</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// The non_empty_output_queue_ steady_timer is set to the maximum time</span>
+        <span style='color:#595979; '>// point whenever the output queue is empty. This ensures that the output</span>
+        <span style='color:#595979; '>// actor stays asleep until a message is put into the queue.</span>
+        non_empty_output_queue_<span style='color:#308080; '>.</span>expires_at<span style='color:#308080; '>(</span>steady_timer<span style='color:#406080; '>::</span>time_point<span style='color:#406080; '>::</span><span style='color:#003060; '>max</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> TCP_Session<span style='color:#406080; '>::</span>UseReadUntil<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>char</span> terminator<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        read_terminator <span style='color:#308080; '>=</span> terminator<span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> TCP_Session<span style='color:#406080; '>::</span>Start<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        channel_<span style='color:#308080; '>.</span>Join<span style='color:#308080; '>(</span>shared_from_this<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> chost <span style='color:#308080; '>=</span> socket_<span style='color:#308080; '>.</span>remote_endpoint<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>address<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>to_string<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>unsigned</span> <span style='color:#200080; font-weight:bold; '>short</span> cport <span style='color:#308080; '>=</span> socket_<span style='color:#308080; '>.</span>remote_endpoint<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>port<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        socket_server_<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>OnClientConnected<span style='color:#308080; '>(</span>chost<span style='color:#308080; '>,</span> cport<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        read_line<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        check_deadline<span style='color:#308080; '>(</span>input_deadline_<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        await_output<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        check_deadline<span style='color:#308080; '>(</span>output_deadline_<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> TCP_Session<span style='color:#406080; '>::</span>stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        channel_<span style='color:#308080; '>.</span>Leave<span style='color:#308080; '>(</span>shared_from_this<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> chost <span style='color:#308080; '>=</span> socket_<span style='color:#308080; '>.</span>remote_endpoint<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>address<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>to_string<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>unsigned</span> <span style='color:#200080; font-weight:bold; '>short</span> cport <span style='color:#308080; '>=</span> socket_<span style='color:#308080; '>.</span>remote_endpoint<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>port<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        socket_server_<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>OnClientDisconnected<span style='color:#308080; '>(</span>chost<span style='color:#308080; '>,</span> cport<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code ignored_error<span style='color:#406080; '>;</span>
+        socket_<span style='color:#308080; '>.</span>close<span style='color:#308080; '>(</span>ignored_error<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        input_deadline_<span style='color:#308080; '>.</span>cancel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        non_empty_output_queue_<span style='color:#308080; '>.</span>cancel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        output_deadline_<span style='color:#308080; '>.</span>cancel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>bool</span> TCP_Session<span style='color:#406080; '>::</span>stopped<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>const</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#308080; '>!</span>socket_<span style='color:#308080; '>.</span>is_open<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> TCP_Session<span style='color:#406080; '>::</span>deliver<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> msg<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        output_queue_<span style='color:#308080; '>.</span>push_back<span style='color:#308080; '>(</span>msg<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// Signal that the output queue contains messages. Modifying the expiry</span>
+        <span style='color:#595979; '>// will wake the output actor, if it is waiting on the timer.</span>
+        non_empty_output_queue_<span style='color:#308080; '>.</span>expires_at<span style='color:#308080; '>(</span>steady_timer<span style='color:#406080; '>::</span>time_point<span style='color:#406080; '>::</span><span style='color:#003060; '>min</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> TCP_Session<span style='color:#406080; '>::</span>read_line<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#595979; '>// Set a deadline for the read operation.     </span>
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>rw_timeout <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            input_deadline_<span style='color:#308080; '>.</span>expires_after<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>chrono<span style='color:#406080; '>::</span>seconds<span style='color:#308080; '>(</span>rw_timeout<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Start an asynchronous operation to read a newline-delimited message.</span>
+        <span style='color:#200080; font-weight:bold; '>auto</span> self<span style='color:#308080; '>(</span>shared_from_this<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>async_read_until<span style='color:#308080; '>(</span>socket_<span style='color:#308080; '>,</span>
+            boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>dynamic_buffer<span style='color:#308080; '>(</span>input_buffer_<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> read_terminator<span style='color:#308080; '>,</span>
+            <span style='color:#308080; '>[</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> self<span style='color:#308080; '>]</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>,</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>size_t</span> n<span style='color:#308080; '>)</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+            <span style='color:#595979; '>// Check if the session was stopped while the operation was pending.</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>stopped<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>error<span style='color:#308080; '>)</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                <span style='color:#595979; '>// Extract the delimited message from the buffer.</span>
+                <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> str_recv<span style='color:#308080; '>(</span>input_buffer_<span style='color:#308080; '>.</span>substr<span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> n <span style='color:#308080; '>-</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                input_buffer_<span style='color:#308080; '>.</span>erase<span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> n<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>str_recv<span style='color:#308080; '>.</span>empty<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                    socket_server_<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>OnReceive<span style='color:#308080; '>(</span>str_recv<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#595979; '>// Send data to connecting client only</span>
+                    <span style='color:#595979; '>//Send(str_recv);</span>
+                <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>else</span>
+                <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                    <span style='color:#595979; '>// We received a heartbeat message from the client. If there's</span>
+                    <span style='color:#595979; '>// nothing else being sent or ready to be sent, send a heartbeat</span>
+                    <span style='color:#595979; '>// right back.</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>output_queue_<span style='color:#308080; '>.</span>empty<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                    <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                        output_queue_<span style='color:#308080; '>.</span>push_back<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>HB</span><span style='color:#800000; '>"</span> <span style='color:#308080; '>+</span> read_terminator<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                        <span style='color:#595979; '>// Signal that the output queue contains messages. Modifying</span>
+                        <span style='color:#595979; '>// the expiry will wake the output actor, if it is waiting on</span>
+                        <span style='color:#595979; '>// the timer.</span>
+                        non_empty_output_queue_<span style='color:#308080; '>.</span>expires_at<span style='color:#308080; '>(</span>steady_timer<span style='color:#406080; '>::</span>time_point<span style='color:#406080; '>::</span><span style='color:#003060; '>min</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+                <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+                read_line<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                socket_server_<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>OnReceiveError<span style='color:#308080; '>(</span>error<span style='color:#308080; '>.</span>message<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> TCP_Session<span style='color:#406080; '>::</span>await_output<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>auto</span> self<span style='color:#308080; '>(</span>shared_from_this<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        non_empty_output_queue_<span style='color:#308080; '>.</span>async_wait<span style='color:#308080; '>(</span>
+            <span style='color:#308080; '>[</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> self<span style='color:#308080; '>]</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> <span style='color:#595979; '>/*error*/</span><span style='color:#308080; '>)</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+            <span style='color:#595979; '>// Check if the session was stopped while the operation was pending.</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>stopped<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>output_queue_<span style='color:#308080; '>.</span>empty<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                <span style='color:#595979; '>// There are no messages that are ready to be sent. The actor goes</span>
+                <span style='color:#595979; '>// to sleep by waiting on the non_empty_output_queue_ timer. When a</span>
+                <span style='color:#595979; '>// new message is added, the timer will be modified and the actor</span>
+                <span style='color:#595979; '>// will wake.</span>
+                non_empty_output_queue_<span style='color:#308080; '>.</span>expires_at<span style='color:#308080; '>(</span>steady_timer<span style='color:#406080; '>::</span>time_point<span style='color:#406080; '>::</span><span style='color:#003060; '>max</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                await_output<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                write_line<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> TCP_Session<span style='color:#406080; '>::</span>write_line<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#595979; '>// Set a deadline for the write operation.</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>rw_timeout <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            output_deadline_<span style='color:#308080; '>.</span>expires_after<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>chrono<span style='color:#406080; '>::</span>seconds<span style='color:#308080; '>(</span>rw_timeout<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Start an asynchronous operation to send a message.</span>
+        <span style='color:#200080; font-weight:bold; '>auto</span> self<span style='color:#308080; '>(</span>shared_from_this<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>async_write<span style='color:#308080; '>(</span>socket_<span style='color:#308080; '>,</span>
+            boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>buffer<span style='color:#308080; '>(</span>output_queue_<span style='color:#308080; '>.</span>front<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+            <span style='color:#308080; '>[</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> self<span style='color:#308080; '>]</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>,</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>size_t</span> <span style='color:#595979; '>/*n*/</span><span style='color:#308080; '>)</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+            <span style='color:#595979; '>// Check if the session was stopped while the operation was pending.</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>stopped<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>error<span style='color:#308080; '>)</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                output_queue_<span style='color:#308080; '>.</span>pop_front<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                await_output<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> TCP_Session<span style='color:#406080; '>::</span>check_deadline<span style='color:#308080; '>(</span>steady_timer<span style='color:#308080; '>&amp;</span> deadline<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>auto</span> self<span style='color:#308080; '>(</span>shared_from_this<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        deadline<span style='color:#308080; '>.</span>async_wait<span style='color:#308080; '>(</span>
+            <span style='color:#308080; '>[</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> self<span style='color:#308080; '>,</span> <span style='color:#308080; '>&amp;</span>deadline<span style='color:#308080; '>]</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> <span style='color:#595979; '>/*error*/</span><span style='color:#308080; '>)</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+            <span style='color:#595979; '>// Check if the session was stopped while the operation was pending.</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>stopped<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Check whether the deadline has passed. We compare the deadline</span>
+            <span style='color:#595979; '>// against the current time since a new asynchronous operation may</span>
+            <span style='color:#595979; '>// have moved the deadline before this actor had a chance to run.</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>deadline<span style='color:#308080; '>.</span>expiry<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>=</span> steady_timer<span style='color:#406080; '>::</span>clock_type<span style='color:#406080; '>::</span>now<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                <span style='color:#595979; '>// The deadline has passed. Stop the session. The other actors will</span>
+                <span style='color:#595979; '>// terminate as soon as possible.</span>
+                stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                <span style='color:#595979; '>// Put the actor back to sleep.</span>
+                check_deadline<span style='color:#308080; '>(</span>deadline<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>//----------------------------------------------------------------------</span>
+
+    UDP_Broadcaster<span style='color:#406080; '>::</span>UDP_Broadcaster<span style='color:#308080; '>(</span>boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>io_context<span style='color:#308080; '>&amp;</span> io_context<span style='color:#308080; '>,</span>
+        <span style='color:#200080; font-weight:bold; '>const</span> udp<span style='color:#406080; '>::</span>endpoint<span style='color:#308080; '>&amp;</span> broadcast_endpoint<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>:</span> socket_<span style='color:#308080; '>(</span>io_context<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        socket_<span style='color:#308080; '>.</span><span style='color:#400000; '>connect</span><span style='color:#308080; '>(</span>broadcast_endpoint<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        socket_<span style='color:#308080; '>.</span>set_option<span style='color:#308080; '>(</span>udp<span style='color:#406080; '>::</span><span style='color:#400000; '>socket</span><span style='color:#406080; '>::</span>broadcast<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> UDP_Broadcaster<span style='color:#406080; '>::</span>deliver<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> msg<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code ignored_error<span style='color:#406080; '>;</span>
+        socket_<span style='color:#308080; '>.</span><span style='color:#400000; '>send</span><span style='color:#308080; '>(</span>boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>buffer<span style='color:#308080; '>(</span>msg<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> ignored_error<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>//----------------------------------------------------------------------</span>
+
+    SPSocketServer<span style='color:#406080; '>::</span>SPSocketServer<span style='color:#308080; '>(</span>boost<span style='color:#406080; '>::</span>asio<span style='color:#406080; '>::</span>io_context<span style='color:#308080; '>&amp;</span> io_context<span style='color:#308080; '>,</span>
+        <span style='color:#200080; font-weight:bold; '>const</span> tcp<span style='color:#406080; '>::</span>endpoint<span style='color:#308080; '>&amp;</span> listen_endpoint<span style='color:#308080; '>,</span>
+        <span style='color:#200080; font-weight:bold; '>const</span> udp<span style='color:#406080; '>::</span>endpoint<span style='color:#308080; '>&amp;</span> broadcast_endpoint<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>:</span> io_context_<span style='color:#308080; '>(</span>io_context<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+        acceptor_<span style='color:#308080; '>(</span>io_context<span style='color:#308080; '>,</span> listen_endpoint<span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        channel_<span style='color:#308080; '>.</span>Join<span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>make_shared<span style='color:#406080; '>&lt;</span>UDP_Broadcaster<span style='color:#406080; '>></span><span style='color:#308080; '>(</span>io_context_<span style='color:#308080; '>,</span> broadcast_endpoint<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>        
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> SPSocketServer<span style='color:#406080; '>::</span>accept<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        acceptor_<span style='color:#308080; '>.</span>async_accept<span style='color:#308080; '>(</span>
+            <span style='color:#308080; '>[</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>]</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> boost<span style='color:#406080; '>::</span><span style='color:#003060; '>system</span><span style='color:#406080; '>::</span>error_code<span style='color:#308080; '>&amp;</span> error<span style='color:#308080; '>,</span> tcp<span style='color:#406080; '>::</span><span style='color:#400000; '>socket</span> <span style='color:#400000; '>socket</span><span style='color:#308080; '>)</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>error<span style='color:#308080; '>)</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>auto</span> tcp_ptr <span style='color:#308080; '>=</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span>make_shared<span style='color:#406080; '>&lt;</span>TCP_Session<span style='color:#406080; '>></span><span style='color:#308080; '>(</span><span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>move</span><span style='color:#308080; '>(</span><span style='color:#400000; '>socket</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> channel_<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                tcp_ptr<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>UseReadUntil<span style='color:#308080; '>(</span>read_terminator<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                tcp_ptr<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>UseReadWriteTimeOut<span style='color:#308080; '>(</span>read_write_timeout<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                tcp_ptr<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>Start<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span>
+            accept<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#ffffff; background:#dd9999; font-weight:bold; font-style:italic; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>void</span> SPSocketServer<span style='color:#406080; '>::</span>StopServer<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>acceptor_<span style='color:#308080; '>.</span>is_open<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            acceptor_<span style='color:#308080; '>.</span>cancel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            acceptor_<span style='color:#308080; '>.</span>close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+        OnServerStopped<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2022-01-31 06:24:39 UTC -->

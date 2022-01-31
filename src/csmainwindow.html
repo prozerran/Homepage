@@ -1,0 +1,1119 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>listener<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>spmessage<span style='color:#308080; '>.</span>core<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>Win32<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Charting<span style='color:#308080; '>.</span>Visuals<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>BusinessLayer<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Common<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Models<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>ComponentModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>IO<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Controls<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> WpfStandaloneApp<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> WpfStandaloneApp<span style='color:#308080; '>.</span>listener<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> WpfStandaloneApp<span style='color:#308080; '>.</span>orderticket<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPTrader<span style='color:#308080; '>.</span>Views
+<span style='color:#406080; '>{</span>
+    <span style='color:#595979; '>/// &lt;summary></span>
+    <span style='color:#595979; '>/// Interaction logic for MainContainer.xaml</span>
+    <span style='color:#595979; '>/// &lt;/summary></span>
+    <span style='color:#200080; font-weight:bold; '>public</span> partial <span style='color:#200080; font-weight:bold; '>class</span> MainSPTrame <span style='color:#308080; '>:</span> SPBindableWindowChrome<span style='color:#308080; '>,</span> SPApiProxyEventListener
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> DaemonApiEventListener daemonApiEventListener<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> MarginCallWindow marginCallWindow <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> TwoFAWindow spAuthWindow <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>double</span> parentOldTop <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>double</span> parentOldLeft <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> isAE <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> errMsg <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> isLoggedIn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> MainSPTrame<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> loginErrMsg<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            InitializeComponent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#595979; '>//DataContext = this;</span>
+
+            daemonApiEventListener <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DaemonApiEventListener<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            errMsg <span style='color:#308080; '>=</span> loginErrMsg<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLoaded<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchLanguageEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Subscribe<span style='color:#308080; '>(</span>OnLanguageChanged<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>RefreshDesktopSubWindowEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Subscribe<span style='color:#308080; '>(</span>UpdateDesktopSubWindowItems<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchColorThemeEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Subscribe<span style='color:#308080; '>(</span>OnColorThemeChanged<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            WindowState <span style='color:#308080; '>=</span> WindowState<span style='color:#308080; '>.</span>Maximized<span style='color:#406080; '>;</span>
+
+            apiProxy<span style='color:#308080; '>.</span>CoreService<span style='color:#308080; '>.</span>AddListener<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            apiProxy<span style='color:#308080; '>.</span>OrderService<span style='color:#308080; '>.</span>AddListener<span style='color:#308080; '>(</span>daemonApiEventListener<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>parentOldLeft <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Left<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>parentOldTop <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Top<span style='color:#406080; '>;</span>
+
+            accountMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+            adminMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+            desktopMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+            helpMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Visible<span style='color:#406080; '>;</span>
+            oldMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+
+            PreloadSciChartResource<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// preload scichart resources</span>
+            ShowLoginWindow<span style='color:#308080; '>(</span>errMsg<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLoggedIn<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>IsLoggingOut <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            UpdateTitle<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            LoadDesktopWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            UpdateDesktopSubWindowItems<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>override</span> <span style='color:#200080; font-weight:bold; '>void</span> SaveDesktop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> UpdateTitle<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> prof <span style='color:#308080; '>=</span> Profiler<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>CurrentLoggedInProfile<span style='color:#406080; '>;</span>
+
+            rtSpTitle<span style='color:#308080; '>.</span>Text <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>{AppConstants.SPSYSTEM_TITLE} {AppConstants.SPSYSTEM_VERSION}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            rtLoginId<span style='color:#308080; '>.</span>Text <span style='color:#308080; '>=</span> prof<span style='color:#308080; '>.</span>User<span style='color:#406080; '>;</span>
+            rtLoginHost<span style='color:#308080; '>.</span>Text <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>{prof.Host}:{prof.Port}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            rtDateTime<span style='color:#308080; '>.</span>Text <span style='color:#308080; '>=</span> DateTime<span style='color:#308080; '>.</span>Now<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>yyyy/MM/dd</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>           
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnColorThemeChanged<span style='color:#308080; '>(</span>ColorThemeEnum color<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            UpdateDesktopSubWindowItems<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLanguageChanged<span style='color:#308080; '>(</span>LanguageEnum lang<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            UpdateDesktopSubWindowItems<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> LoadDesktopWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPBindableWindow window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> openWin <span style='color:#308080; '>=</span> DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>Load<span style='color:#308080; '>(</span>SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>GetUniqueLoggedInUserId<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            isAE <span style='color:#308080; '>=</span> apiProxy<span style='color:#308080; '>.</span>TradeContext<span style='color:#308080; '>.</span>IsAEMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#200080; font-weight:bold; '>in</span> openWin<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> windowId <span style='color:#308080; '>=</span> win<span style='color:#308080; '>.</span>Key<span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> winName <span style='color:#308080; '>=</span> win<span style='color:#308080; '>.</span>Value<span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// re-open windows on login</span>
+                <span style='color:#200080; font-weight:bold; '>switch</span> <span style='color:#308080; '>(</span>winName<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>MarketPriceWindow<span style='color:#308080; '>:</span>          window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarketPriceWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>       <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>AccInfoWindow<span style='color:#308080; '>:</span>              window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> AccInfoWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>           <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>TickerWindow<span style='color:#308080; '>:</span>               window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TickerWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>            <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>PriceDepthWindow<span style='color:#308080; '>:</span>           window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> PriceDepthWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>        <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>EnterOrder<span style='color:#308080; '>:</span>                 window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EnterOrder<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>              <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>OptionMasterWindow<span style='color:#308080; '>:</span>         window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> OptionMasterWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>TradeStatisticsWindow<span style='color:#308080; '>:</span>      window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TradeStatisticsWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>   <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>ChartTickerWindow<span style='color:#308080; '>:</span>          window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartTickerWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>       <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>ChartIntradayWindow<span style='color:#308080; '>:</span>        window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartIntradayWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>     <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>ChartAnalysisProWindow<span style='color:#308080; '>:</span>     window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartAnalysisProWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>  <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>PlaceOrderWindow<span style='color:#308080; '>:</span>           window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> PlaceOrderWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>        <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>MarketPlaceWindow<span style='color:#308080; '>:</span>          window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarketPlaceWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>       <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>default</span><span style='color:#308080; '>:</span>                                        window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>                                  <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                <span style='color:#595979; '>// re-open windows for AE account</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE &amp;&amp; window <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>switch</span> <span style='color:#308080; '>(</span>winName<span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#595979; '>// there can be only 1 margin call window</span>
+                        <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>MarginCallWindow<span style='color:#308080; '>:</span>
+                            <span style='color:#406080; '>{</span>
+                                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>marginCallWindow <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                                <span style='color:#406080; '>{</span>
+                                    window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarginCallWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                                    marginCallWindow <span style='color:#308080; '>=</span> window <span style='color:#200080; font-weight:bold; '>as</span> MarginCallWindow<span style='color:#406080; '>;</span>
+                                <span style='color:#406080; '>}</span>
+                            <span style='color:#406080; '>}</span>
+                            <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+
+                        <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>MarginCheckWindow<span style='color:#308080; '>:</span>      window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarginCheckWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>       <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                        <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>TradeConfirmWindow<span style='color:#308080; '>:</span>     window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TradeConfirmWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                        <span style='color:#200080; font-weight:bold; '>case</span> DesktopSetting<span style='color:#308080; '>.</span>OrderApprovalWindow<span style='color:#308080; '>:</span>    window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> OrderApprovalWindow<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>     <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>                            
+                        <span style='color:#200080; font-weight:bold; '>default</span><span style='color:#308080; '>:</span>                                    window <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>                                  <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>window <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    window<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                    window<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                    window<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// make sure some windows show</span>
+            MarginCallList_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> UpdateDesktopSubWindowItems<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// remove sub windows first</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> winItems <span style='color:#308080; '>=</span> desktopMenu<span style='color:#308080; '>.</span>Items<span style='color:#308080; '>.</span>OfType<span style='color:#308080; '>&lt;</span>MenuItem<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> menu <span style='color:#200080; font-weight:bold; '>in</span> winItems<span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>menu <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp; menu<span style='color:#308080; '>.</span>Tag <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                    desktopMenu<span style='color:#308080; '>.</span>Items<span style='color:#308080; '>.</span>Remove<span style='color:#308080; '>(</span>menu<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>                
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// re-initialize sub-windows into menu list</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>Window win <span style='color:#200080; font-weight:bold; '>in</span> App<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win <span style='color:#200080; font-weight:bold; '>is</span> SPBindableWindow<span style='color:#308080; '>)</span>    <span style='color:#595979; '>// SPBindableWindowChrome</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> spwin <span style='color:#308080; '>=</span> win <span style='color:#200080; font-weight:bold; '>as</span> SPBindableWindow<span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>spwin <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>IsNullOrEmpty<span style='color:#308080; '>(</span>spwin<span style='color:#308080; '>.</span>Title<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                            <span style='color:#200080; font-weight:bold; '>continue</span><span style='color:#406080; '>;</span>
+
+                        <span style='color:#200080; font-weight:bold; '>var</span> subWin <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MenuItem<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        subWin<span style='color:#308080; '>.</span>Header <span style='color:#308080; '>=</span> spwin<span style='color:#308080; '>.</span>Title<span style='color:#406080; '>;</span>
+                        subWin<span style='color:#308080; '>.</span>Style <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>TryFindResource<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>MindSystemMenuItem</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>as</span> Style<span style='color:#406080; '>;</span>
+                        subWin<span style='color:#308080; '>.</span>Click <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> SubWin_Click<span style='color:#406080; '>;</span>
+                        subWin<span style='color:#308080; '>.</span>Tag <span style='color:#308080; '>=</span> spwin<span style='color:#308080; '>.</span>windowId<span style='color:#406080; '>;</span>
+                        desktopMenu<span style='color:#308080; '>.</span>Items<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>subWin<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> SubWin_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> subWin <span style='color:#308080; '>=</span> sender <span style='color:#200080; font-weight:bold; '>as</span> MenuItem<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> winId <span style='color:#308080; '>=</span> subWin<span style='color:#308080; '>.</span>Tag<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            CenterFocusWindowById<span style='color:#308080; '>(</span>winId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> CenterFocusWindowById<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> windowId<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>Window win <span style='color:#200080; font-weight:bold; '>in</span> App<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win <span style='color:#200080; font-weight:bold; '>is</span> SPBindableWindow<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> spwin <span style='color:#308080; '>=</span> win <span style='color:#200080; font-weight:bold; '>as</span> SPBindableWindow<span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>spwin <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>spwin<span style='color:#308080; '>.</span>windowId<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                        <span style='color:#406080; '>{</span>
+                            <span style='color:#595979; '>// center to screen</span>
+                            <span style='color:#200080; font-weight:bold; '>double</span> screenWidth <span style='color:#308080; '>=</span> SystemParameters<span style='color:#308080; '>.</span>PrimaryScreenWidth<span style='color:#406080; '>;</span>
+                            <span style='color:#200080; font-weight:bold; '>double</span> screenHeight <span style='color:#308080; '>=</span> SystemParameters<span style='color:#308080; '>.</span>PrimaryScreenHeight<span style='color:#406080; '>;</span>
+                            <span style='color:#200080; font-weight:bold; '>double</span> windowWidth <span style='color:#308080; '>=</span> spwin<span style='color:#308080; '>.</span>Width<span style='color:#406080; '>;</span>
+                            <span style='color:#200080; font-weight:bold; '>double</span> windowHeight <span style='color:#308080; '>=</span> spwin<span style='color:#308080; '>.</span>Height<span style='color:#406080; '>;</span>
+                            spwin<span style='color:#308080; '>.</span>Left <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>screenWidth <span style='color:#308080; '>/</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>-</span> <span style='color:#308080; '>(</span>windowWidth <span style='color:#308080; '>/</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                            spwin<span style='color:#308080; '>.</span>Top <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>screenHeight <span style='color:#308080; '>/</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>-</span> <span style='color:#308080; '>(</span>windowHeight <span style='color:#308080; '>/</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                            spwin<span style='color:#308080; '>.</span>WindowState <span style='color:#308080; '>=</span> WindowState<span style='color:#308080; '>.</span>Normal<span style='color:#406080; '>;</span>                            
+                            spwin<span style='color:#308080; '>.</span>Focus<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                            <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                        <span style='color:#406080; '>}</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnClosing<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> CancelEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            apiProxy<span style='color:#308080; '>.</span>CoreService<span style='color:#308080; '>.</span>RemoveListener<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            apiProxy<span style='color:#308080; '>.</span>OrderService<span style='color:#308080; '>.</span>RemoveListener<span style='color:#308080; '>(</span>daemonApiEventListener<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            CloseChildWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Logout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLocationChanged<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> EventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>Window win <span style='color:#200080; font-weight:bold; '>in</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>OwnedWindows<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                win<span style='color:#308080; '>.</span>Top <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Top <span style='color:#308080; '>-</span> parentOldTop<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Left <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Left <span style='color:#308080; '>-</span> parentOldLeft<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>parentOldLeft <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Left<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>parentOldTop <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Top<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowSPAuthWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>spAuthWindow <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                spAuthWindow <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TwoFAWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                spAuthWindow<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                spAuthWindow<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                spAuthWindow<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> CloseChildWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>Window win <span style='color:#200080; font-weight:bold; '>in</span> App<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>win<span style='color:#308080; '>.</span>IsFocused &amp;&amp; win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span> || win <span style='color:#200080; font-weight:bold; '>is</span> SPBindableWindow<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span>
+                        win<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> LockDesktopWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>Window win <span style='color:#200080; font-weight:bold; '>in</span> App<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win <span style='color:#200080; font-weight:bold; '>is</span> SPBindableWindow<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>var</span> spwin <span style='color:#308080; '>=</span> win <span style='color:#200080; font-weight:bold; '>as</span> SPBindableWindow<span style='color:#406080; '>;</span>
+                        spwin<span style='color:#308080; '>.</span>Hide<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> UnLockDesktopWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>Window win <span style='color:#200080; font-weight:bold; '>in</span> App<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win <span style='color:#200080; font-weight:bold; '>is</span> SPBindableWindow<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> spwin <span style='color:#308080; '>=</span> win <span style='color:#200080; font-weight:bold; '>as</span> SPBindableWindow<span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span> &amp;&amp; spwin<span style='color:#308080; '>.</span>ActualWidth <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span> &amp;&amp; spwin<span style='color:#308080; '>.</span>ActualHeight <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+                        spwin<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Logout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>IsLoggingOut <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>Save<span style='color:#308080; '>(</span>SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>GetUniqueLoggedInUserId<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>SaveSetting<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            CloseChildWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            apiProxy<span style='color:#308080; '>.</span>LogoutAll<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            accountMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+            adminMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+            statusMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+            desktopMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+            helpMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Visible<span style='color:#406080; '>;</span>
+            oldMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+
+            isLoggedIn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>//void MainContainer_SourceInitialized(object sender, EventArgs e)</span>
+        <span style='color:#595979; '>//{</span>
+        <span style='color:#595979; '>//    HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);</span>
+        <span style='color:#595979; '>//    source.AddHook(new HwndSourceHook(WndProc));</span>
+        <span style='color:#595979; '>//}</span>
+
+        <span style='color:#595979; '>//private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)</span>
+        <span style='color:#595979; '>//{</span>
+        <span style='color:#595979; '>//    switch (msg)</span>
+        <span style='color:#595979; '>//    {</span>
+        <span style='color:#595979; '>//        case 0x00A3: /* WM_NCLBUTTONDBLCLK */</span>
+        <span style='color:#595979; '>//            {</span>
+        <span style='color:#595979; '>//                handled = true;  //prevent double click from maximizing the window.</span>
+        <span style='color:#595979; '>//            }</span>
+        <span style='color:#595979; '>//            break;</span>
+        <span style='color:#595979; '>//    }</span>
+        <span style='color:#595979; '>//    return IntPtr.Zero;</span>
+        <span style='color:#595979; '>//}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> UpdateConnectionStatus<span style='color:#308080; '>(</span>ConnectionStatusInfo info<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> statusList <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span>ConnectionInfo<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            statusList<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>info<span style='color:#308080; '>.</span>TransactionLink<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            statusList<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>info<span style='color:#308080; '>.</span>QuotePriceLink<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            statusList<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>info<span style='color:#308080; '>.</span>TickerLink<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>apiProxy<span style='color:#308080; '>.</span>TradeContext<span style='color:#308080; '>.</span>IsAEMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                statusList<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>info<span style='color:#308080; '>.</span>MarginCheckerLink<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> found <span style='color:#308080; '>=</span> statusList<span style='color:#308080; '>.</span>Where<span style='color:#308080; '>(</span>x <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> x<span style='color:#308080; '>.</span>IsConnected <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>found<span style='color:#308080; '>.</span>Count<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+                btn_conn<span style='color:#308080; '>.</span>Foreground <span style='color:#308080; '>=</span> ColorThemeSetting<span style='color:#308080; '>.</span>GetColorValue<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>DangerColor</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+                btn_conn<span style='color:#308080; '>.</span>Foreground <span style='color:#308080; '>=</span> ColorThemeSetting<span style='color:#308080; '>.</span>GetColorValue<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>ConfirmColor</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnTServerLoginReply<span style='color:#308080; '>(</span>LoginReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnTServerHostResponse<span style='color:#308080; '>(</span>HostResponseMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnPServerLoginReply<span style='color:#308080; '>(</span>LoginPServerReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnForceLogoutPush<span style='color:#308080; '>(</span>ForceLogoutPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>reasonCode <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>Save<span style='color:#308080; '>(</span>SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>GetUniqueLoggedInUserId<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>SaveSetting<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> dir <span style='color:#308080; '>=</span> Directory<span style='color:#308080; '>.</span>GetCurrentDirectory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> exe <span style='color:#308080; '>=</span> dir <span style='color:#308080; '>+</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>\\sptrader.exe</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// set up argument for new process [-e] is show error in login message</span>
+                <span style='color:#200080; font-weight:bold; '>string</span> args <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>-e \"{0}\"</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> message<span style='color:#308080; '>.</span>reasonText<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                CommonUtil<span style='color:#308080; '>.</span>StartProcess<span style='color:#308080; '>(</span>exe<span style='color:#308080; '>,</span> args<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                Environment<span style='color:#308080; '>.</span>Exit<span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnSwitchSystemUserListPush<span style='color:#308080; '>(</span>SwitchSystemUserListPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnTServerDisabledMobileApi<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnBusinessDatePush<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>uint</span> businessDate<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnDisclaimerUrlReady<span style='color:#308080; '>(</span>HyperlinkPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnHyperlinkPush<span style='color:#308080; '>(</span>HyperlinkPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnPasswordChangeReply<span style='color:#308080; '>(</span>PasswordChangeReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnUserMessagePush<span style='color:#308080; '>(</span>UserMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnHeartbeatReceived<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ushort</span> hostType<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnUserChallengeNotification<span style='color:#308080; '>(</span>UserChallengeNotificationMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Application<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Dispatcher<span style='color:#308080; '>.</span>InvokeAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>Action<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>delegate</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>bool</span> isServerNewDevice <span style='color:#308080; '>=</span> message<span style='color:#308080; '>.</span>serverNewDevice<span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>bool</span> isClientNewDevice <span style='color:#308080; '>=</span> <span style='color:#308080; '>!</span>apiProxy<span style='color:#308080; '>.</span>CoreService<span style='color:#308080; '>.</span>IsRegisteredDevice<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isClientNewDevice &amp;&amp; <span style='color:#308080; '>!</span>isServerNewDevice<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    apiProxy<span style='color:#308080; '>.</span>CoreService<span style='color:#308080; '>.</span>ResendUserChallengeRequest<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    ShowSPAuthWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>else</span> <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isClientNewDevice || isServerNewDevice<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    ShowSPAuthWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>else</span>
+                <span style='color:#406080; '>{</span>
+                    apiProxy<span style='color:#308080; '>.</span>CoreService<span style='color:#308080; '>.</span>SendStoredUserChallengeAnswerRequest<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnUserChallengeAnswerReply<span style='color:#308080; '>(</span>UserChallengeAnswerReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Application<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Dispatcher<span style='color:#308080; '>.</span>InvokeAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>Action<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>delegate</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>returnCode <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>spAuthWindow <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>returnCode <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> SPErrorCode<span style='color:#308080; '>.</span>ERR_2FA_TOO_MANY_WRONG_PSW<span style='color:#308080; '>)</span>
+                        <span style='color:#406080; '>{</span>
+                            MessageBoxResult result <span style='color:#308080; '>=</span> MessageBox<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>errMsg<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Authentication Error</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> MessageBoxButton<span style='color:#308080; '>.</span>OK<span style='color:#308080; '>,</span> MessageBoxImage<span style='color:#308080; '>.</span>Error<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>result <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> MessageBoxResult<span style='color:#308080; '>.</span>OK<span style='color:#308080; '>)</span>
+                            <span style='color:#406080; '>{</span>
+                                Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                            <span style='color:#406080; '>}</span>
+                        <span style='color:#406080; '>}</span>
+                    <span style='color:#406080; '>}</span>
+                    <span style='color:#200080; font-weight:bold; '>else</span>
+                    <span style='color:#406080; '>{</span>
+                        ShowSPAuthWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnDeviceListReply<span style='color:#308080; '>(</span>DeviceListReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnUpdatedConnectionStatusInfo<span style='color:#308080; '>(</span>ConnectionStatusInfo info<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            btn_conn<span style='color:#308080; '>.</span>Dispatcher<span style='color:#308080; '>.</span>Invoke<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>Action<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>delegate</span>
+            <span style='color:#406080; '>{</span>
+                UpdateConnectionStatus<span style='color:#308080; '>(</span>info<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnAlreadyConnected<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> hostType<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnConnecting<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> hostType<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnFailedToConnect<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> hostType<span style='color:#308080; '>,</span> SPConnectionException e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnConnectionError<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> hostType<span style='color:#308080; '>,</span> SPConnectionException e<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>ulong</span> lastHeartBeatSentTime<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnConnectSuccess<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> hostType<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> AdvancedOrderMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ShowAdvancedOrderTicket<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ConnectionStatusMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ShowConnectionStatusWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> MarginCallListMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ShowMarginCallListWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> MarginCheckMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ShowMarginCheckWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowAdvancedOrderTicket<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> AddOrderWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowConnectionStatusWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ConnectionStatusWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowMarginCallListWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarginCallListWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowApprovalOrderListWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ApprovalOrderListWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowTradeConfirmationWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TradeConfirmationWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowMarginCheckWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> WpfStandaloneApp<span style='color:#308080; '>.</span>MarginCheckWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ApprovalOrderListMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ShowApprovalOrderListWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TradeConfirmationMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ShowTradeConfirmationWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLight_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPGlobal<span style='color:#308080; '>.</span>SetColorTheme<span style='color:#308080; '>(</span>ColorThemeEnum<span style='color:#308080; '>.</span>LIGHT<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>ColorThemeEnum <span style='color:#308080; '>=</span> ColorThemeEnum<span style='color:#308080; '>.</span>LIGHT<span style='color:#406080; '>;</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchColorThemeEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>ColorThemeEnum<span style='color:#308080; '>.</span>LIGHT<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnDark_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPGlobal<span style='color:#308080; '>.</span>SetColorTheme<span style='color:#308080; '>(</span>ColorThemeEnum<span style='color:#308080; '>.</span>DARK<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>ColorThemeEnum <span style='color:#308080; '>=</span> ColorThemeEnum<span style='color:#308080; '>.</span>DARK<span style='color:#406080; '>;</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchColorThemeEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>ColorThemeEnum<span style='color:#308080; '>.</span>DARK<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnEng_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPGlobal<span style='color:#308080; '>.</span>SetLanguage<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>ENG<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>LanguageEnum <span style='color:#308080; '>=</span> LanguageEnum<span style='color:#308080; '>.</span>ENG<span style='color:#406080; '>;</span>
+            SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>SwitchLanguage<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>ENG<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchLanguageEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>ENG<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnChiTrad_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPGlobal<span style='color:#308080; '>.</span>SetLanguage<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>TCHI_UNICODE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>LanguageEnum <span style='color:#308080; '>=</span> LanguageEnum<span style='color:#308080; '>.</span>TCHI_UNICODE<span style='color:#406080; '>;</span>
+            SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>SwitchLanguage<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>TCHI_UNICODE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchLanguageEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>TCHI_UNICODE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnChiSimp_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPGlobal<span style='color:#308080; '>.</span>SetLanguage<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>SCHI_UNICODE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>LanguageEnum <span style='color:#308080; '>=</span> LanguageEnum<span style='color:#308080; '>.</span>SCHI_UNICODE<span style='color:#406080; '>;</span>
+            SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>SwitchLanguage<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>SCHI_UNICODE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchLanguageEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>LanguageEnum<span style='color:#308080; '>.</span>SCHI_UNICODE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ExitMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Logout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> PreloadSciChartResource<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// preload SciChart resources so subsequent charts load faster</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>new</span> SciChartSurface<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowLoginWindow<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> msg<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> LoginWindow<span style='color:#308080; '>(</span>msg<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            isLoggedIn <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span> win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isLoggedIn <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                accountMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Visible<span style='color:#406080; '>;</span>
+                desktopMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Visible<span style='color:#406080; '>;</span>
+                helpMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Collapsed<span style='color:#406080; '>;</span>
+                oldMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Visible<span style='color:#406080; '>;</span>
+
+                isAE <span style='color:#308080; '>=</span> apiProxy<span style='color:#308080; '>.</span>TradeContext<span style='color:#308080; '>.</span>IsAEMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE<span style='color:#308080; '>)</span>
+                    adminMenu<span style='color:#308080; '>.</span>Visibility <span style='color:#308080; '>=</span> Visibility<span style='color:#308080; '>.</span>Visible<span style='color:#406080; '>;</span>
+
+                OnLoggedIn<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>            
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLogin_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isLoggedIn <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span> 
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            ShowLoginWindow<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLogout_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Logout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> DeviceManagementMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DeviceListWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> AccInfoMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> AccInfoWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> EnterOrderMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> PlaceOrderWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnChangePassword_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChangePassword<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> MarketPriceMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarketPriceWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TickerMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TickerWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> QuotePriceMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> QuotePrice<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OrderTradeMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> OrderTradeWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> PriceDepthMenuItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> PriceDepthWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> MarginCheck_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>   
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarginCheckWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>           
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> MarginCallList_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>isAE<span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// there can be only 1 margin call window</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>marginCallWindow <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                marginCallWindow <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarginCallWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                marginCallWindow<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                marginCallWindow<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                marginCallWindow<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#406080; '>{</span>
+                marginCallWindow<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                marginCallWindow<span style='color:#308080; '>.</span>Focus<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ApprovalOrderList_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> OrderApprovalWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>           
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TradeConfirmation_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isAE<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TradeConfirmWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+                win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> SaveDesktop_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// save the current desktop instance to LAST SNAPSHOT</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>Window win <span style='color:#200080; font-weight:bold; '>in</span> App<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win <span style='color:#200080; font-weight:bold; '>is</span> SPBindableWindow<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> spwin <span style='color:#308080; '>=</span> win <span style='color:#200080; font-weight:bold; '>as</span> SPBindableWindow<span style='color:#406080; '>;</span>
+                    spwin<span style='color:#308080; '>.</span>SaveDesktop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+            DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>Save<span style='color:#308080; '>(</span>SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>GetUniqueLoggedInUserId<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> fd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SaveFileDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            fd<span style='color:#308080; '>.</span>DefaultExt <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>.sdt</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            fd<span style='color:#308080; '>.</span>InitialDirectory <span style='color:#308080; '>=</span> Path<span style='color:#308080; '>.</span>GetFullPath<span style='color:#308080; '>(</span>SPGlobal<span style='color:#308080; '>.</span>DATA_DIR<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            fd<span style='color:#308080; '>.</span>Filter <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Desktop File|*.sdt</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>bool</span>? res <span style='color:#308080; '>=</span> fd<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>res <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>               
+                File<span style='color:#308080; '>.</span>WriteAllText<span style='color:#308080; '>(</span>fd<span style='color:#308080; '>.</span>FileName<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> filename <span style='color:#308080; '>=</span> Path<span style='color:#308080; '>.</span>GetFileNameWithoutExtension<span style='color:#308080; '>(</span>fd<span style='color:#308080; '>.</span>FileName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> newfilename <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span><span style='color:#800000; '>@"</span><span style='color:#1060b6; '>spdesktop_{0}.db</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> filename<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> fullpathname <span style='color:#308080; '>=</span> SPGlobal<span style='color:#308080; '>.</span>DATA_DIR <span style='color:#308080; '>+</span> newfilename<span style='color:#406080; '>;</span>
+                File<span style='color:#308080; '>.</span>Copy<span style='color:#308080; '>(</span>SPGlobal<span style='color:#308080; '>.</span>DB_PATH<span style='color:#308080; '>,</span> fullpathname<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> LoadDesktop_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> fd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> OpenFileDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            fd<span style='color:#308080; '>.</span>DefaultExt <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>.sdt</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            fd<span style='color:#308080; '>.</span>InitialDirectory <span style='color:#308080; '>=</span> Path<span style='color:#308080; '>.</span>GetFullPath<span style='color:#308080; '>(</span>SPGlobal<span style='color:#308080; '>.</span>DATA_DIR<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            fd<span style='color:#308080; '>.</span>Filter <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Desktop File|*.sdt</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>bool</span>? res <span style='color:#308080; '>=</span> fd<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>res <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>IsLoadingPreviousDB <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>                     
+                CloseChildWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>ClearWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>Terminate<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>    <span style='color:#595979; '>// close all connections, release file handle lock</span>
+                File<span style='color:#308080; '>.</span>Delete<span style='color:#308080; '>(</span>SPGlobal<span style='color:#308080; '>.</span>DB_PATH<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> filename <span style='color:#308080; '>=</span> Path<span style='color:#308080; '>.</span>GetFileNameWithoutExtension<span style='color:#308080; '>(</span>fd<span style='color:#308080; '>.</span>FileName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> newfilename <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span><span style='color:#800000; '>@"</span><span style='color:#1060b6; '>spdesktop_{0}.db</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> filename<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> fullpathname <span style='color:#308080; '>=</span> SPGlobal<span style='color:#308080; '>.</span>DATA_DIR <span style='color:#308080; '>+</span> newfilename<span style='color:#406080; '>;</span>
+
+                Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>50</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>                       <span style='color:#595979; '>// add some lead time for OS to properly delink file</span>
+                File<span style='color:#308080; '>.</span>Copy<span style='color:#308080; '>(</span>fullpathname<span style='color:#308080; '>,</span> SPGlobal<span style='color:#308080; '>.</span>DB_PATH<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>50</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>                       <span style='color:#595979; '>// add some lead time for OS to properly establish file</span>
+                DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>Initialize<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>   <span style='color:#595979; '>// open and connect to all db</span>
+                LoadDesktopWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>IsLoadingPreviousDB <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OptionMasterItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> OptionMasterWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> StrategyItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> StrategyList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> SPCustomWindowChrome_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPTestCustomWindowChrome<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnDeviceList_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DeviceList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnConnectionStatus_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ConnectionStatusWin<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnUserManual_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPWebNavigator<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>NavigateUserManual<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnELearning_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPWebNavigator<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>NavigateELearning<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnWhatsNew_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SPWebNavigator<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>NavigateWhatsNew<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TradeStatistics_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TradeStatisticsWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> IntradayChart_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartIntradayWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TickerChart_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartTickerWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> JavaScriptInterOp_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> WebBrowserJSInterOpTest<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>          
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> EnterOrder_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EnterOrder<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ChartProTA_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartAnalysisProWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ChartProAnno_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartAnnotationWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnTargetPositionReply<span style='color:#308080; '>(</span>TargetPositionReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnTargetPositionUpdate<span style='color:#308080; '>(</span>TargetPositionUpdateMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ChangeCreditLimit_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> acc <span style='color:#308080; '>=</span> apiProxy<span style='color:#308080; '>.</span>TradeContext<span style='color:#308080; '>.</span>GetAccNo<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>IsNullOrEmpty<span style='color:#308080; '>(</span>acc<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChangeDialog<span style='color:#308080; '>(</span>AdminChangeMode<span style='color:#308080; '>.</span>CHANGE_CREDIT_LIM<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ChangeMaxMargin_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> acc <span style='color:#308080; '>=</span> apiProxy<span style='color:#308080; '>.</span>TradeContext<span style='color:#308080; '>.</span>GetAccNo<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>IsNullOrEmpty<span style='color:#308080; '>(</span>acc<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChangeDialog<span style='color:#308080; '>(</span>AdminChangeMode<span style='color:#308080; '>.</span>CHANGE_MAX_MARGIN<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnAbout_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> AboutDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnDisclaimer_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DisclaimerDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnComputerClock_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ComputerClock<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLockDesktop_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            LockDesktopWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> LockDesktop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                UnLockDesktopWindows<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ChartAnalysis_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartAnalysisWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> Application<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>MainWindow<span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ChartAnnotation_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChartAnnotationWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> Application<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>MainWindow<span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> WebView2Chart_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPWebView2<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Navigate<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TradingViewWidget.html</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TradingView1_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPWebView2<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Navigate<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TradingViewSample1.html</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TradingView2_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPWebView2<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Navigate<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TradingViewSample2.html</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TradingView3_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPWebView2<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Navigate<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TradingViewSample3.html</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> MarketPlaceItem_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarketPlaceWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> UITest_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> UITestWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            win<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-13 09:29:39 UTC -->

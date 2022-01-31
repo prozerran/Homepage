@@ -1,0 +1,72 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Concurrent<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>listener<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>poco<span style='color:#308080; '>.</span>product<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>spmessage<span style='color:#308080; '>.</span>product<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Commands<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Mvvm<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Common<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Models<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Controls<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Views<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>poco<span style='color:#308080; '>.</span>account<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPTraderCore<span style='color:#308080; '>.</span>BusinessLayer
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>sealed</span> <span style='color:#200080; font-weight:bold; '>class</span> ThrottleService
+    <span style='color:#406080; '>{</span>
+        <span style='color:#595979; '>// lower throttle = refresh more freq</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#200080; font-weight:bold; '>int</span> MAX_THROTTLE <span style='color:#308080; '>=</span> <span style='color:#008c00; '>50</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> SPApiProxyWrapper apiProxy<span style='color:#406080; '>;</span>
+
+        ConcurrentDictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>object</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>></span> _cd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ConcurrentDictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>object</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>readonly</span> Lazy<span style='color:#308080; '>&lt;</span>ThrottleService<span style='color:#308080; '>></span> lazy <span style='color:#308080; '>=</span>
+             <span style='color:#200080; font-weight:bold; '>new</span> Lazy<span style='color:#308080; '>&lt;</span>ThrottleService<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#200080; font-weight:bold; '>new</span> ThrottleService<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> ThrottleService Instance <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> lazy<span style='color:#308080; '>.</span>Value<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> ThrottleService<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            apiProxy <span style='color:#308080; '>=</span> SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>ApiProxyWrapper<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> AllowSPEventThrough<span style='color:#308080; '>(</span>SPEventListener obj<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> _max_throttle_throughput <span style='color:#308080; '>=</span> MAX_THROTTLE<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>_cd<span style='color:#308080; '>.</span>ContainsKey<span style='color:#308080; '>(</span>obj<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>apiProxy<span style='color:#308080; '>.</span>UIHelper<span style='color:#308080; '>.</span>CanRefreshUI<span style='color:#308080; '>(</span>obj<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>int</span> count <span style='color:#308080; '>=</span> _cd<span style='color:#308080; '>[</span>obj<span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>                    
+
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>count <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>=</span> _max_throttle_throughput<span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        _cd<span style='color:#308080; '>[</span>obj<span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> <span style='color:#308080; '>+</span><span style='color:#308080; '>+</span>count<span style='color:#406080; '>;</span>
+                        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                    <span style='color:#200080; font-weight:bold; '>else</span>
+                    <span style='color:#406080; '>{</span>
+                        _cd<span style='color:#308080; '>[</span>obj<span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>   <span style='color:#595979; '>// reset the count</span>
+                        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>                
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> _cd<span style='color:#308080; '>.</span>TryAdd<span style='color:#308080; '>(</span>obj<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// first time, allow through</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-13 09:38:46 UTC -->

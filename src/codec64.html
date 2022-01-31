@@ -1,0 +1,32 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>cppcodec/base32_crockford.hpp</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>cppcodec/base64_rfc4648.hpp</span><span style='color:#800000; '>></span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>stdio.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>string</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>iostream</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>sstream</span><span style='color:#800000; '>></span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/tplgy/cppcodec</span>
+
+<span style='color:#595979; '>// cppcodec</span>
+<span style='color:#200080; font-weight:bold; '>int</span> <span style='color:#400000; '>main</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> argc<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>char</span><span style='color:#308080; '>*</span> argv<span style='color:#308080; '>[</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span>
+<span style='color:#406080; '>{</span>
+	<span style='color:#200080; font-weight:bold; '>using</span> base32 <span style='color:#308080; '>=</span> cppcodec<span style='color:#406080; '>::</span>base32_crockford<span style='color:#406080; '>;</span>
+	<span style='color:#200080; font-weight:bold; '>using</span> base64 <span style='color:#308080; '>=</span> cppcodec<span style='color:#406080; '>::</span>base64_rfc4648<span style='color:#406080; '>;</span>
+
+	<span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#200080; font-weight:bold; '>char</span><span style='color:#308080; '>*</span> binary_data <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Hello World</span><span style='color:#0f69ff; '>\0</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+	<span style='color:#200080; font-weight:bold; '>auto</span> enc <span style='color:#308080; '>=</span> base64<span style='color:#406080; '>::</span>encode<span style='color:#308080; '>(</span>binary_data<span style='color:#308080; '>,</span> <span style='color:#003060; '>strlen</span><span style='color:#308080; '>(</span>binary_data<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#200080; font-weight:bold; '>auto</span> dec <span style='color:#308080; '>=</span> base64<span style='color:#406080; '>::</span>decode<span style='color:#308080; '>(</span>enc<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> str<span style='color:#308080; '>(</span>dec<span style='color:#308080; '>.</span>begin<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> dec<span style='color:#308080; '>.</span>end<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+	<span style='color:#003060; '>printf</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0f69ff; '>\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> binary_data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#003060; '>printf</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0f69ff; '>\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> enc<span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#003060; '>printf</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0f69ff; '>\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> str<span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+	<span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2022-01-06 03:16:26 UTC -->

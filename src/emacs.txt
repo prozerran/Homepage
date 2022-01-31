@@ -1,0 +1,88 @@
+Cursor movement command reference
+-------------------------------------------------------------------------------
+<Meta-<>        Move cursor to the beginning of the file
+<Meta-x>        goto line   Move cursor to a specific line # in file
+<Cntl-u>        Repeat following command;
+                e.g., <Cntl-u> 8 <Cntl-n> moves down 8 lines
+<Cntl-l>        Refresh the screen with cursor location at center
+<Cntl-g>        Quit command but stay in emacs
+
+File-content modification command reference
+-------------------------------------------------------------------------------
+delete          Backspace
+<Cntl-d>        Character delete, like 'x' in vi
+<Meta-delete>   Kill previous word
+<Meta-d>        Kill next word
+<Cntl-k>        Kill to end of line
+<Meta-k>        Kill to end of sentence
+<Meta-h>        Mark paragraph
+<Cntl-@>        Mark a point
+<Meta-w>        Save a marked region as though killed but do not kill
+<Cntl-y>        Paste, but concatenate commands in buffer
+<Meta-y>        Same as <Cntl-y> but goes back previous deletes
+<Meta-Y>        Replace from <Meta-y>
+<Cntl-x> u      UNDO command; can also go many commands back
+
+File manipulation command reference
+-------------------------------------------------------------------------------
+<Cntl-x> <Cntl-f>           Load/find a file. emacs prompts for file name
+<Cntl-x> <Cntl-s>           Save the current buffer
+<Cntl-x> s                  Save the current buffers; interrogative
+<Cntl-x> k                  Kill selected buffer
+<Cntl-x> <Cntl-b>           Show local buffers
+<Cntl-x> b BUF              Select buffer BUF
+<Cntl-x> 1                  Eliminate extra windows
+<Cntl-x> 0                  Eliminate upper window
+<Meta-x> kill-some-buffers  Kill the current buffers; interrogative
+
+Global options command reference
+-------------------------------------------------------------------------------
+<Meta-x> auto-fill      Sets mode to word wrap mode
+<Meta-q>                Autofills paragraph from within the paragraph
+<Cntl-s>                Forward search; delete key moves backward;
+                        <ESC> terminates
+<Cntl-r>                Backward search; delete key moves backward;
+                        <ESC> terminates
+<Cntl-g>                Unhang a command; if emacs is taking too long, or
+                        if you mistype on the command line
+<Cntl-l>                Refreshes the screen
+<Cntl-h>                HELP; emacs prompts for a command name
+
+Session command reference
+-------------------------------------------------------------------------------
+emacs FILE              Invoke emacs, with or without filename FILE
+<Cntl-z>                Suspend emacs
+fg or %emacs            Resume emacs
+<Cntl-x> <Cntl-c>       Exit/Quit emacs
+
+Help options command reference
+-------------------------------------------------------------------------------
+<Cntl-h> a              Apropos to find command names; type a string with any term
+                        you would like information on; identical to UNIX apropos and 
+                        man -k
+<Cntl-h> b              Describe bindings; display a table of all key values
+<Cntl-h> c              Describe a key briefly
+<Cntl-h> f              Describe name; type a command name and emacs prints full
+                        documentation for the function name
+<Cntl-h> k              Describe key; type a command key sequence and emacs will
+                        print a full description of the function associated with the
+                        key sequence
+<Cntl-h> l              View-lossage; shows the last one hundred char you typed
+<Cntl-h> w              Type a command name and emacs prints which keystrokes
+                        invoke that command; first find the command name with apropos 
+BUGS                    Generally system specific, with notes from sys programmers
+<Cntl-h> t              Run the emacs tutorial
+
+Utilities command reference
+-------------------------------------------------------------------------------
+<Meta-x> shell          Run a C shell
+<Meta-x> telnet         telnet to a remote host
+<Meta-x> run-lisp       Run a LISP interpreter
+<Meta-x> run-scheme     Run a SCHEME interpreter
+<Meta-x> run-prolog     Run a PROLOG interpreter
+<Meta-x> doctor         Run the psychotherapist game
+<Meta-x> lpr-buffer     Print a buffer using lpr
+<Meta-x> spell-buffer   Run the spell checker on a buffer
+<Meta-x> calendar       Display a 3-month calendar in buffer
+<Meta-x> mail           Run the mailer
+<Meta-x> rn             Run the news reader

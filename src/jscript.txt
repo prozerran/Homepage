@@ -1,0 +1,353 @@
+JAVASCRIPT CODE
+-------------------------------------------------------------------------------
+Syntax
+<script [language="JavaScript] [src="scriptURL"]>
+<!-- hide fron non-javaScript browsers
+
+    //JavaScript statements
+
+//-->
+</script>
+
+WINDOW
+-------------------------------------------------------------------------------
+frames[]            Array of child frames
+frames.length       Number of defined child frames
+self                The current window
+status              Display message at bottom of document
+opener              The window name of the calling window
+parent              The parent window
+top                 Top most window
+
+alert("message")    Displays JavaScript Alert dialog box
+blur()              Removes focus from current window
+close()             Closes new window
+confirm("message")  Displays a Confirm dialog box
+focus()             Brings focus to current window
+prompt("message")   Displays a prompt dialog box
+scroll(x,y)         Scrolls current window to pixel coordinates (x,y)
+open("URL," "windowname" "feature1, feature2, feature3, etc.")
+                    Opens a new window with specified name and feature
+
+- toolbar=yes or no         Determine whether to include Back, Forward, Home
+- location=yes or no        Determine whether to show current URL location
+- directories=yes or no     Determine to show other buttons
+- status=yes or no          Determine to display status bar or not
+- menubar=yes or no         Determine to display menu bar or not
+- scrollbars=yes or no      Determine to create scroll bars or not
+- resizable=yes or no       Determine whether user may resize the window
+- copyhistory=yes or no     Determine whether new window contain current info
+- width = # pixels          Defines how wide the window should be
+- height= # pixels          Defines how tall the window should be
+
+LOCATION
+-------------------------------------------------------------------------------
+current             Contains the value of the current URL
+href                The entire URL as JavaScript string
+protocol            A string consisting first part of the URL
+host                A string consisting of the hostname of the URL
+hostname            A string consisting of the hostname of the URL
+port                A string consisting of the port from the URL
+pathname            A string consisting everthing after third slash
+hash                A string consisting of any text after the #
+search              A string consisting of any text after the ?
+length              Contains the current length of history list
+
+back()              Moves user to the URL of the back page
+forward()           Moves user to the URL of the forward page
+go()                Moves user to the desire URL
+
+DOCUMENT
+-------------------------------------------------------------------------------
+title               Current document title
+location            Full URL of the document
+lastModified        A date object string of document was last modified
+referrer            Contains the URL of the calling document
+bgColor             Background color
+fgColor             Foreground (text) color
+linkColor           Hyperlink color
+vlinkColor          Visited hyperlink color
+alinkColor          Activated hyperlink color
+forms[]             Array of forms objects in the document
+forms.length        The number of form objects within the document
+links[]             Array objects corresponding to all HREF links
+links.length        The number of HREF links in the document
+anchors[]           Array of all "named" anchors within the document
+anchors.length      The number of named anchors in the document
+images[]            Image objects that correspond to each image
+applets[]           Java applets that correspond to each applet
+embeds[]            Plugins objects that represent each plug-in
+
+write("string")     Write strings to the current window
+writeln("string")   Perform same as write(), but adds a carriage
+clear()             Clears the window
+close()             Closes the window
+
+FORM
+-------------------------------------------------------------------------------
+name                String value of the "name" attribute of <form>
+method              Numeric value of the "method" attribute of <form>
+action              String value of the "action" attribute of <form>
+target              Window targeted for form response ater submitted
+elements[index]     Object that contains object of each element
+length              Contains the number of elements in the form
+
+submit()            Submits the form
+reset()             Resets the form
+
+onSubmit()          Identifies code to run when the form is submitted
+onReset()           Identifies code to run when the form is reset
+
+TEXT and TEXTAREA
+-------------------------------------------------------------------------------
+name                String value of the name attribute
+value               String value of the contents in the field
+defaultValue        String value of the initial contents of the field
+type                Specifies what type of object this form field is
+
+focus()             Sets input focus to the object
+blur()              Removes input focus from the object
+select()            Selects the object's input field
+
+onFocus             Executes when input focus enters field
+onBlur              Executes when input focus leaves the field
+onSelect            Executes when the field is input-focus
+onChange            Executes when input focus exits field with change
+
+CHECKBOX
+-------------------------------------------------------------------------------
+name                String value of the "name" attribute
+value               String value of the contents of the checkbox
+checked             Boolean value that reflects the "checked" attrib
+defaultChecked      Same as checked but defaulted
+type                Specifies what type of object the form field is
+
+click()             Selects the checkbox, causing it to be "on"
+
+onClick             Excecutes when the user checks or unckecks box
+
+RADIO
+-------------------------------------------------------------------------------
+name                String value of the "name" attribute
+length              The number of radio buttons in the radio object
+value               String value of the "value" attribute
+checked             Boolean value. True if pressed; false if not
+defaultChecked      Boolean property that reflects the "checked" attrib
+type                Specifies what type of object this form field is
+
+click()             Selects the radio button
+
+onClick             Executes when the radio button is selected
+
+SELECT
+-------------------------------------------------------------------------------
+length              Contains the number of objects in the select object
+name                The internal name of the select object by "name"
+selectedIndex       The index number of currently selected option
+type                Specifies what type of object this form field is
+options[]           Property is an object reflecting <option> tag
+- text              String containing the text after the <option> tag
+- value             Reflecting of the "value" attribute
+- defaultSelected   Boolean, which reflects the "selected" attribute
+- selected          Boolean, which indicates the current selected state
+
+onFocus             Executes when input enters the field
+onBlur              Executes when input focus leaves the field
+onChange            Executes when input focus exits field with changes
+
+BUTTON
+-------------------------------------------------------------------------------
+value               String containing the "value" attribute
+name                String containing the "name"  attribute
+type                Sepcifies what type of object this form field is
+
+click()             Selects the button
+
+onClick             Executes when a button is clicked
+
+SUBMIT and RESET
+-------------------------------------------------------------------------------
+name                The contents of the "name"  attribute
+value               The contents of the "value" attribute
+
+click()             Selects the button
+
+onClick             Triggers when the button is clicked
+
+PASSWORD
+-------------------------------------------------------------------------------
+defaultValue        Contains the contents of the "value" atrribute
+name                The contents of the "name" attribute
+value               The current data entered into the password field
+type                Specifies waht type of object this form field is
+
+focus()             Brings focus onto the password element
+blur()              Removes focus from the password element
+select()            Selects the current data in the password
+
+NAVIGATOR
+-------------------------------------------------------------------------------
+appCodeName         Reflects the "codename" of the user's browser
+appName             Reflects the real name of the user's browser
+appVersion          Reflects the version number of the user's browser
+userAgent           Reflects the full information of the browser
+plugins[]           This array reflects which plug-ins are installed
+mimeType[]          An array reflects which mime type are configured
+
+javaEnabled()       This method returns value of true if javs enabled
+
+STRING              strvar = new String(string)
+-------------------------------------------------------------------------------
+length              he length of the string
+
+big()               Yield the string <big></big>
+blink()             Yield the string <blink></blink>
+bold()              Yield the string <b></b>
+fixed()             n/a
+italics()           Yield the string <i></i>
+small()             Yield the string <small></small>
+sub()               n/a
+strike()            n/a
+sup()               n/a
+fontColor(color)    Yield the string <font color="color"></font>
+fontSize(size)      n/a
+charAt(index)       returns the character located at index in string
+indexOf(searchValue, [fromIndex]
+                    Searches the string for the first instance of the
+                    string searchValue
+lastIndexOf(searchValue, [fromIndex]
+                    Searches for searchValue beginning at (rightmost)
+                    the end of the string and working backward
+substring(indexA, indexB)
+                    Extracts the substring starting from indexA to
+                    indexB
+toLoweCase()        Convert string to all lowercase letters
+toUpperCase()       Convert string to all uppercase letters
+
+DATE                variablename = new Date();
+-------------------------------------------------------------------------------
+getDay()            Returns the current number of days
+getDate()           Returns the current string of dates
+getHours()          Returns the current number of hours
+getMinutes()        Returns the current number of minutes
+getMonth()          Returns the current number of months
+getSeconds()        Returns the current number of seconds
+getTime()           Returns the current string of time
+getTimeZoneOffset() Returns the current string of time to terminate
+getYear()           Returns the current number of years
+setDate()           Set date
+setHours()          Set hours
+setMinutes()        set minutes
+setSeconds()        set seconds
+setTime()           set time
+setYear()           set year
+toGMTString()       Returns the current date in GMT format
+toLocaleString()    Returns the current date in locale format
+parse(date)         Convert a traditional date string into millisecond
+                    format for use with the setTime() method
+
+MATH
+-------------------------------------------------------------------------------
+LN10                2.302   (natural log of 10)
+LN2                 0.693   (natural log of  2)
+PI                  3.1415  (value of PI)
+SQRT_2              0.707   (the square root of 1/2)
+SQRT2               1.414   (the square root of 2)
+
+abs(x)              Returns absolute value of x
+acos(x)             Returns arc cosine of x
+asin(x)             Returns arc sine of x
+atan(x)             Returns arc tangent of x
+ceil(x)             Returns the least integer greater or equal to x
+cos(x)              Returns the cosine of x
+exp(x)              Returns e to the power of x
+floor(x)            Returns the greatest integer less or equal to x
+log(x)              Returns the natural log of x
+max(x,y)            Returns the greater of x and y
+min(x,y)            Returns the smaller of x and y
+pow(x,y)            Returns x to the yth power
+round(x)            Returns x rounded to the nearest integer
+random(x)           Returns a random real number between 0 and 1
+sin(x)              Returns sine of x
+sqrt(x)             Returns square root of x
+tan(x)              Returns tangent of x
+
+IMAGE               document.images[index].p or document.formname.p
+-------------------------------------------------------------------------------
+border              Reflects the "boder" attribute
+complete            Boolean value whether image loaded or not
+height              Reflects the "height" attribute
+hspace              Reflects the "hspace" attribute
+lowsrc              Reflects the "lowsrc" attribute
+name                Reflects the "name" attribute
+prototype           Lets you and properties to an Image object
+src                 Reflects the "src" attribute
+vspace              Reflects the "vspace" attribute
+width               Reflects the "width" attribute
+length              Reflects how many images are in the page
+
+ARRAY               arrayvar = new Array(length)
+-------------------------------------------------------------------------------
+length              Reflects the number of elements in the array
+
+join(separator)     Joins all elements in array into one string
+reverse()           Reverses the index order of all elements in array
+sort(sortfunc)      Sorts the index order of elements in array
+
+Basic JavaScript Codes and Conditions
+-------------------------------------------------------------------------------
+//          Single line comment
+/* ... */       Mutiple line comment
+
+<!-- var statement -->
+var variablename = value;
+
+<!-- if...else statement -->
+if (condition)
+{
+    statements if true
+}
+else
+{
+    statements if false
+}
+
+<!-- while statement -->
+while (condition)
+{
+    statments
+}
+
+<!-- for statement -->
+for (initialize counter; condition; update counter)
+{
+    statements
+}
+
+<!-- for...in statement -->
+for (counter in object)
+{
+    statements
+}
+
+<!-- with statement -->
+with (object)
+{
+    statements
+}
+
+<!-- functions -->
+defined:
+function funcname(parameter1, parameter2, ...)
+{
+    statements
+}
+
+called:
+funcname(parameter1, parameter2, ...);
+
+assignment operator for returned results:
+variable = funcname(parameter1, parameter2, ...);
+
+object creation:
+objectname = new objfunction(property1, property2, ...);

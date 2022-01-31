@@ -26,8 +26,18 @@
     <link rel="stylesheet" href="https://cdn.rawgit.com/konpa/devicon/df6431e323547add1b4cf45992913f15286456d3/devicon.min.css">
       
     <!--  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>      -->
-    <script src="./js/modern-business.js"></script>  
-                
+    <script src="./js/modern-business.js"></script> 
+
+    <script>
+        function myFunction(id) {
+          var x = document.getElementById(id);
+          if (x.style.display === "none") {
+            x.style.display = "block";
+          } else {
+            x.style.display = "none";
+          }
+        }
+    </script>              
   </head>
 
   <body id="page-top">
@@ -134,7 +144,13 @@
               <h3 class="mb-0">Senior C++/C# .NET System Analyst</h3>
               <div class="subheading mb-3">UNDISCLOSED Fintech Company</div>
               <p>Maintained high-frequency FIX trading platform in C++. Wrote new trading platform in C# .NET Core WPF, MVVM. Realtime Market Data, Services include live charting system for brokerages in derivatives, futures and options contracts.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('sharppoint')">&#8594; Reason for Leaving</div>
+            <div id="sharppoint" style="display: none; background-color: #F8F8FF;">
+	      I literally have nothing to do now. I would like to seek new challenges. This systems I've built here are running in production and I'm just providing maintenance and support. I would like to have new development challenges.
             </div>
+              
+            </div>        
             <div class="resume-date text-md-right">
               <span class="text-primary">January 2019 - Present</span>
             </div>
@@ -145,6 +161,12 @@
               <h3 class="mb-0">Senior .NET Consultant</h3>
               <div class="subheading mb-3">Avanade</div>
               <p>Provided expert consultancy and solutions to clients. Leveraged C# .NET experience to solve complex communication between systems. IPC, message queue, distributed system, web api 2.0, asynchronous programming, SQL scripts, all within an Agile, TDD, and DevOps development cycle.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('avanade')">&#8594; Reason for Leaving</div>
+            <div id="avanade" style="display: none; background-color: #F8F8FF;">
+              This is a consultant position. Either I am on site in a client office or on bench. I finished some of the projects and was put on bench for too long. It was up to myself to look for new projects or continue to be on bench. I decided I did not want to waste my time so I left.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">November 2017 - December 2018</span>
@@ -156,6 +178,12 @@
               <h3 class="mb-0">Lead Analyst Programmer</h3>
               <div class="subheading mb-3">Concord Pacific Satellite Technologies Ltd.</div>
               <p>Lead a team of Agile developers to maintain and build features on a fleet management system. Re-built from scatch entire production infrastructure using C# .NET, C++, MySQL, TDD, socket and network programming, mult-threaded code, in a distributed high availability system.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('lf')">&#8594; Reason for Leaving</div>
+            <div id="lf" style="display: none; background-color: #F8F8FF;">
+              New management took over as the previous management was under legal prosecution for sabatoging the system and landuring money overseas. However, they hired some incompetent developers and totally screwed the system. The servers was constantly under stress and crashes on a near daily basis. Their option was to hire someone that knew how to fix the system or shutdown the business. 50% of the clients had already left, so I was practically begged by the boss to come back and help fix the problem. I agreed to re-join the company and lead a team to fix the issues, if they would pay me a manager's salary. They agreed only if I fixed the system afterwords. I was naive to believe them, but eventually, I fixed the system, increase efficiency by over 500% and everything was back and stable again. I asked for my raise, but management brush it off since we have lost another 30% of the remaining clients. Of the 3.5 years I worked here, I never had any raise, bonus, or even regconition of the work I did, so I left for good.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">November 2015 - June 2017</span>
@@ -167,6 +195,12 @@
               <h3 class="mb-0">Senior .NET Consultant</h3>
               <div class="subheading mb-3">Global Talent Services Ltd. - Unisys Hong Kong Ltd.</div>
               <p>Provided consultancy in .NET and VB .NET for various clients, usually in the banking and financial institutions. Wrote and maintained digital signature view system for bank tellers across HK. Technologies used include WCF, HTML5, AngularJS, CSS3, MSSQL, JQuery, REST, and asynchronous programming.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('unisys')">&#8594; Reason for Leaving</div>
+            <div id="unisys" style="display: none; background-color: #F8F8FF;">
+              This is a contract position for 1 year. My contract expired and I did not renew.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">January 2015 - November 2015</span>
@@ -178,6 +212,12 @@
               <h3 class="mb-0">Software Engineer</h3>
               <div class="subheading mb-3">Sungard Global Trading Ltd.</div>
               <p>Part of a team to develop high frequency trading platform for clients, for both buy and sell side institutions. Worked closely in the order books to facilitate trade, and leverge existing trading protocols. FIX, OMS, Derivative and options valuation, and implementing financial products and different asset classes into the trading platform among many other things.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('sungard')">&#8594; Reason for Leaving</div>
+            <div id="sungard" style="display: none; background-color: #F8F8FF;">
+              Worked here for 3.5 years, planned on staying. However, Sungard was in the middle of an aquisition by FIS. Their merger forced some of the redundant staff to be let go. Half of all HK employees was terminated and I was one of them.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">August 2011 - December 2014</span>
@@ -189,6 +229,12 @@
               <h3 class="mb-0">Sr. Software Engineer</h3>
               <div class="subheading mb-3">QVIVO Ltd.</div>
               <p>Used standard C++ and boost libraries to write cross platform video viewer with social features. Also wrote the connectivity, networking, and cloud related features all tied into C++ code, FFMpeg, media libraries, scaleform, OpenGL, DiretX, social APIs, boost threads, in an Agile development environment.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('qvivo')">&#8594; Reason for Leaving</div>
+            <div id="qvivo" style="display: none; background-color: #F8F8FF;">
+              Management had conflicting ideas and unsure where to take the project. We were programming things, tossing them away, and rewriting things constantly. Besides, I wanted to get in Finance and the opportunity came up to work at Sungard.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">October 2010 - August 2011</span>
@@ -200,6 +246,12 @@
               <h3 class="mb-0">Sr. Software Engineer</h3>
               <div class="subheading mb-3">Concord Pacific Satellite Technologies Ltd.</div>
               <p>Core engineer that developed the backend socket and networking system. Develop own proprietary protocol for transfering data over the network. Realtime, high frequency and low latency, all using C/C++ and part MFC. Certain systems requiring low level coding in ANSI C, COM, serial ports, WinCE and embedded hardware.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('cpstl')">&#8594; Reason for Leaving</div>
+            <div id="cpstl" style="display: none; background-color: #F8F8FF;">
+              My first job in HK. This is a small company. Management was under fire because the project was overrun by bugs, tight scheduling, and over budgeting. Management pretty much knew there was no saving the project, so I was hired to be the 'fallout' person to take the blame, since it's easier to blame on a foreigner than a local. I saw the project and I took it on my hands to fix it and overhaul the system to a working state. Management was quite unhappy I actually found a solution, because on the back, they were counting on siphoning company resources into their own pockets. I saw the criminal activities and didn't want to deal with them. Eventually I left.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">November 2008 - October 2010</span>
@@ -211,6 +263,12 @@
               <h3 class="mb-0">Sr. Software Engineer</h3>
               <div class="subheading mb-3">OPSWAT, Inc.</div>
               <p>Developed a standard SDK for major security clients that manages behavior of anti-virus, anti-spyware, and firewalls. Computer security focus in crptography, compression, hash functions, white-hat and defensive programming. Technologies used including C++, C#, MySQL, JAVA, and a little bit of front end development.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('opswat')">&#8594; Reason for Leaving</div>
+            <div id="opswat" style="display: none; background-color: #F8F8FF;">
+              I was generally unhappy about my life in USA. So I moved to HK and became independant. Best decision ever made. I love HK and will continue to stay in this great city.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">April 2005- October 2008</span>
@@ -222,6 +280,12 @@
               <h3 class="mb-0">SEO Specialist</h3>
               <div class="subheading mb-3">One Share of Stock, Inc.</div>
               <p>Fullstack developer using class ASP for search engine optimization. Implemented several SEO and marketing campaigns within web site to track user behavior, traffic analysis, and ad tracking for ROI. HTML, Javascript, CSS, and MSSQL are among the techologies used.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('oneshare')">&#8594; Reason for Leaving</div>
+            <div id="oneshare" style="display: none; background-color: #F8F8FF;">
+              I found myself doing more marketing work instead of development work. I was a web developer but constantly had to think of ways to market the website, market the products, and market the content to list high on search engines. I had no interest in marketing and wanted to be a backend developer so I moved to C++/C#.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">August 2003- July 2004</span>
@@ -233,6 +297,12 @@
               <h3 class="mb-0">Web Developer</h3>
               <div class="subheading mb-3">Mendocino. San Francisco Sales, Inc.</div>
               <p>Develop in house internal website for inventory tracking. Proposed and wrote from scratch item warehousing, search and retrive inventory system. Used primarily HTML, XML, Photoshop, some C++ and CGI techniques.</p>
+
+            <div style="color: #0000ff;" onclick="myFunction('mendocino')">&#8594; Reason for Leaving</div>
+            <div id="mendocino" style="display: none; background-color: #F8F8FF;">
+              This is sales and shipping company dealing with apparrels and womans wear. I was a shipping clerk. Although I volunterred to help them develop an in house web tracking system. I had limited programming freedom so I moved on.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">August 2002- August 2003</span>
@@ -244,6 +314,13 @@
               <h3 class="mb-0">Web Developer (Internship)</h3>
               <div class="subheading mb-3">Club-i - Cyber café</div>
               <p>Helped with administrator task, computer tranining, and some web development using HTML, javascript, and photoshopping skils.</p>
+
+
+            <div style="color: #0000ff;" onclick="myFunction('clubi')">&#8594; Reason for Leaving</div>
+            <div id="clubi" style="display: none; background-color: #F8F8FF;">
+              This was a summer intern. It wasn't suppose to last more than 1 summer. I did my job and went back to school.
+            </div>
+
             </div>
             <div class="resume-date text-md-right">
               <span class="text-primary">May 1998- September 1998</span>

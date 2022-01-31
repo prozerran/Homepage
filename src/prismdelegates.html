@@ -1,0 +1,206 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>poco<span style='color:#308080; '>.</span>account<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Commands<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Mvvm<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Common<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Models<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Views<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTraderCore<span style='color:#308080; '>.</span>BusinessLayer<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>ObjectModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Controls<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPTrader<span style='color:#308080; '>.</span>ViewModels
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> partial <span style='color:#200080; font-weight:bold; '>class</span> MainBarViewModel <span style='color:#308080; '>:</span> BindableBase
+    <span style='color:#406080; '>{</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Bindables MainBar</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> UserControl modeControl <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> UserControl<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> UserControl ModeControl
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> modeControl<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> modeControl<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> minWidth <span style='color:#308080; '>=</span> <span style='color:#008c00; '>400</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> MinWidth
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> minWidth<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> minWidth<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> isMode2 <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> IsMode2
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> isMode2<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> isMode2<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> ChangeMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> ConnectionToolTipViewModel connectionToolTipViewModel <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ConnectionToolTipViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> ConnectionToolTipViewModel ConnectionToolTipViewModel
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> connectionToolTipViewModel<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> connectionToolTipViewModel<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> SPAccInfo accountingData <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPAccInfo AccountingData
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> accountingData<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> accountingData<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> AccountInfoViewModel accountInfoViewModel <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> AccountInfoViewModel AccountInfoViewModel
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> accountInfoViewModel<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> accountInfoViewModel<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> showAccountInfo <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> ShowAccountInfo
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> showAccountInfo<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> showAccountInfo<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> ModeViewModel modevm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand SettingCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand MarketCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand ChartCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand ClosingCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand ConnectionCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> MainBarViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SettingCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>(</span>OnSettingCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            MarketCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>(</span>OnMarketCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ChartCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>(</span>OnChartCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ClosingCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>(</span>OnClosingCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ConnectionCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>(</span>OnConnectionCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            AccountInfoViewModel <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> AccountInfoViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AccountInfoViewModel<span style='color:#308080; '>.</span>UpdateAccounting <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Action<span style='color:#308080; '>(</span>OnUpdateAccounting<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// should be onload?</span>
+            OnLoadModeContext<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            IsMode2 <span style='color:#308080; '>=</span> GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>IsMode2<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ChangeMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            GlobalSettings<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>IsMode2 <span style='color:#308080; '>=</span> IsMode2<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// new view instance</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isMode2<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                MinWidth <span style='color:#308080; '>=</span> <span style='color:#008c00; '>830</span><span style='color:#406080; '>;</span>
+                modevm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Mode2ViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                ModeControl <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Mode2<span style='color:#308080; '>(</span>modevm<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#406080; '>{</span>
+                MinWidth <span style='color:#308080; '>=</span> <span style='color:#008c00; '>415</span><span style='color:#406080; '>;</span>
+                modevm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Mode1ViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                ModeControl <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Mode1<span style='color:#308080; '>(</span>modevm<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// apply content view models</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>modevm <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                modevm<span style='color:#308080; '>.</span>OrderPositionViewModel <span style='color:#308080; '>=</span> orderPositionViewModel<span style='color:#406080; '>;</span>
+                modevm<span style='color:#308080; '>.</span>WatchListViewModel <span style='color:#308080; '>=</span> watchListViewModel<span style='color:#406080; '>;</span>
+                modevm<span style='color:#308080; '>.</span>PlaceOrderViewModel1 <span style='color:#308080; '>=</span> placeOrderViewModel1<span style='color:#406080; '>;</span>
+                modevm<span style='color:#308080; '>.</span>MainTradingViewModel <span style='color:#308080; '>=</span> mainTradingViewModel<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// apply content sizes</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isMode2<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                modevm<span style='color:#308080; '>.</span>OrderPositionViewModel<span style='color:#308080; '>.</span>Height <span style='color:#308080; '>=</span> TradeSetting<span style='color:#308080; '>.</span>POS_MIN_HEIGHT <span style='color:#308080; '>*</span> <span style='color:#008c00; '>3</span><span style='color:#406080; '>;</span>
+                modevm<span style='color:#308080; '>.</span>WatchListViewModel<span style='color:#308080; '>.</span>Height <span style='color:#308080; '>=</span> TradeSetting<span style='color:#308080; '>.</span>WL_MIN_HEIGHT <span style='color:#308080; '>*</span> <span style='color:#008c00; '>2</span><span style='color:#406080; '>;</span>
+                modevm<span style='color:#308080; '>.</span>MainTradingViewModel<span style='color:#308080; '>.</span>Height <span style='color:#308080; '>=</span> TradeSetting<span style='color:#308080; '>.</span>TRADE_MIN_HEIGHT <span style='color:#308080; '>*</span> <span style='color:#008c00; '>2</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#406080; '>{</span>
+                modevm<span style='color:#308080; '>.</span>OrderPositionViewModel<span style='color:#308080; '>.</span>Height <span style='color:#308080; '>=</span> TradeSetting<span style='color:#308080; '>.</span>POS_MIN_HEIGHT<span style='color:#406080; '>;</span>
+                modevm<span style='color:#308080; '>.</span>WatchListViewModel<span style='color:#308080; '>.</span>Height <span style='color:#308080; '>=</span> TradeSetting<span style='color:#308080; '>.</span>WL_MIN_HEIGHT<span style='color:#406080; '>;</span>
+                modevm<span style='color:#308080; '>.</span>MainTradingViewModel<span style='color:#308080; '>.</span>Height <span style='color:#308080; '>=</span> TradeSetting<span style='color:#308080; '>.</span>TRADE_MIN_HEIGHT<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>// attempt to recover memory</span>
+            <span style='color:#595979; '>//GC.Collect();</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnUpdateAccounting<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>AccountInfoViewModel <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                AccountingData <span style='color:#308080; '>=</span> AccountInfoViewModel<span style='color:#308080; '>.</span>AccountingData<span style='color:#406080; '>;</span>
+                RaisePropertyChanged<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>AccountingData</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            OnUpdatePosition<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnUpdatePosition<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>ThrottleService<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>AllowSPEventThrough<span style='color:#308080; '>(</span>AccountInfoViewModel<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// update position data + mini account info</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>orderPositionViewModel <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp; accountInfoViewModel <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> accountData <span style='color:#308080; '>=</span> accountInfoViewModel<span style='color:#308080; '>.</span>accountData<span style='color:#406080; '>;</span>
+                orderPositionViewModel<span style='color:#308080; '>.</span>Update<span style='color:#308080; '>(</span>accountData<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// update place order pos data</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>placeOrderViewModel1 <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> prod <span style='color:#308080; '>=</span> placeOrderViewModel1<span style='color:#308080; '>.</span>ProdCode<span style='color:#406080; '>;</span>
+                    placeOrderViewModel1<span style='color:#308080; '>.</span>OrderPositionData <span style='color:#308080; '>=</span> orderPositionViewModel<span style='color:#308080; '>.</span>GetOrderPosition<span style='color:#308080; '>(</span>prod<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnSettingCommand<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            AppSettings gs <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> AppSettings<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            gs<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnMarketCommand<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            MarketMain sp <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MarketMain<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            sp<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnChartCommand<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ScreenChartBigViewModel vm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ScreenChartBigViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            vm<span style='color:#308080; '>.</span>RenderChartForProduct<span style='color:#308080; '>(</span>placeOrderViewModel1<span style='color:#308080; '>.</span>ProdCode<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            ScreenChartBigView vv <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ScreenChartBigView<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            vv<span style='color:#308080; '>.</span>DataContext <span style='color:#308080; '>=</span> vm<span style='color:#406080; '>;</span>
+
+            vv<span style='color:#308080; '>.</span>Show<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnClosingCommand<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            AccountInfoViewModel<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnConnectionCommand<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ConnectionStatus cs <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ConnectionStatus<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            cs<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-16 02:57:01 UTC -->

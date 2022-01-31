@@ -1,0 +1,89 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Events<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://prismlibrary.com/docs/event-aggregator.html</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#595979; '>/// &lt;summary></span>
+    <span style='color:#595979; '>/// EventService provider that instantiates the event hub for all classes</span>
+    <span style='color:#595979; '>/// The one and only event hub service provider for all classes that usages it</span>
+    <span style='color:#595979; '>/// Replaces the mediator class functionalities in [MediatR]</span>
+    <span style='color:#595979; '>/// &lt;/summary></span>
+    <span style='color:#200080; font-weight:bold; '>internal</span> <span style='color:#200080; font-weight:bold; '>sealed</span> <span style='color:#200080; font-weight:bold; '>class</span> EventService
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> EventService<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>readonly</span> EventService _instance <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EventService<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>internal</span> <span style='color:#200080; font-weight:bold; '>static</span> EventService Instance <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _instance<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> IEventAggregator _eventAggregator<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>internal</span> IEventAggregator EventAggregator
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>_eventAggregator <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                    _eventAggregator <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EventAggregator<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>return</span> _eventAggregator<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>// Define each event</span>
+    <span style='color:#595979; '>// Define as many event as needed, with different event or parameters</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> SamplePubSubTest <span style='color:#308080; '>:</span> PubSubEvent<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>/// ////////////////////////////////////////////////////////////////////////////////////////</span>
+
+    <span style='color:#595979; '>// Subscriber class</span>
+    <span style='color:#200080; font-weight:bold; '>internal</span> <span style='color:#200080; font-weight:bold; '>class</span> EventSubscriber
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IEventAggregator ea <span style='color:#308080; '>=</span> EventService<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>EventAggregator<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> SubscribeEvent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SamplePubSubTest<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Subscribe<span style='color:#308080; '>(</span>OnEventReceived<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnEventReceived<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> str<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>str<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>// Publisher class</span>
+    <span style='color:#200080; font-weight:bold; '>internal</span> <span style='color:#200080; font-weight:bold; '>class</span> EventPublisher
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IEventAggregator ea <span style='color:#308080; '>=</span> EventService<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>EventAggregator<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> PublishEvent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SamplePubSubTest<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>Hello World: The time is {DateTime.Now}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>/// &lt;summary></span>
+    <span style='color:#595979; '>// Main driver class</span>
+    <span style='color:#595979; '>// The purpose of the event hub is to drive a mediator pattern into two different classes.</span>
+    <span style='color:#595979; '>// The classes are suppose to be loosely coupled and have no dependency on each other.</span>
+    <span style='color:#595979; '>// And in such case, we can send messages and/or event to one another without having the classes</span>
+    <span style='color:#595979; '>// to know one or the other exist. The is usefull for passing data around between classes.</span>
+    <span style='color:#595979; '>/// &lt;/summary></span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainEventHubDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> RunPubSubEvent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> sub <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EventSubscriber<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            sub<span style='color:#308080; '>.</span>SubscribeEvent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> pub <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EventPublisher<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            pub<span style='color:#308080; '>.</span>PublishEvent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-02 05:07:07 UTC -->

@@ -1,0 +1,53 @@
+DOS Commands
+
+Command     Description
+---------------------------------------------------------------
+map         Shows the drive directories
+ver         Shows the versionof the system
+dir         Shows the contents in the directory
+cd          Change directory
+cls         Clear screen
+time        Edit time
+date        Edit date
+mem         Shows system memory
+tree        Shows the directories within a path
+md          Create directory
+copy        Copy files
+player      Runs movie player with filename
+type        Read contents
+more        Read files
+backup      Backup Harddrive
+ren         Rename file
+diskcomp    Compare disk
+comp        Compare files
+echo        Display text
+chkdsk      Check disk
+vol         Display volume
+find        Locate a string in a file
+move        Move a file
+rd          Remove a directory
+restore     Restore backup harddisk
+path        Set alternative directories for programs
+prompt      Change prompt   [default: prompt $p$s]
+device      Use new device
+intersvr    Make computer server for multiple computers
+memmaker    Optimize memory use
+dblspace    Compress a disk
+attrib      Find attribute of file
+edit        Edit file
+label       Change label
+deltree     Remove directory and all sub-directories and files
+
+
+
+RUN Executables
+EXE         Description
+---------------------------------------------------------------------
+telnet      Telnet to server
+ping        Send and recieve data patches
+command     Run MS-Dos
+notepad     Run notepad for text edit
+regedit     Edit registry
+winipcfg    System IP configuration
+sysedit     Edit System files
+

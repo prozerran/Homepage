@@ -1,0 +1,290 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Data<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Data<span style='color:#308080; '>.</span>SQLite<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Dapper<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Newtonsoft<span style='color:#308080; '>.</span>Json<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://www.youtube.com/watch?v=ayp3tHEkRc0</span><span style='color:#595979; '>      // Simple Dapper</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://www.youtube.com/watch?v=eKkh5Xm0OlU</span><span style='color:#595979; '>      // Advaned Dapper</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://stackoverflow.com/questions/9218847/how-do-i-handle-database-connections-with-dapper-in-net</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>DB table schema model</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> CyrptoPairModel
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> id <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> LocalProd <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> RemoteProd <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>double</span> Multiplier <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> OrderIdMapModel
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> id <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> prod_id <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> acc_no <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> acc_ord_no <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> client_ord_id <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> order_id <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> ext_ord_no <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> last_req_no <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DateTime update_time <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> PhoneModel
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> Id <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>        
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> PhoneNumber <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> PersonModel
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> Id <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> FirstName <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> LastName <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> PhoneModel CellPhone <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainDapperDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#595979; '>// connection string</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> connstr <span style='color:#308080; '>=</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>DataSource=..\..\..\Resources\Database.db;Version=3;</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> MainDapperDriver<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> CreateTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                conn<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>
+                    <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>CREATE TABLE IF NOT EXISTS Customer (</span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;ID              INTEGER PRIMARY KEY AUTOINCREMENT,</span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;FirstName       varchar(100) not null,</span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;LastName        varchar(100) not null,</span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;DateOfBirth     datetime not null</span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;)</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DropTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                conn<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>DROP TABLE IF EXISTS Customer</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// demonstration to load info from db</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> List<span style='color:#308080; '>&lt;</span>CyrptoPairModel<span style='color:#308080; '>></span> LoadCryptoPair<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> resultset <span style='color:#308080; '>=</span> conn<span style='color:#308080; '>.</span>Query<span style='color:#308080; '>&lt;</span>CyrptoPairModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>SELECT * FROM ExchangeCryptoPair</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> DynamicParameters<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> resultset<span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// demonstration to load info from db</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> List<span style='color:#308080; '>&lt;</span>OrderIdMapModel<span style='color:#308080; '>></span> LoadOrderIdMap<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> resultset <span style='color:#308080; '>=</span> conn<span style='color:#308080; '>.</span>Query<span style='color:#308080; '>&lt;</span>OrderIdMapModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>SELECT * FROM OrderIdMap_TBL</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> DynamicParameters<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> resultset<span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// demonstration to update data in DB</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> UpdateOrderIdMap<span style='color:#308080; '>(</span>OrderIdMapModel orderModel<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                conn<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>INSERT INTO OrderIdMap_TBL (id, prod_id, acc_no, last_req_no) </span><span style='color:#800000; '>"</span> <span style='color:#308080; '>+</span>
+                    <span style='color:#800000; '>"</span><span style='color:#1060b6; '>VALUES (@id, @prod_id, @acc_no, @last_req_no)</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> orderModel<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> List<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>></span> MapMultipleObject<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> sql <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>SELECT pe.*, ph.* FROM Person pe JOIN Phone ph ON pe.Id = ph.Id</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> resultset <span style='color:#308080; '>=</span> conn<span style='color:#308080; '>.</span>Query<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>,</span> PhoneModel<span style='color:#308080; '>,</span> PersonModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>sql<span style='color:#308080; '>,</span>
+                    <span style='color:#308080; '>(</span>person<span style='color:#308080; '>,</span> phone<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#406080; '>{</span> person<span style='color:#308080; '>.</span>CellPhone <span style='color:#308080; '>=</span> phone<span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>return</span> person<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>return</span> resultset<span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> List<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>></span> MapMultipleObjectWithParam<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> id<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> p <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#406080; '>{</span> Id <span style='color:#308080; '>=</span> id <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> sql <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>SELECT pe.*, ph.* FROM Person pe JOIN Phone ph ON pe.Id = ph.Id WHERE pe.Id = @Id</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> resultset <span style='color:#308080; '>=</span> conn<span style='color:#308080; '>.</span>Query<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>,</span> PhoneModel<span style='color:#308080; '>,</span> PersonModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>sql<span style='color:#308080; '>,</span>
+                    <span style='color:#308080; '>(</span>person<span style='color:#308080; '>,</span> phone<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#406080; '>{</span> person<span style='color:#308080; '>.</span>CellPhone <span style='color:#308080; '>=</span> phone<span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>return</span> person<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span> p<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>return</span> resultset<span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#308080; '>(</span>List<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>></span><span style='color:#308080; '>,</span> List<span style='color:#308080; '>&lt;</span>PhoneModel<span style='color:#308080; '>></span><span style='color:#308080; '>)</span> MapMultipleSets<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> sql <span style='color:#308080; '>=</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>SELECT * FROM Person; </span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;SELECT * FROM Phone;</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+                List<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>></span> people <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+                List<span style='color:#308080; '>&lt;</span>PhoneModel<span style='color:#308080; '>></span> phones <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> lists <span style='color:#308080; '>=</span> conn<span style='color:#308080; '>.</span>QueryMultiple<span style='color:#308080; '>(</span>sql<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    people <span style='color:#308080; '>=</span> lists<span style='color:#308080; '>.</span>Read<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    phones <span style='color:#308080; '>=</span> lists<span style='color:#308080; '>.</span>Read<span style='color:#308080; '>&lt;</span>PhoneModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#308080; '>(</span>people<span style='color:#308080; '>,</span> phones<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#308080; '>(</span>List<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>></span><span style='color:#308080; '>,</span> List<span style='color:#308080; '>&lt;</span>PhoneModel<span style='color:#308080; '>></span><span style='color:#308080; '>)</span> MapMultipleSetsWithParam<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> name<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> phonenumber<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> p <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#406080; '>{</span> FirstName <span style='color:#308080; '>=</span> name<span style='color:#308080; '>,</span> PhoneNumber <span style='color:#308080; '>=</span> phonenumber <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> sql <span style='color:#308080; '>=</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>SELECT * FROM Person WHERE FirstName = @FirstName; </span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;SELECT * FROM Phone WHERE PhoneNumber = @PhoneNumber</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+                List<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>></span> people <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+                List<span style='color:#308080; '>&lt;</span>PhoneModel<span style='color:#308080; '>></span> phones <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> lists <span style='color:#308080; '>=</span> conn<span style='color:#308080; '>.</span>QueryMultiple<span style='color:#308080; '>(</span>sql<span style='color:#308080; '>,</span> p<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    people <span style='color:#308080; '>=</span> lists<span style='color:#308080; '>.</span>Read<span style='color:#308080; '>&lt;</span>PersonModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    phones <span style='color:#308080; '>=</span> lists<span style='color:#308080; '>.</span>Read<span style='color:#308080; '>&lt;</span>PhoneModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#308080; '>(</span>people<span style='color:#308080; '>,</span> phones<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Does NOT work because ID was not created as an Identity</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> GetLastInsertedId<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> first<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> last<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> p <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DynamicParameters<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                p<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>@Id</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#308080; '>,</span> DbType<span style='color:#308080; '>.</span>Int32<span style='color:#308080; '>,</span> ParameterDirection<span style='color:#308080; '>.</span>Output<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                p<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>@FirstName</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> first<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                p<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>@LastName</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> last<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> sql <span style='color:#308080; '>=</span> $<span style='color:#800000; '>@"</span><span style='color:#1060b6; '>INSERT INTO Person (FirstName, LastName) VALUES </span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;(@FirstName, @LastName); </span>
+<span style='color:#1060b6; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;SELECT @Id = @@IDENTITY</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+                conn<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>sql<span style='color:#308080; '>,</span> p<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> newId <span style='color:#308080; '>=</span> p<span style='color:#308080; '>.</span>Get<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>@Id</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> newId<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>//// Assume the following stored precedure exist</span>
+        <span style='color:#595979; '>//CREATE PROCEDURE [spPerson_InsertSet]</span>
+        <span style='color:#595979; '>//    @people BasicUDT readonly</span>
+        <span style='color:#595979; '>//AS</span>
+        <span style='color:#595979; '>//BEGIN  </span>
+        <span style='color:#595979; '>//    INSERT INTO Person(FirstName, LastName)</span>
+        <span style='color:#595979; '>//    SELECT[FirstName], [LastName]</span>
+        <span style='color:#595979; '>//    FROM @people;</span>
+        <span style='color:#595979; '>//END</span>
+
+        <span style='color:#595979; '>// SQLite doesnt support Stored Procedure, here we assume it does</span>
+        <span style='color:#595979; '>// Method does not work as is.</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> InsertDataSetWithStoredProcedure<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> conn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SQLiteConnection<span style='color:#308080; '>(</span>connstr<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> dataset <span style='color:#308080; '>=</span> GetDataSets<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> p <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span>
+                <span style='color:#406080; '>{</span>
+                    people <span style='color:#308080; '>=</span> dataset<span style='color:#308080; '>.</span>AsTableValuedParameter<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>BasicUDT</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>return</span> conn<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>spPerson_InsertSet</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> p<span style='color:#308080; '>,</span> commandType<span style='color:#308080; '>:</span> CommandType<span style='color:#308080; '>.</span>StoredProcedure<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> DataTable GetDataSets<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> output <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DataTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Columns<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>FirstName</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>typeof</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Columns<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LastName</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>typeof</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            output<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name1</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>123456</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name2</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>123456</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name3</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>123456</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name4</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>123456</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name5</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>123456</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name6</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>123456</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name7</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>123456</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            output<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name8</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>123456</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>return</span> output<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> DisplayObjectInJson<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> obj<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> json <span style='color:#308080; '>=</span> JsonConvert<span style='color:#308080; '>.</span>SerializeObject<span style='color:#308080; '>(</span>obj<span style='color:#308080; '>,</span> Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>json<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Main driver of Dapper application</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>//First, select data from DB and display it</span>
+            DisplayObjectInJson<span style='color:#308080; '>(</span>LoadCryptoPair<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            DisplayObjectInJson<span style='color:#308080; '>(</span>LoadOrderIdMap<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            DisplayObjectInJson<span style='color:#308080; '>(</span>MapMultipleObject<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            DisplayObjectInJson<span style='color:#308080; '>(</span>MapMultipleObjectWithParam<span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            DisplayObjectInJson<span style='color:#308080; '>(</span>MapMultipleSets<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            DisplayObjectInJson<span style='color:#308080; '>(</span>MapMultipleSetsWithParam<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TIM</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>88888888</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//GetLastInsertedId("NEW", "NAME");</span>
+
+            <span style='color:#595979; '>//// prepare new data to add into db</span>
+            <span style='color:#595979; '>//var oid = new OrderIdMapModel</span>
+            <span style='color:#595979; '>//{</span>
+            <span style='color:#595979; '>//    id = 10,</span>
+            <span style='color:#595979; '>//    prod_id = "NEW_PROD",</span>
+            <span style='color:#595979; '>//    acc_no = "TEST_1",</span>
+            <span style='color:#595979; '>//    last_req_no = 101</span>
+            <span style='color:#595979; '>//};</span>
+
+            <span style='color:#595979; '>//// Update data into DB and display again with new data added</span>
+            <span style='color:#595979; '>//UpdateOrderIdMap(oid);</span>
+            <span style='color:#595979; '>//DisplayObjectInJson(LoadOrderIdMap());</span>
+
+            <span style='color:#595979; '>// Calls store precedure to do mass insert at once</span>
+            <span style='color:#595979; '>//InsertDataSetWithStoredProcedure();</span>
+            <span style='color:#595979; '>//DisplayObjectInJson(MapMultipleObject());</span>
+
+            <span style='color:#595979; '>// Create and delete table</span>
+            CreateTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            DropTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-05 05:41:20 UTC -->

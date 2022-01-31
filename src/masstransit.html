@@ -1,0 +1,130 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Diagnostics<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Net<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Net<span style='color:#308080; '>.</span>Security<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Security<span style='color:#308080; '>.</span>Authentication<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Security<span style='color:#308080; '>.</span>Cryptography<span style='color:#308080; '>.</span>X509Certificates<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> MassTransit<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>Extensions<span style='color:#308080; '>.</span>Configuration<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>Extensions<span style='color:#308080; '>.</span>DependencyInjection<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>Extensions<span style='color:#308080; '>.</span>Hosting<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>Extensions<span style='color:#308080; '>.</span>Logging<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>Extensions<span style='color:#308080; '>.</span>Options<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SampleService<span style='color:#308080; '>.</span>Contracts<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// MassTransit Sample</span>
+<span style='color:#595979; '>// Connectivity to multiple Message Queue, such as RabbitMQ, Azure Bus, etc...</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/MassTransit/Sample-ConsoleService</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>http://masstransit-project.com/getting-started/</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SampleService
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>class</span> Program
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> AppConfig AppConfig <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>static</span> async Task Main<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> args<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> isService <span style='color:#308080; '>=</span> <span style='color:#308080; '>!</span><span style='color:#308080; '>(</span>Debugger<span style='color:#308080; '>.</span>IsAttached || args<span style='color:#308080; '>.</span>Contains<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>--console</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> builder <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> HostBuilder<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                <span style='color:#308080; '>.</span>ConfigureAppConfiguration<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>hostingContext<span style='color:#308080; '>,</span> config<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+                <span style='color:#406080; '>{</span>
+                    config<span style='color:#308080; '>.</span>AddJsonFile<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>appsettings.json</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> optional<span style='color:#308080; '>:</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    config<span style='color:#308080; '>.</span>AddEnvironmentVariables<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>args <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                        config<span style='color:#308080; '>.</span>AddCommandLine<span style='color:#308080; '>(</span>args<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span>
+                <span style='color:#308080; '>.</span>ConfigureServices<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>hostContext<span style='color:#308080; '>,</span> services<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+                <span style='color:#406080; '>{</span>
+                    services<span style='color:#308080; '>.</span>Configure<span style='color:#308080; '>&lt;</span>AppConfig<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>hostContext<span style='color:#308080; '>.</span>Configuration<span style='color:#308080; '>.</span>GetSection<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>AppConfig</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    services<span style='color:#308080; '>.</span>AddMassTransit<span style='color:#308080; '>(</span>cfg <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+                    <span style='color:#406080; '>{</span>
+                        cfg<span style='color:#308080; '>.</span>AddConsumer<span style='color:#308080; '>&lt;</span>TimeConsumer<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        cfg<span style='color:#308080; '>.</span>AddBus<span style='color:#308080; '>(</span>ConfigureBus<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        cfg<span style='color:#308080; '>.</span>AddRequestClient<span style='color:#308080; '>&lt;</span>IsItTime<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    services<span style='color:#308080; '>.</span>AddHostedService<span style='color:#308080; '>&lt;</span>MassTransitConsoleHostedService<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    services<span style='color:#308080; '>.</span>AddHostedService<span style='color:#308080; '>&lt;</span>CheckTheTimeService<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span>
+                <span style='color:#308080; '>.</span>ConfigureLogging<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>hostingContext<span style='color:#308080; '>,</span> logging<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+                <span style='color:#406080; '>{</span>
+                    logging<span style='color:#308080; '>.</span>AddConfiguration<span style='color:#308080; '>(</span>hostingContext<span style='color:#308080; '>.</span>Configuration<span style='color:#308080; '>.</span>GetSection<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Logging</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    logging<span style='color:#308080; '>.</span>AddConsole<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>isService<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                await builder<span style='color:#308080; '>.</span>UseWindowsService<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Build<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>RunAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#595979; '>//await builder.UseSystemd().Build().RunAsync(); // For Linux, replace the nuget package: "Microsoft.Extensions.Hosting.WindowsServices" with "Microsoft.Extensions.Hosting.Systemd", and then use this line instead</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#406080; '>{</span>
+                await builder<span style='color:#308080; '>.</span>RunConsoleAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>static</span> IBusControl ConfigureBus<span style='color:#308080; '>(</span>IServiceProvider provider<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            AppConfig <span style='color:#308080; '>=</span> provider<span style='color:#308080; '>.</span>GetRequiredService<span style='color:#308080; '>&lt;</span>IOptions<span style='color:#308080; '>&lt;</span>AppConfig<span style='color:#308080; '>></span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Value<span style='color:#406080; '>;</span>
+
+            X509Certificate2 x509Certificate2 <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+            X509Store store <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> X509Store<span style='color:#308080; '>(</span>StoreName<span style='color:#308080; '>.</span>My<span style='color:#308080; '>,</span> StoreLocation<span style='color:#308080; '>.</span>LocalMachine<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            store<span style='color:#308080; '>.</span>Open<span style='color:#308080; '>(</span>OpenFlags<span style='color:#308080; '>.</span>ReadOnly<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                X509Certificate2Collection certificatesInStore <span style='color:#308080; '>=</span> store<span style='color:#308080; '>.</span>Certificates<span style='color:#406080; '>;</span>
+
+                x509Certificate2 <span style='color:#308080; '>=</span> certificatesInStore<span style='color:#308080; '>.</span>OfType<span style='color:#308080; '>&lt;</span>X509Certificate2<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                    <span style='color:#308080; '>.</span>FirstOrDefault<span style='color:#308080; '>(</span>cert <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> cert<span style='color:#308080; '>.</span>Thumbprint?<span style='color:#308080; '>.</span>ToLower<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> AppConfig<span style='color:#308080; '>.</span>SSLThumbprint?<span style='color:#308080; '>.</span>ToLower<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>finally</span>
+            <span style='color:#406080; '>{</span>
+                store<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#200080; font-weight:bold; '>return</span> Bus<span style='color:#308080; '>.</span>Factory<span style='color:#308080; '>.</span>CreateUsingRabbitMq<span style='color:#308080; '>(</span>cfg <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> host <span style='color:#308080; '>=</span> cfg<span style='color:#308080; '>.</span>Host<span style='color:#308080; '>(</span>AppConfig<span style='color:#308080; '>.</span>Host<span style='color:#308080; '>,</span> AppConfig<span style='color:#308080; '>.</span>VirtualHost<span style='color:#308080; '>,</span> h <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+                <span style='color:#406080; '>{</span>
+                    h<span style='color:#308080; '>.</span>Username<span style='color:#308080; '>(</span>AppConfig<span style='color:#308080; '>.</span>Username<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    h<span style='color:#308080; '>.</span>Password<span style='color:#308080; '>(</span>AppConfig<span style='color:#308080; '>.</span>Password<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>AppConfig<span style='color:#308080; '>.</span>SSLActive<span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        h<span style='color:#308080; '>.</span>UseSsl<span style='color:#308080; '>(</span>ssl <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+                        <span style='color:#406080; '>{</span>
+                            ssl<span style='color:#308080; '>.</span>ServerName <span style='color:#308080; '>=</span> Dns<span style='color:#308080; '>.</span>GetHostName<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                            ssl<span style='color:#308080; '>.</span>AllowPolicyErrors<span style='color:#308080; '>(</span>SslPolicyErrors<span style='color:#308080; '>.</span>RemoteCertificateNameMismatch<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                            ssl<span style='color:#308080; '>.</span>Certificate <span style='color:#308080; '>=</span> x509Certificate2<span style='color:#406080; '>;</span>
+                            ssl<span style='color:#308080; '>.</span>Protocol <span style='color:#308080; '>=</span> SslProtocols<span style='color:#308080; '>.</span>Tls12<span style='color:#406080; '>;</span>
+                            ssl<span style='color:#308080; '>.</span>CertificateSelectionCallback <span style='color:#308080; '>=</span> CertificateSelectionCallback<span style='color:#406080; '>;</span>
+                        <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                cfg<span style='color:#308080; '>.</span>ConfigureEndpoints<span style='color:#308080; '>(</span>provider<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> X509Certificate CertificateSelectionCallback<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> targethost<span style='color:#308080; '>,</span> X509CertificateCollection localcertificates<span style='color:#308080; '>,</span> X509Certificate remotecertificate<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> acceptableissuers<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> serverCertificate <span style='color:#308080; '>=</span> localcertificates<span style='color:#308080; '>.</span>OfType<span style='color:#308080; '>&lt;</span>X509Certificate2<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                                    <span style='color:#308080; '>.</span>FirstOrDefault<span style='color:#308080; '>(</span>cert <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> cert<span style='color:#308080; '>.</span>Thumbprint<span style='color:#308080; '>.</span>ToLower<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> AppConfig<span style='color:#308080; '>.</span>SSLThumbprint<span style='color:#308080; '>.</span>ToLower<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>return</span> serverCertificate ?? <span style='color:#200080; font-weight:bold; '>throw</span> <span style='color:#200080; font-weight:bold; '>new</span> Exception<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Wrong certificate</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-06 08:36:38 UTC -->

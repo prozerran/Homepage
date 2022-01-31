@@ -1,0 +1,22 @@
+Notes
+=================================================================
+Starting a Daemon
+1) Move your program to daemon dir: /usr/libexec/mydaemond
+2) Add a line to /etc/services file
+        #mydaemond      port/tcp        # mydaemond daemon
+
+3) Add a line to /etc/inetd.conf file
+        #mydaemond  stream  tcp     nowait  root    /usr/libexec/mydaemond
+
+4) Execute /usr/sbin/inetd
+5) Test your daemon
+        $ telnet localhost port
+
+Removing escaped characters to prevent CGI exploit
+# Process input values
+{$NAME, $VALUE) = split(/=/, $_);       # split up each variable=value pair
+$VALUE =~ s/\+/ /g;                     # Replace '+' with ' '
+$VALUE =~ s/%([0-9|A-F]{2})/pack(C,hex,{$1}}/eg;  # Replace %xx characters with ASCII
+# Escape metacharacters
+$VALUE =~ s/([;<>\*\|'&\$!#\(\)\[\]\{\}:"])/\\$1/g;# remove unwanted special characters
+$MYDATA[$NAME} = $VALUE;        # Assign the value to the associative array

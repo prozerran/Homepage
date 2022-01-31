@@ -1,0 +1,420 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>listener<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>poco<span style='color:#308080; '>.</span>margincheck<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>spmessage<span style='color:#308080; '>.</span>margincheck<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>BusinessLayer<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Common<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Interface<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Data<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Controls<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Controls<span style='color:#308080; '>.</span>Primitives<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Input<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Media<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPTrader<span style='color:#308080; '>.</span>Views
+<span style='color:#406080; '>{</span>
+    <span style='color:#595979; '>/// &lt;summary></span>
+    <span style='color:#595979; '>/// Interaction logic for MarginCheckWindow.xaml</span>
+    <span style='color:#595979; '>/// &lt;/summary></span>
+    <span style='color:#200080; font-weight:bold; '>public</span> partial <span style='color:#200080; font-weight:bold; '>class</span> MarginCheckWindow <span style='color:#308080; '>:</span> SPBindableWindowChrome<span style='color:#308080; '>,</span> MarginDataListener<span style='color:#308080; '>,</span> IWindowDesktopConfig<span style='color:#308080; '>,</span> IDataGridSetting
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IndexedObservableCollectionEx<span style='color:#308080; '>&lt;</span>SPAeMarginData<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> aeMarginModel <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> IndexedObservableCollectionEx<span style='color:#308080; '>&lt;</span>SPAeMarginData<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IndexedObservableCollectionEx<span style='color:#308080; '>&lt;</span>SPAccountMarginData<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> accountMarginModel <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> IndexedObservableCollectionEx<span style='color:#308080; '>&lt;</span>SPAccountMarginData<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> DatagridSettingWindow dgs_aem_win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> DatagridSettingWindow dgs_acm_win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> SPBindableWindowChrome parentWin <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> tabId <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> activeAeCode <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>double</span> tot_acc_margin <span style='color:#308080; '>=</span> <span style='color:#008000; '>0.0</span><span style='color:#406080; '>;</span>
+        
+        <span style='color:#200080; font-weight:bold; '>public</span> MarginCheckWindow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            InitializeComponent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            DataContext <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>,</span> winName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            dgs_aem_win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DatagridSettingWindow<span style='color:#308080; '>(</span>aeMarginModel<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            dgs_acm_win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DatagridSettingWindow<span style='color:#308080; '>(</span>accountMarginModel<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> MarginCheckWindow<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> winId<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            InitializeComponent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            DataContext <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#406080; '>;</span>
+            windowId <span style='color:#308080; '>=</span> winId<span style='color:#406080; '>;</span>
+
+            dgs_aem_win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DatagridSettingWindow<span style='color:#308080; '>(</span>aeMarginModel<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            dgs_acm_win <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DatagridSettingWindow<span style='color:#308080; '>(</span>accountMarginModel<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            LoadSavedContent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> InitGridMetaSetting<span style='color:#308080; '>(</span>SPBindableWindowChrome win<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> windowId<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> ctrlId<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> tabId<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            parentWin <span style='color:#308080; '>=</span> win<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>windowId <span style='color:#308080; '>=</span> windowId<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>tabId <span style='color:#308080; '>=</span> tabId<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLoaded<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchLanguageEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Subscribe<span style='color:#308080; '>(</span>OnLanguageChanged<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            aeMarginListView<span style='color:#308080; '>.</span>DataContext <span style='color:#308080; '>=</span> aeMarginModel<span style='color:#406080; '>;</span>
+            accountMarginListView<span style='color:#308080; '>.</span>DataContext <span style='color:#308080; '>=</span> accountMarginModel<span style='color:#406080; '>;</span>
+
+            apiProxy<span style='color:#308080; '>.</span>MarginDataService<span style='color:#308080; '>.</span>AddListener<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            List<span style='color:#308080; '>&lt;</span>SPAeMarginData<span style='color:#308080; '>></span> dataList <span style='color:#308080; '>=</span> apiProxy<span style='color:#308080; '>.</span>MarginDataService<span style='color:#308080; '>.</span>GetAeMarginDataList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            RefreshAeMarginDataList<span style='color:#308080; '>(</span>dataList<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            dgs_aem_win<span style='color:#308080; '>.</span>SetDataGrid<span style='color:#308080; '>(</span>aeMarginListView<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            dgs_acm_win<span style='color:#308080; '>.</span>SetDataGrid<span style='color:#308080; '>(</span>accountMarginListView<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            LoadSavedTabMetaData<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            OnLanguageChanged<span style='color:#308080; '>(</span>SPGlobal<span style='color:#308080; '>.</span>GetLanguage<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> LoadSavedTabMetaData<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            LoadSavedMetaData<span style='color:#308080; '>(</span>dgs_aem_win<span style='color:#308080; '>,</span> aeMarginListView<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> aeMarginModel<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            LoadSavedMetaData<span style='color:#308080; '>(</span>dgs_acm_win<span style='color:#308080; '>,</span> accountMarginListView<span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> accountMarginModel<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> LoadSavedMetaData<span style='color:#308080; '>(</span>DatagridSettingWindow dgs_win<span style='color:#308080; '>,</span> DataGrid grid<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> ctrlId<span style='color:#308080; '>,</span> Type type<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> dt <span style='color:#308080; '>=</span> SQLiteDataGridSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>SelectTableRecord<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>,</span> ctrlId<span style='color:#308080; '>,</span> tabId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> dt<span style='color:#308080; '>.</span>AsEnumerable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> fnum <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> data <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#200080; font-weight:bold; '>in</span> result<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> res<span style='color:#308080; '>.</span>ItemArray<span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// tab headers</span>
+                fnum <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>4</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                data <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>data <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                dgs_win<span style='color:#308080; '>.</span>SetDataGrid<span style='color:#308080; '>(</span>grid<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                dgs_win<span style='color:#308080; '>.</span>SetDataGrid<span style='color:#308080; '>(</span>data<span style='color:#308080; '>,</span> fnum<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnUnloaded<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>IsLoadingPreviousDB &amp;&amp; <span style='color:#308080; '>!</span>DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>IsLoggingOut<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                DesktopSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>Remove<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                SQLiteMarginCheck<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>DeleteRecord<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                SQLiteDataGridSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>DeleteRecord<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            apiProxy<span style='color:#308080; '>.</span>MarginDataService<span style='color:#308080; '>.</span>RemoveListener<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            apiProxy<span style='color:#308080; '>.</span>MarginDataService<span style='color:#308080; '>.</span>StopMarginMonitoring<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>RefreshDesktopSubWindowEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnClosed<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> EventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SaveDesktop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            SaveDataGridSettting<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>override</span> <span style='color:#200080; font-weight:bold; '>void</span> SaveDesktop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> x <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Left<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> y <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Top<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> h <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Height<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> w <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Width<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            SQLiteMarginCheck<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>InsertOrUpdateRecord<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>,</span> x<span style='color:#308080; '>,</span> y<span style='color:#308080; '>,</span> h<span style='color:#308080; '>,</span> w<span style='color:#308080; '>,</span> activeAeCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> LoadSavedContent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> dt <span style='color:#308080; '>=</span> SQLiteMarginCheck<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>SelectTableRecord<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> dt<span style='color:#308080; '>.</span>AsEnumerable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> x <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> y <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> h <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> w <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#200080; font-weight:bold; '>in</span> result<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> res<span style='color:#308080; '>.</span>ItemArray<span style='color:#406080; '>;</span>
+
+                x <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                y <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>2</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                h <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>3</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                w <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToInt32<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>4</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                activeAeCode <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Left <span style='color:#308080; '>=</span> x<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Top <span style='color:#308080; '>=</span> y<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Height <span style='color:#308080; '>=</span> h<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>Width <span style='color:#308080; '>=</span> w<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//apiProxy.MarginDataService.SelectAe(activeAeCode);</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLanguageChanged<span style='color:#308080; '>(</span>LanguageEnum lang<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Title <span style='color:#308080; '>=</span> LanguageSetting<span style='color:#308080; '>.</span>GetLanguageValue<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>ACCMGN_CAPTION</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>RefreshDesktopSubWindowEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> RefreshAeMarginDataList<span style='color:#308080; '>(</span>List<span style='color:#308080; '>&lt;</span>SPAeMarginData<span style='color:#308080; '>></span> dataList<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            aeMarginModel<span style='color:#308080; '>.</span>Clear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>double</span> tot_call <span style='color:#308080; '>=</span> <span style='color:#008000; '>0.0</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>SPAeMarginData data <span style='color:#200080; font-weight:bold; '>in</span> dataList<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+                aeMarginModel<span style='color:#308080; '>.</span>SaveOrUpdate<span style='color:#308080; '>(</span>data<span style='color:#308080; '>,</span> data<span style='color:#308080; '>.</span>AECode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                tot_call <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> data<span style='color:#308080; '>.</span>MarginCall<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>tot_call <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+                imgMargin<span style='color:#308080; '>.</span>Source <span style='color:#308080; '>=</span> CommonUtil<span style='color:#308080; '>.</span>GetImage<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>/Resource/Assets/redicon3x.png</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+                imgMargin<span style='color:#308080; '>.</span>Source <span style='color:#308080; '>=</span> CommonUtil<span style='color:#308080; '>.</span>GetImage<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>/Resource/Assets/greenicon.png</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//if (dataList.Count > 0)</span>
+            <span style='color:#595979; '>//{</span>
+            <span style='color:#595979; '>//    //apiProxy.MarginDataService.</span>
+            <span style='color:#595979; '>//}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> RefreshAcountMarginInfo<span style='color:#308080; '>(</span>SPAccountMarginData marginData<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> tot_call <span style='color:#308080; '>=</span> marginData<span style='color:#308080; '>.</span>MarginCall<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>tot_call <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+                tot_acc_margin <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> tot_call<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>tot_acc_margin <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+                imgAccount<span style='color:#308080; '>.</span>Source <span style='color:#308080; '>=</span> CommonUtil<span style='color:#308080; '>.</span>GetImage<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>/Resource/Assets/redicon3x.png</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+                imgAccount<span style='color:#308080; '>.</span>Source <span style='color:#308080; '>=</span> CommonUtil<span style='color:#308080; '>.</span>GetImage<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>/Resource/Assets/greenicon.png</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLoginReply<span style='color:#308080; '>(</span>LoginMcServerReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnLogoutReply<span style='color:#308080; '>(</span>LogoutMcServerReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnAccountMarginReply<span style='color:#308080; '>(</span>AccountMarginReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>aeMarginModel<span style='color:#308080; '>.</span>SelectedItem <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>aeMarginModel<span style='color:#308080; '>.</span>SelectedItem <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp;
+                <span style='color:#308080; '>!</span>String<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>marginData<span style='color:#308080; '>.</span>Mkt<span style='color:#308080; '>.</span>AEId<span style='color:#308080; '>,</span> aeMarginModel<span style='color:#308080; '>.</span>SelectedItem<span style='color:#308080; '>.</span>AECode<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            accountMarginListView<span style='color:#308080; '>.</span>Dispatcher<span style='color:#308080; '>.</span>InvokeAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>Action<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>delegate</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                accountMarginModel<span style='color:#308080; '>.</span>SaveOrUpdate<span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>marginData<span style='color:#308080; '>,</span> message<span style='color:#308080; '>.</span>marginData<span style='color:#308080; '>.</span>AccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// change icon image</span>
+                RefreshAcountMarginInfo<span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>marginData<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnAeMarginReply<span style='color:#308080; '>(</span>AeMarginReplyMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            aeMarginListView<span style='color:#308080; '>.</span>Dispatcher<span style='color:#308080; '>.</span>InvokeAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>Action<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>delegate</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                aeMarginModel<span style='color:#308080; '>.</span>SaveOrUpdate<span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>marginData<span style='color:#308080; '>,</span> message<span style='color:#308080; '>.</span>marginData<span style='color:#308080; '>.</span>AECode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnAccountListPush<span style='color:#308080; '>(</span>AccountListPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            accountMarginListView<span style='color:#308080; '>.</span>Dispatcher<span style='color:#308080; '>.</span>InvokeAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>Action<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>delegate</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                accountMarginModel<span style='color:#308080; '>.</span>SaveOrUpdate<span style='color:#308080; '>(</span>message<span style='color:#308080; '>.</span>marginData<span style='color:#308080; '>,</span> message<span style='color:#308080; '>.</span>marginData<span style='color:#308080; '>.</span>AccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnAeCodeListPush<span style='color:#308080; '>(</span>AeCodeListPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnMarginAlertPush<span style='color:#308080; '>(</span>MarginAlertPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnMarginCallListPush<span style='color:#308080; '>(</span>MarginCallListPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> aeMarginListView_MouseDoubleClick<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> MouseButtonEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            tot_acc_margin <span style='color:#308080; '>=</span> <span style='color:#008000; '>0.0</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> item <span style='color:#308080; '>=</span> aeMarginListView<span style='color:#308080; '>.</span>SelectedItem<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>item <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp; item <span style='color:#200080; font-weight:bold; '>is</span> SPAeMarginData<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                accountMarginModel<span style='color:#308080; '>.</span>Clear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> marginData <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>SPAeMarginData<span style='color:#308080; '>)</span>item<span style='color:#406080; '>;</span>
+                apiProxy<span style='color:#308080; '>.</span>MarginDataService<span style='color:#308080; '>.</span>SelectAe<span style='color:#308080; '>(</span>marginData<span style='color:#308080; '>.</span>AECode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                activeAeCode <span style='color:#308080; '>=</span> marginData<span style='color:#308080; '>.</span>AECode<span style='color:#406080; '>;</span>
+
+                aeMarginModel<span style='color:#308080; '>.</span>SelectedItem <span style='color:#308080; '>=</span> marginData<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> accountMarginSelectionChanged<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> SelectionChangedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> item <span style='color:#308080; '>=</span> accountMarginListView<span style='color:#308080; '>.</span>SelectedItem<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>item <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp; item <span style='color:#200080; font-weight:bold; '>is</span> SPAccountMarginData<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> marginData <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>SPAccountMarginData<span style='color:#308080; '>)</span>item<span style='color:#406080; '>;</span>
+                accNo<span style='color:#308080; '>.</span>Text <span style='color:#308080; '>=</span> marginData<span style='color:#308080; '>.</span>AccNo<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> accountMarginDoubleClick<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> MouseButtonEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> item <span style='color:#308080; '>=</span> accountMarginListView<span style='color:#308080; '>.</span>SelectedItem<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>item <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp; item <span style='color:#200080; font-weight:bold; '>is</span> SPAccountMarginData<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> marginData <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>SPAccountMarginData<span style='color:#308080; '>)</span>item<span style='color:#406080; '>;</span>
+                ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchAccountEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>marginData<span style='color:#308080; '>.</span>AccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnAccNo_KeyDown<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> KeyEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Key <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> Key<span style='color:#308080; '>.</span>Enter<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchAccountEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>accNo<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Access_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchAccountEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>accNo<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Release_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>SwitchAccountEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OpenDataGridSetting<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OpenDataGridSetting<span style='color:#308080; '>(</span>DatagridSettingWindow dgs_win<span style='color:#308080; '>,</span> DataGrid grid<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            dgs_win<span style='color:#308080; '>.</span>OnResultOk <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Action<span style='color:#308080; '>(</span>SaveDataGridSettting<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            dgs_win<span style='color:#308080; '>.</span>PopulateSetting<span style='color:#308080; '>(</span>grid<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            dgs_win<span style='color:#308080; '>.</span>ShowInTaskbar <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            dgs_win<span style='color:#308080; '>.</span>Owner <span style='color:#308080; '>=</span> parentWin<span style='color:#406080; '>;</span>
+            dgs_win<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> SaveDataGridSettting<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SaveDataGridSettting<span style='color:#308080; '>(</span>dgs_aem_win<span style='color:#308080; '>,</span> aeMarginListView<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            SaveDataGridSettting<span style='color:#308080; '>(</span>dgs_acm_win<span style='color:#308080; '>,</span> accountMarginListView<span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> SaveDataGridSettting<span style='color:#308080; '>(</span>DatagridSettingWindow dgs_win<span style='color:#308080; '>,</span> DataGrid grid<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> ctrlId<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> data <span style='color:#308080; '>=</span> dgs_win<span style='color:#308080; '>.</span>GetEncodedDataGrid<span style='color:#308080; '>(</span>grid<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> froze_count <span style='color:#308080; '>=</span> grid<span style='color:#308080; '>.</span>FrozenColumnCount<span style='color:#406080; '>;</span>
+            SQLiteDataGridSetting<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>InsertOrUpdateRecord<span style='color:#308080; '>(</span>windowId<span style='color:#308080; '>,</span> ctrlId<span style='color:#308080; '>,</span> tabId<span style='color:#308080; '>,</span> froze_count<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnDataGridMouseRight_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> MouseButtonEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> dep <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>DependencyObject<span style='color:#308080; '>)</span>e<span style='color:#308080; '>.</span>OriginalSource<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// iteratively traverse the visual tree</span>
+            <span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>dep <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span> &amp;&amp;
+                    <span style='color:#308080; '>!</span><span style='color:#308080; '>(</span>dep <span style='color:#200080; font-weight:bold; '>is</span> DataGridCell<span style='color:#308080; '>)</span> &amp;&amp;
+                    <span style='color:#308080; '>!</span><span style='color:#308080; '>(</span>dep <span style='color:#200080; font-weight:bold; '>is</span> DataGridColumnHeader<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                dep <span style='color:#308080; '>=</span> VisualTreeHelper<span style='color:#308080; '>.</span>GetParent<span style='color:#308080; '>(</span>dep<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dep <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dep <span style='color:#200080; font-weight:bold; '>is</span> DataGridColumnHeader<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> s <span style='color:#308080; '>=</span> sender <span style='color:#200080; font-weight:bold; '>as</span> DataGrid<span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>s<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>.</span>StartsWith<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>ae</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    OpenDataGridSetting<span style='color:#308080; '>(</span>dgs_aem_win<span style='color:#308080; '>,</span> aeMarginListView<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>else</span> <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>s<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>.</span>StartsWith<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>account</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    OpenDataGridSetting<span style='color:#308080; '>(</span>dgs_acm_win<span style='color:#308080; '>,</span> accountMarginListView<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnReloadAcc_Click<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> acc <span style='color:#308080; '>=</span> accountMarginListView<span style='color:#308080; '>.</span>SelectedItem <span style='color:#200080; font-weight:bold; '>as</span> SPAccountMarginData<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>acc <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> title <span style='color:#308080; '>=</span> LanguageSetting<span style='color:#308080; '>.</span>GetLanguageValue<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>ACCMGN_RELOADACC</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> cap <span style='color:#308080; '>=</span> LanguageSetting<span style='color:#308080; '>.</span>GetLanguageValue<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>ACCMGN_RELOADACC</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> caption <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>{cap} [{acc.AccNo}]?</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> sb <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SimpleMessageBox<span style='color:#308080; '>(</span>title<span style='color:#308080; '>,</span> caption<span style='color:#308080; '>,</span> SimpleMessageBoxMode<span style='color:#308080; '>.</span>YESNO<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> b <span style='color:#308080; '>=</span> sb<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>b <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> req <span style='color:#308080; '>=</span> LanguageSetting<span style='color:#308080; '>.</span>GetLanguageValue<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>ACCMGN_REQSENT</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                caption <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>{cap} [{acc.AccNo}] {req}!</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                apiProxy<span style='color:#308080; '>.</span>AccountDataService<span style='color:#308080; '>.</span>SwitchAccount<span style='color:#308080; '>(</span>acc<span style='color:#308080; '>.</span>AccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                sb <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SimpleMessageBox<span style='color:#308080; '>(</span>title<span style='color:#308080; '>,</span> caption<span style='color:#308080; '>,</span> SimpleMessageBoxMode<span style='color:#308080; '>.</span>OK<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                sb<span style='color:#308080; '>.</span>ShowDialog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnSidePanelChanged<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> RoutedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>tbSidePanel<span style='color:#308080; '>.</span>IsChecked <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                cdSide1<span style='color:#308080; '>.</span>Width <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> GridLength<span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                cdSide2<span style='color:#308080; '>.</span>Width <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> GridLength<span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#406080; '>{</span>
+                cdSide1<span style='color:#308080; '>.</span>Width <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> GridLength<span style='color:#308080; '>(</span><span style='color:#008c00; '>260</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                cdSide2<span style='color:#308080; '>.</span>Width <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> GridLength<span style='color:#308080; '>(</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-13 09:46:23 UTC -->

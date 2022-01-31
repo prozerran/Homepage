@@ -1,0 +1,91 @@
+Assembly Language
+SAL                     Simple Assembly Language
+-------------------------------------------------------------------------------
+move        x, y            x = y
+add         x, y, z         x = y + z
+sub         x, y, z         x = y - z
+mul         x, y, z         x = y * z
+div         x, y, z         x = y / z
+rem         x, y, z         x = y % z
+cvt         x, y            x = y; with type conversion
+not         x, y            x = NOT y
+and         x, y, z         x = y AND z
+or          x, y, z         x = y OR z
+nand        x, y, z         x = y NAND z
+nor         x, y, z         x = y NOR z
+xor         x, y, z         x = y XOR z
+xnor        x, y, z         x = y XNOR z
+sll         x, y, AMT       x = y; shift left by AMT bits
+srl         x, y, AMT       x = y; shift right by AMT bits
+sra         x, y, AMT       x = y; shift right by AMT bits
+rol         x, y, AMT       x = y; rotate left by AMT bits
+ror         x, y, AMT       x = y; rotate right by AMT bits
+b           label           goto label
+j           label           goto label
+beg         y, z, label     if (y == z) then goto label
+bne         y, z, label     if (y != z) then goto label
+blt         y, z, label     if (y < z) then goto label
+bgt         y, z, label     if (y > z) then goto label
+ble         y, z, label     if (y <= z) then goto label
+bge         y, z, label     if (y >= z) then goto label
+beqz        y, label        if (y == 0) then goto label
+bnez        y, label        if (y != 0) then goto label
+bltz        y, label        if (y < 0) then goto label
+bgtz        y, label        if (y > 0) then goto label
+blez        y, label        if (y <= 0) then goto label
+bgez        y, label        if (y >= 0) then goto label
+la          x, label        x = label
+put         x               x is written to the screen
+get         x               x = value type at keyboard
+puts        string          string is written to the screen
+getc        x               x = the ASCII code of value
+putc        y               write ASCII char y to screen
+nop                         no operation
+
+Reference
+x           - must be a variable
+y           - may be variable or constant
+z           - may be variable or constant
+string      - a NULL terminated string
+AMT -        may be variable or constant
+
+MAL                         MIPS Assembly Language
+-------------------------------------------------------------------------------
+la          R, label        R = label
+li          R, constant     R = constant
+lw          R, address      R = contents of address
+lb          R, address      R = (m[add]7)^24 || m[add]
+lbu         R, address      R = 0^24 || m[address]
+sw          R, address      contents of R = address
+sb          R, address      m[addresss] = [R]7..0
+add         D, S1, S2       D = S1 + S2
+sub         D, S1, S2       D = S1 - S2
+mul         D, S1, S2       D = S1 * S2
+div         D, S1, S2       D = S1 / S2
+rem         D, S1, S2       D = S1 % S2
+and         D, S1, S2       D = S1 AND S2
+or          D, S1, S2       D = S1 OR S2
+xor         D, S1, S2       D = S1 XOR S2
+nor         D, S1, S2       D = S1 NOR S2
+not         D, S1           D = NOT S1
+move        D, S2           D = S2
+sll         Rd, Rt, AMT     Rd = [Rt]31-AMT..0 || 0^AMT
+srl         Rd, Rt, AMT     Rd = 0^AMT || [Rt]31...AMT
+sra         Rd, Rt, AMT     Rd = ([Rt]31)^AMT || [Rt]31..AMT
+b           label           goto label
+beg         Rs, Rt, label   if (Rs == Rt) then goto label
+bne         Rs, Rt, label   if (Rs != Rt) then goto label
+blt         Rs, Rt, label   if (Rs < Rt) then goto label
+bgt         Rs, Rt, label   if (Rs > Rt) then goto label
+ble         Rs, Rt, label   if (Rs <= Rt) then goto label
+bge         Rs, Rt, label   if (Rs >= Rt) then goto label
+bltz        R, label        if (R < 0) then goto label
+bgtz        R, label        if (R > 0) then goto label
+blez        R, label        if (R <= 0) then goto label
+bgez        R, label        if (R >= 0) then goto label
+bnez        R, label        if (R != 0) then goto label
+begz        R, label        if (R == 0) then goto label
+
+Reference
+R, Rb, Rd, Rs, and Rt are the contents or a general register
+|| indicates concatenation of bit fields

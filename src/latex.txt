@@ -1,0 +1,94 @@
+LATEX document control options reference
+-------------------------------------------------------------------------------
+\documentstyle[option]{style}       Basic document page layout; font
+\pageheight{N-units}                Length of page
+\pagewidth{N-units}                 Width of page
+\leftmargin{N-units}                Size of left margin
+\rightmargin{N-units}               Size of right margin
+\title{TITLE}                       Document title
+\author{TEXT}                       Names, addresses, etc. of authors
+\thanks{TEXT}                       Acknowledgments
+\begin{abstract}...\end{abstract}   Abstract enviornment
+\tableofcontents                    No argument
+\listoffigures                      No argument
+\listoftables                       No argument
+\date{item}                         Current date
+\begin{document}...\end{document}   Document enviornment
+\maketitle                          Put the title here, after \begin
+\include{DOC}                       Insert DOC to compile here; DOC
+                                    name ends with ".tex"
+\appendix{TEXT}                     Chapter level header with TEXT
+                                    text
+\printindex                         Print the index now
+\bibliography{FILE}                 Name of file bibliographic
+                                    entries; FILE name ends with ".bib"
+\bibliographystyle{STYLE}           Type of bibliography formatting
+                                    desired; STYLE type ends with ".sty"
+
+LATEX page control options reference
+-------------------------------------------------------------------------------
+\newpage                            Break page here and start a new page
+
+LATEX font type options reference
+-------------------------------------------------------------------------------
+{\bf item}                          bold font
+{\em item}                          emphasis, italic
+{\sf item}                          san serif
+{\sl item}                          slant type
+{\tt item}                          typewriter (constant width) font
+
+LATEX font size options reference
+-------------------------------------------------------------------------------
+\tiny                               tiny text
+\footnotesize                       footnote-sized text
+\normalsize                         normal-sized text (for style option)
+\large                              large text
+\Large                              Large text
+\huge                               huge text
+\Huge                               Huge text
+
+LATEX sections header options reference
+-------------------------------------------------------------------------------
+\part{Part}                         Part I
+\chapter{Chapter}                   3 Chapter
+\section{Section}                   1.1 Section
+\subsection{Subsection}             1.1.1 Subsection
+\subsubsection{Subsubsection}       Subsubsection
+\paragraph{Paragraph}               Paragraph
+\subparagraph{Subparagraph}         Subparagraph
+
+LATEX paragraph style options reference
+-------------------------------------------------------------------------------
+\begin{enumerate} ...items...\end{enumerate}        1. Numbered list of items
+\begin{itemize}..items...\end{itemize}              *  Bulleted list of items
+\begin{description}...items...\end{description}     Item text in the paragraph
+                                                    is indented under item
+\begin{abstract}...text...\end{abstract}            abstract Indented and
+                                                    justified text with "abstract"
+                                                    centered above
+\begin{quote}...text...\end{quote}                  Indented and justified
+                                                    text
+\begin{verse}...text...\end{verse}                  Indented and not justified
+                                                    text
+\begin{verbatim}...text...\end{verbatim}            Format exactly as typed in
+                                                    constant width font
+
+LATEX figure control options reference
+-------------------------------------------------------------------------------
+\begin{figure}[htbc]..stuff..\end{figure}           Figure enviornment
+\begin{table}[htbc]..stuff..\end{table}             Table enviornment
+        h   Place the figure or table here
+        t   Place the figure of table at the top of a page
+        b   Place the figure or table at the bottom of a page
+        c   Place the figure or table at the center of a page
+\caption{text}                                      Creates a caption for figure or table
+\vspace{size-units}                                 Creates vertical space (e.g., for figure or table)
+                                                    between paragraphs
+
+LATEX reference control options reference
+-------------------------------------------------------------------------------
+\footnote{item}         Inserts a footnote with item as text
+\cite{bibitem}          Inserts a bibliographic cite for reference associated with
+                        bibitem key
+\ref{label}             Inserts section number in which label occurs
+\pageref{label}         Inserts a page number where label occurs

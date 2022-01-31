@@ -1,0 +1,40 @@
+# find files with setuid and setgid flag
+find / -type f -a \( -perm -4000 -o -perm -2000 \) -print
+
+# search all html files and replace them with one string to another.
+find . -name '*.html' -exec perl -i -pe 's!string to change!what to change it to!g' {} \;
+
+# look for SYN_RECEIVED for possible DOS attacks
+netstat -a -f inet
+
+# non-interactive way to send email at shell with attachment
+cat "emailbody" | mutt -s "subject" -a "attachment.doc" -x email@address
+
+# synchronize date/time with NTP automic time server
+/usr/sbin/ntpdate time.nist.gov
+
+For a shortcut to RESTART Windows XP:
+SHUTDOWN -r -t 01
+
+For a shortcut to SHUT DOWN Windows XP:
+SHUTDOWN -s -t 01
+
+validate XML against DTD
+xmllint --noout --dtdvalid ./epupdate_hist.dtd epupdate_hist.xml
+
+
+$ alias gdbbt="gdb -q -n -ex bt -batch"
+Print stack trace of a core file without needing to enter gdb interactively
+
+
+$ gdb -batch -ex "run" -ex "bt" ${my_program} 2>&1 | grep -v ^"No stack."$
+Run a program transparently, but print a stack trace if it fails
+
+
+$ gdb --batch --quiet -ex "thread apply all bt full" -ex "quit" ${exe} ${corefile}
+Print stack trace of a core file without needing to enter gdb interactively
+
+# code -> HTML
+https://tohtml.com/
+
+# web scrapper

@@ -1,0 +1,80 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> MongoDB<span style='color:#308080; '>.</span>Bson<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> MongoDB<span style='color:#308080; '>.</span>Driver<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://docs.mongodb.com/drivers/csharp/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://mongodb.github.io/mongo-csharp-driver/2.13/getting_started/quick_tour/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://cloud.mongodb.com/v2/6142bf8600516e180d5ff4b5#clusters</span>
+
+<span style='color:#595979; '>// Uses AWS cloud with NoSQL MongoDB storage (Atlas)</span>
+<span style='color:#595979; '>// Sample to add db/document with object data and delete data</span>
+<span style='color:#595979; '>// Display collections before/after insert/delete</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MongoData
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> name <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> type <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> count <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MongoDB <span style='color:#308080; '>:</span> ITopNugetPackages
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IMongoCollection<span style='color:#308080; '>&lt;</span>BsonDocument<span style='color:#308080; '>></span> collec<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> connStr <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>mongodb+srv://timhsu:abcd@cluster0.najcl.mongodb.net/myFirstDatabase?retryWrites=true&amp;w=majority</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> client <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MongoClient<span style='color:#308080; '>(</span>connStr<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> db <span style='color:#308080; '>=</span> client<span style='color:#308080; '>.</span>GetDatabase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>myFirstDatabase</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            collec <span style='color:#308080; '>=</span> db<span style='color:#308080; '>.</span>GetCollection<span style='color:#308080; '>&lt;</span>BsonDocument<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>config</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//var document = new BsonDocument</span>
+            <span style='color:#595979; '>//{</span>
+            <span style='color:#595979; '>//    { "name", "Street Fighter" },</span>
+            <span style='color:#595979; '>//    { "type", "Game" },</span>
+            <span style='color:#595979; '>//    { "count", 2 },</span>
+            <span style='color:#595979; '>//    { "info", new BsonDocument</span>
+            <span style='color:#595979; '>//        {</span>
+            <span style='color:#595979; '>//            { "x", 20 },</span>
+            <span style='color:#595979; '>//            { "y", 12 }</span>
+            <span style='color:#595979; '>//        }}</span>
+            <span style='color:#595979; '>//};</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> mongoData <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> MongoData <span style='color:#406080; '>{</span> name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Tim</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> type <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>DB</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> count <span style='color:#308080; '>=</span> <span style='color:#008c00; '>3</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> document <span style='color:#308080; '>=</span> mongoData<span style='color:#308080; '>.</span>ToBsonDocument<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            collec<span style='color:#308080; '>.</span>InsertOne<span style='color:#308080; '>(</span>document<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            DisplayAll<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// now delete and display again</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> filter <span style='color:#308080; '>=</span> Builders<span style='color:#308080; '>&lt;</span>BsonDocument<span style='color:#308080; '>></span><span style='color:#308080; '>.</span>Filter<span style='color:#308080; '>.</span>Eq<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>count</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            collec<span style='color:#308080; '>.</span>DeleteMany<span style='color:#308080; '>(</span>filter<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            DisplayAll<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> DisplayAll<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> doclist <span style='color:#308080; '>=</span> collec<span style='color:#308080; '>.</span>Find<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>new</span> BsonDocument<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> doc <span style='color:#200080; font-weight:bold; '>in</span> doclist<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>doc<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-09-16 05:36:07 UTC -->

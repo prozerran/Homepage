@@ -1,0 +1,15 @@
+GDB (The GNU Debugger)
+Command: gdb>               Discription
+----------------------------------------------------------------------------
+b   linenumber              Set breatpoint
+r                           Run program
+c                           Continue execution
+b   filename:#num           Set breakpoint in different file
+s                           Step program
+n                           Step over functions
+p   varname                 Print value of variable
+disp    varname             Print value of var and turns p on
+del $num                    Turn off breakpoint or display
+h                           Help on commands
+q                           Quit GDB
+

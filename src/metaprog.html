@@ -1,0 +1,209 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Reflection<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Dynamic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Z<span style='color:#308080; '>.</span>Expressions<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Newtonsoft<span style='color:#308080; '>.</span>Json<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://eval-expression.net/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://eval-expression.net/online-examples</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainMetaProgrammingDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> ConcreteType
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> ID <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TestSimple<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Parameter: Anonymous Type</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> result <span style='color:#308080; '>=</span> Eval<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>X + Y</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#406080; '>{</span> X <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> Y <span style='color:#308080; '>=</span> <span style='color:#008c00; '>6</span> <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Parameter: Argument Position</span>
+            result <span style='color:#308080; '>=</span> Eval<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>{0} + {1}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Parameter: Class Member</span>
+            dynamic expandoObject <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ExpandoObject<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            expandoObject<span style='color:#308080; '>.</span>X <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#406080; '>;</span>
+            expandoObject<span style='color:#308080; '>.</span>Y <span style='color:#308080; '>=</span> <span style='color:#008c00; '>9</span><span style='color:#406080; '>;</span>
+            result <span style='color:#308080; '>=</span> Eval<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>X + Y</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> expandoObject<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Parameter: Dictionary Key</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> values <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>object</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>X</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>4</span> <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span> <span style='color:#406080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Y</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>2</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            result <span style='color:#308080; '>=</span> Eval<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>X + Y</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> values<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TestComplex<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                List<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> expressions <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Math.Pow(2, 3)</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                    <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Math.pOW(2, 3)</span><span style='color:#800000; '>"</span>
+                <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> context <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EvalContext<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                context<span style='color:#308080; '>.</span>UseCache <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> expression <span style='color:#200080; font-weight:bold; '>in</span> expressions<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> context<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>expression<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>{0}: {1}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> expression<span style='color:#308080; '>,</span> result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>\nAfter context.IsCaseSensitive = false; \n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                context<span style='color:#308080; '>.</span>IsCaseSensitive <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> expression <span style='color:#200080; font-weight:bold; '>in</span> expressions<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> context<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>expression<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>{0}: {1}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> expression<span style='color:#308080; '>,</span> result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>\nAfter context.BindingFlags = BindingFlags.IgnoreCase; \n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                context<span style='color:#308080; '>.</span>BindingFlags <span style='color:#308080; '>=</span> BindingFlags<span style='color:#308080; '>.</span>Public<span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> expression <span style='color:#200080; font-weight:bold; '>in</span> expressions<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> context<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>expression<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>{0}: {1}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> expression<span style='color:#308080; '>,</span> result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception e<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// demonstrate new object creation and assignment</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TestConcreteType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            EvalManager<span style='color:#308080; '>.</span>DefaultContext<span style='color:#308080; '>.</span>RegisterType<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>typeof</span><span style='color:#308080; '>(</span>ConcreteType<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> list <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>5</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> list2 <span style='color:#308080; '>=</span> list<span style='color:#308080; '>.</span>SelectDynamic<span style='color:#308080; '>(</span>x <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>new ConcreteType() { ID = x }</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Cast<span style='color:#308080; '>&lt;</span>ConcreteType<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> json <span style='color:#308080; '>=</span> JsonConvert<span style='color:#308080; '>.</span>SerializeObject<span style='color:#308080; '>(</span>list2<span style='color:#308080; '>,</span> Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>json<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// demonstrate list of meta-program</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TestMyMetaExpression<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> exprs <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Math.Pow(2, 3)</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                    <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Math.Max(3, 9)</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                    <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Console.WriteLine(\"Hello World\")</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> context <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EvalContext<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> UseCache <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> expr <span style='color:#200080; font-weight:bold; '>in</span> exprs<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> context<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>expr<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>{0}: {1}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> expr<span style='color:#308080; '>,</span> result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception e<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// demonstrate simple if-else conditional statements</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> TestMetaIsPosOrNeg<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> num<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> context <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EvalContext<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> UseCache <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> metacode <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> StringBuilder<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>int x = {num};</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>if (x > 0)</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>{ Console.WriteLine($\"POSITIVE. X = {x}\"); }</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>else</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>{ Console.WriteLine($\"NEGATIVE. X = {x}\"); }</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> context<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>metacode<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception e<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Demonstrate meta-programming with calculating factorial and returning the result</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>long</span> TestMetaFactorial<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> number<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> context <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> EvalContext<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> UseCache <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> metacode <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> StringBuilder<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>long fact = 1;</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>int numb = {number};</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Console.WriteLine($\"Calculating Factorial of {numb}.\");</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>for (int i = 1; i &lt;= numb; i++) {</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>    fact = fact * i;</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Console.WriteLine($\"{numb}! = {fact}.\");</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                metacode<span style='color:#308080; '>.</span>Append<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>return fact;</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> context<span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>metacode<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>                
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>Return value is: {result}\r\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>return</span> Convert<span style='color:#308080; '>.</span>ToInt64<span style='color:#308080; '>(</span>result<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception e<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            TestSimple<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestComplex<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestConcreteType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestMyMetaExpression<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            TestMetaIsPosOrNeg<span style='color:#308080; '>(</span><span style='color:#008c00; '>2</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestMetaIsPosOrNeg<span style='color:#308080; '>(</span><span style='color:#308080; '>-</span><span style='color:#008c00; '>12</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestMetaIsPosOrNeg<span style='color:#308080; '>(</span><span style='color:#008c00; '>8</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestMetaIsPosOrNeg<span style='color:#308080; '>(</span><span style='color:#308080; '>-</span><span style='color:#008c00; '>27</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestMetaIsPosOrNeg<span style='color:#308080; '>(</span><span style='color:#008c00; '>28</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestMetaIsPosOrNeg<span style='color:#308080; '>(</span><span style='color:#308080; '>-</span><span style='color:#008c00; '>81</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            TestMetaFactorial<span style='color:#308080; '>(</span><span style='color:#008c00; '>3</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestMetaFactorial<span style='color:#308080; '>(</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TestMetaFactorial<span style='color:#308080; '>(</span><span style='color:#008c00; '>12</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-03 09:23:34 UTC -->

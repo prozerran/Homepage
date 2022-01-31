@@ -1,0 +1,753 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#595979; '>// *************************************************************************************</span>
+<span style='color:#595979; '>// SCICHART® Copyright SciChart Ltd. 2011-2021. All rights reserved.</span>
+<span style='color:#595979; '>//  </span>
+<span style='color:#595979; '>// Web: </span><span style='color:#5555dd; '>http://www.scichart.com</span>
+<span style='color:#595979; '>//   Support: </span><span style='color:#7144c4; '>support@scichart.com</span>
+<span style='color:#595979; '>//   Sales:   </span><span style='color:#7144c4; '>sales@scichart.com</span>
+<span style='color:#595979; '>// </span>
+<span style='color:#595979; '>// CreateMultiPaneStockChartsViewModel.cs is part of the SCICHART® Examples. Permission is hereby granted</span>
+<span style='color:#595979; '>// to modify, create derivative works, distribute and publish any part of this source</span>
+<span style='color:#595979; '>// code whether for commercial, private or personal use. </span>
+<span style='color:#595979; '>// </span>
+<span style='color:#595979; '>// The SCICHART® examples are distributed in the hope that they will be useful, but</span>
+<span style='color:#595979; '>// without any warranty. It is provided "AS IS" without warranty of any kind, either</span>
+<span style='color:#595979; '>// expressed or implied. </span>
+<span style='color:#595979; '>// *************************************************************************************</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Input<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Media<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>poco<span style='color:#308080; '>.</span>order<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>BusinessLayer<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Models<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Views<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Charting<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Charting<span style='color:#308080; '>.</span>Common<span style='color:#308080; '>.</span>Helpers<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Charting<span style='color:#308080; '>.</span>Model<span style='color:#308080; '>.</span>ChartSeries<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Charting<span style='color:#308080; '>.</span>ViewportManagers<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Charting<span style='color:#308080; '>.</span>Visuals<span style='color:#308080; '>.</span>Annotations<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Charting<span style='color:#308080; '>.</span>Visuals<span style='color:#308080; '>.</span>TradeChart<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Core<span style='color:#308080; '>.</span>Framework<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Data<span style='color:#308080; '>.</span>Model<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Examples<span style='color:#308080; '>.</span>Examples<span style='color:#308080; '>.</span>AnnotateAChart<span style='color:#308080; '>.</span>OverlayTradeMarkers<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Examples<span style='color:#308080; '>.</span>ExternalDependencies<span style='color:#308080; '>.</span>Common<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Examples<span style='color:#308080; '>.</span>ExternalDependencies<span style='color:#308080; '>.</span>Data<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Common<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Data<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>ObjectModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SciChart<span style='color:#308080; '>.</span>Charting<span style='color:#308080; '>.</span>DrawingTools<span style='color:#308080; '>.</span>TradingAnnotations<span style='color:#308080; '>.</span>ViewModels<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// Separate each class in their own files, as they are partial class of</span>
+<span style='color:#595979; '>// ChartAnalysisProControlViewModel</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPTrader<span style='color:#308080; '>.</span>ViewModels
+<span style='color:#406080; '>{</span>
+    <span style='color:#595979; '>// SciChart ViewModel Annotations</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> partial <span style='color:#200080; font-weight:bold; '>class</span> ChartAnalysisProControlViewModel <span style='color:#308080; '>:</span> SPBindableBase
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> _rolloverEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> _cursorEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> _isPanEnabled<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> _isZoomEnabled<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand ZoomModeCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand PanModeCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand ZoomExtentsCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand CursorModeCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand RolloverModeCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> ObservableCollection<span style='color:#308080; '>&lt;</span>IAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>></span> CurrentAnnotationMap <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>,</span> ObservableCollection<span style='color:#308080; '>&lt;</span>IAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> SPCurrentPriceAnnotationViewModel currentPriceAnno <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> Action OnAnnotationDrawn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> VerticalLineAnnotationViewModel cutoffAnno <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> InitAnnotations<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ZoomModeCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>(</span>SetZoomMode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            PanModeCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>(</span>SetPanMode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ZoomExtentsCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>(</span>ZoomExtends<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            CursorModeCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>(</span>SetCursorMode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            RolloverModeCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>(</span>SetRolloverMode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ZoomExtends<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>//_viewportManager.AnimateZoomExtents(TimeSpan.FromMilliseconds(500));</span>
+            _viewportManager<span style='color:#308080; '>.</span>ZoomExtents<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>       
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> IsPanEnabled
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _isPanEnabled<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _isPanEnabled<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> IsZoomEnabled
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _isZoomEnabled<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _isZoomEnabled<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> CursorEnabled
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _cursorEnabled<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _cursorEnabled<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> RolloverEnabled
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _rolloverEnabled<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _rolloverEnabled<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> SetPanMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IsPanEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            IsZoomEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> SetZoomMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IsPanEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            IsZoomEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>void</span> SetCursorMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            CursorEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            RolloverEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>void</span> SetRolloverMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            CursorEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            RolloverEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand SetTradingAnnotationCreationTypeCommand
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>&lt;</span>Type<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>SetTradingAnnotationTypeExecute<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand SetRegularAnnotationCreationTypeCommand
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>&lt;</span>Type<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>SetRegularAnnotationTypeExecute<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand DeleteAnnotationCommand
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>(</span>DeleteSelectedAnnotation<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand DeleteAllAnnotationCommand
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>(</span>DeleteAllAnnotation<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> DeleteSelectedAnnotation<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> sel <span style='color:#308080; '>=</span> ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>SelectedAnnotation<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>sel <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                sel <span style='color:#308080; '>=</span> ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>FirstOrDefault<span style='color:#308080; '>(</span>x <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> x<span style='color:#308080; '>.</span>IsSelected <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Remove<span style='color:#308080; '>(</span>sel<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> DeleteAllAnnotation<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> annos <span style='color:#308080; '>=</span> ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> annolist <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span>IAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>annos<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#200080; font-weight:bold; '>in</span> annolist<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno <span style='color:#200080; font-weight:bold; '>is</span> SPCurrentPriceAnnotationViewModel<span style='color:#308080; '>)</span>  <span style='color:#595979; '>// skip current price anno</span>
+                    <span style='color:#200080; font-weight:bold; '>continue</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno <span style='color:#200080; font-weight:bold; '>is</span> VerticalLineAnnotationViewModel<span style='color:#308080; '>)</span>    <span style='color:#595979; '>// skip cutoff anno</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno<span style='color:#308080; '>.</span>StyleKey <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>CutOffLineStyle</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span>
+                        <span style='color:#200080; font-weight:bold; '>continue</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Remove<span style='color:#308080; '>(</span>anno<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> ToggleShowAllAnnotations<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span> flag<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> annos <span style='color:#308080; '>=</span> ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> annolist <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span>IAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>annos<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#200080; font-weight:bold; '>in</span> annolist<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno <span style='color:#200080; font-weight:bold; '>is</span> SPCurrentPriceAnnotationViewModel<span style='color:#308080; '>)</span>  <span style='color:#595979; '>// skip current price anno</span>
+                    <span style='color:#200080; font-weight:bold; '>continue</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno <span style='color:#200080; font-weight:bold; '>is</span> VerticalLineAnnotationViewModel<span style='color:#308080; '>)</span>    <span style='color:#595979; '>// skip cutoff anno</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno<span style='color:#308080; '>.</span>StyleKey <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>CutOffLineStyle</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span>
+                        <span style='color:#200080; font-weight:bold; '>continue</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>flag<span style='color:#308080; '>)</span>
+                    anno<span style='color:#308080; '>.</span>IsHidden <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>else</span>
+                    anno<span style='color:#308080; '>.</span>IsHidden <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> ToggleShowCutOffAnnotations<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span> flag<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> annos <span style='color:#308080; '>=</span> ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> annolist <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span>IAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>annos<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#200080; font-weight:bold; '>in</span> annolist<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno <span style='color:#200080; font-weight:bold; '>is</span> VerticalLineAnnotationViewModel<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno<span style='color:#308080; '>.</span>StyleKey <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>CutOffLineStyle</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>flag<span style='color:#308080; '>)</span>
+                            anno<span style='color:#308080; '>.</span>IsHidden <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+                        <span style='color:#200080; font-weight:bold; '>else</span>
+                            anno<span style='color:#308080; '>.</span>IsHidden <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> SetTradingAnnotationTypeExecute<span style='color:#308080; '>(</span>Type type<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IsPanEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            IsZoomEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>SetTradingAnnotationTypeExecute<span style='color:#308080; '>(</span>type<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> SetRegularAnnotationTypeExecute<span style='color:#308080; '>(</span>Type type<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IsPanEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            IsZoomEnabled <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>SetRegularAnnotationTypeExecute<span style='color:#308080; '>(</span>type<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> AddCutoffLineAnnotation<span style='color:#308080; '>(</span>DateTime dt<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> idx<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> VerticalLineAnnotationViewModel
+            <span style='color:#406080; '>{</span>
+                <span style='color:#595979; '>//CoordinateMode = AnnotationCoordinateMode.RelativeY,</span>
+                X1 <span style='color:#308080; '>=</span> idx<span style='color:#308080; '>,</span>
+                Y1 <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span>
+                Y2 <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span>
+                StyleKey <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>CutOffLineStyle</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                Tooltip <span style='color:#308080; '>=</span> dt<span style='color:#308080; '>.</span>ToLocalTime<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>anno<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> AddCutoffLineAnnotation<span style='color:#308080; '>(</span>ChartDataSeries prices<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> prices<span style='color:#308080; '>.</span>CutoffData<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>for</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> i <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span> i <span style='color:#308080; '>&lt;</span> dd<span style='color:#308080; '>.</span>Count<span style='color:#406080; '>;</span> i<span style='color:#308080; '>+</span><span style='color:#308080; '>+</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>var</span> dt <span style='color:#308080; '>=</span> prices<span style='color:#308080; '>.</span>TimeData<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+                    AddCutoffLineAnnotation<span style='color:#308080; '>(</span>dt<span style='color:#308080; '>,</span> i<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> EcodeAnnotationToBase64<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>ChartPaneViewModels<span style='color:#308080; '>.</span>Count <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> annolist <span style='color:#308080; '>=</span> ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Where<span style='color:#308080; '>(</span>x <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> x<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Name <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>typeof</span><span style='color:#308080; '>(</span>T<span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Name<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> annoSave <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span>IAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#200080; font-weight:bold; '>in</span> annolist<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno <span style='color:#200080; font-weight:bold; '>is</span> SPCurrentPriceAnnotationViewModel<span style='color:#308080; '>)</span>  <span style='color:#595979; '>// skip current price anno</span>
+                    <span style='color:#200080; font-weight:bold; '>continue</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno <span style='color:#200080; font-weight:bold; '>is</span> VerticalLineAnnotationViewModel<span style='color:#308080; '>)</span>    <span style='color:#595979; '>// skip cutoff anno</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno<span style='color:#308080; '>.</span>StyleKey <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>CutOffLineStyle</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span>
+                        <span style='color:#200080; font-weight:bold; '>continue</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> t1 <span style='color:#308080; '>=</span> anno<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> t2 <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>typeof</span><span style='color:#308080; '>(</span>T<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>t1<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span>t2<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                    annoSave<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>anno<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>annoSave<span style='color:#308080; '>.</span>Count <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>return</span> annoSave<span style='color:#308080; '>.</span>ToBase64<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AddSavedAnnotations<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Clear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> uid_key <span style='color:#308080; '>=</span> SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>GetUniqueLoggedInUserId<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> dt <span style='color:#308080; '>=</span> SQLiteChartAnno<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>SelectAnnotationRecord<span style='color:#308080; '>(</span>uid_key<span style='color:#308080; '>,</span> prodCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> result <span style='color:#308080; '>=</span> dt<span style='color:#308080; '>.</span>AsEnumerable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> b64_anno <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>[</span><span style='color:#008c00; '>20</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#200080; font-weight:bold; '>in</span> result<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> dd <span style='color:#308080; '>=</span> res<span style='color:#308080; '>.</span>ItemArray<span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>//dd[0];  // id</span>
+                <span style='color:#595979; '>//dd[1];  // uid_key</span>
+                <span style='color:#595979; '>//dd[2];  // prodCode</span>
+
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>3</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// LineAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>4</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// BoxAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>2</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// TextAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>3</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>6</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// AxisAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>4</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>7</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// LineArrowAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>8</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// HorAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>6</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>9</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>      <span style='color:#595979; '>// VerAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>7</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>10</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>     <span style='color:#595979; '>// BrushAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>8</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>11</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>     <span style='color:#595979; '>// HaSAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>9</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>12</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>     <span style='color:#595979; '>// FibRAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>10</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>13</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>    <span style='color:#595979; '>// FibEAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>11</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>14</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>    <span style='color:#595979; '>// ElliotAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>12</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>15</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>    <span style='color:#595979; '>// PitchAnno</span>
+                b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>13</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> Convert<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span>dd<span style='color:#308080; '>[</span><span style='color:#008c00; '>16</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>    <span style='color:#595979; '>// XABCDAnno</span>
+                <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>LineAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>BoxAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>TextAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>2</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>AxisMarkerAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>3</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>LineArrowAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>4</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>HorizontalLineAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>VerticalLineAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>6</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>BrushAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>7</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>HeadAndShouldersAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>8</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>FibonacciRetracementAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>9</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>FibonacciExtensionAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>10</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>ElliotWaveAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>11</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>PitchforkAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>12</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            AddSavedAnnotations<span style='color:#308080; '>&lt;</span>XabcdAnnotationViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>b64_anno<span style='color:#308080; '>[</span><span style='color:#008c00; '>13</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> AddSavedAnnotations<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> b64<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>IsNullOrEmpty<span style='color:#308080; '>(</span>b64<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> annoList <span style='color:#308080; '>=</span> b64<span style='color:#308080; '>.</span>FromBase64<span style='color:#308080; '>&lt;</span>List<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#200080; font-weight:bold; '>in</span> annoList<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>anno <span style='color:#200080; font-weight:bold; '>is</span> T<span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>var</span> annovm <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>IAnnotationViewModel<span style='color:#308080; '>)</span> Convert<span style='color:#308080; '>.</span>ChangeType<span style='color:#308080; '>(</span>anno<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>typeof</span><span style='color:#308080; '>(</span>T<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>annovm<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AddCurrentPriceAnnotation<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>double</span> price<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            currentPriceAnno <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPCurrentPriceAnnotationViewModel<span style='color:#308080; '>(</span>price<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                CoordinateMode <span style='color:#308080; '>=</span> AnnotationCoordinateMode<span style='color:#308080; '>.</span>RelativeX<span style='color:#308080; '>,</span>
+                X1 <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span>  <span style='color:#595979; '>// adjust the start position of SPLine head</span>
+                X2 <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span>
+                Y1 <span style='color:#308080; '>=</span> price<span style='color:#308080; '>,</span>
+                Y2 <span style='color:#308080; '>=</span> price<span style='color:#308080; '>,</span>
+                IsEditable <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>,</span>
+                DragDirections <span style='color:#308080; '>=</span> XyDirection<span style='color:#308080; '>.</span>YDirection
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>currentPriceAnno<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> ToggleCurrentPriceAnnotation<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span> flag<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>flag<span style='color:#308080; '>)</span>
+                currentPriceAnno<span style='color:#308080; '>.</span>IsHidden <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+                currentPriceAnno<span style='color:#308080; '>.</span>IsHidden <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> UpdateCurrentPriceAnnotation<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>double</span> price<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>currentPriceAnno <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                AddCurrentPriceAnnotation<span style='color:#308080; '>(</span>price<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            currentPriceAnno<span style='color:#308080; '>.</span>Y1 <span style='color:#308080; '>=</span> price<span style='color:#406080; '>;</span>
+            currentPriceAnno<span style='color:#308080; '>.</span>Y2 <span style='color:#308080; '>=</span> price<span style='color:#406080; '>;</span>
+            currentPriceAnno<span style='color:#308080; '>.</span>AdjustMarker<span style='color:#308080; '>(</span>price<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AddBuyMarkerAnnotation<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> trade <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TradeEx<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                BuySell <span style='color:#308080; '>=</span> OrderSideEnum<span style='color:#308080; '>.</span>Buy<span style='color:#308080; '>,</span>
+                Price <span style='color:#308080; '>=</span> <span style='color:#008000; '>29451.0</span><span style='color:#308080; '>,</span>
+                Quantity <span style='color:#308080; '>=</span> <span style='color:#008c00; '>5</span><span style='color:#308080; '>,</span>
+                ProdCode <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Buy Test</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                TradeDate <span style='color:#308080; '>=</span> DateTime<span style='color:#308080; '>.</span>Now<span style='color:#308080; '>.</span>AddDays<span style='color:#308080; '>(</span><span style='color:#308080; '>-</span><span style='color:#008c00; '>3</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> BuyMarkerAnnotationViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                TradeData <span style='color:#308080; '>=</span> trade<span style='color:#308080; '>,</span>
+                X1 <span style='color:#308080; '>=</span> trade<span style='color:#308080; '>.</span>TradeDate<span style='color:#308080; '>,</span>
+                Y1 <span style='color:#308080; '>=</span> trade<span style='color:#308080; '>.</span>Price
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>anno<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AddSellMarkerAnnotation<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> trade <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> TradeEx<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                BuySell <span style='color:#308080; '>=</span> OrderSideEnum<span style='color:#308080; '>.</span>Sell<span style='color:#308080; '>,</span>
+                Price <span style='color:#308080; '>=</span> <span style='color:#008000; '>29551.0</span><span style='color:#308080; '>,</span>
+                Quantity <span style='color:#308080; '>=</span> <span style='color:#008c00; '>5</span><span style='color:#308080; '>,</span>
+                ProdCode <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Sell Test</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                TradeDate <span style='color:#308080; '>=</span> DateTime<span style='color:#308080; '>.</span>Now<span style='color:#308080; '>.</span>AddDays<span style='color:#308080; '>(</span><span style='color:#308080; '>-</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SellMarkerAnnotationViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                TradeData <span style='color:#308080; '>=</span> trade<span style='color:#308080; '>,</span>
+                X1 <span style='color:#308080; '>=</span> trade<span style='color:#308080; '>.</span>TradeDate<span style='color:#308080; '>,</span>
+                Y1 <span style='color:#308080; '>=</span> trade<span style='color:#308080; '>.</span>Price
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>anno<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AddNewsMarkerAnnotation<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> header<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> msg<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> news <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> NewsEvent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Headline <span style='color:#308080; '>=</span> header<span style='color:#308080; '>,</span>
+                EventDate <span style='color:#308080; '>=</span> DateTime<span style='color:#308080; '>.</span>Now<span style='color:#308080; '>.</span>AddHours<span style='color:#308080; '>(</span><span style='color:#308080; '>-</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+                Body <span style='color:#308080; '>=</span> msg
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> anno <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> NewsBulletAnnotationViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                NewsData <span style='color:#308080; '>=</span> news<span style='color:#308080; '>,</span>
+                X1 <span style='color:#308080; '>=</span> news<span style='color:#308080; '>.</span>EventDate
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            ChartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>AnnotationViewModels<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>anno<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>// SciChart ViewModel Events</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> partial <span style='color:#200080; font-weight:bold; '>class</span> ChartAnalysisProControlViewModel <span style='color:#308080; '>:</span> SPBindableBase<span style='color:#308080; '>,</span> TickerDataListener
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> IEventAggregator ea <span style='color:#308080; '>=</span> EventService<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>EventAggregator<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> SPApiProxyWrapper apiProxy <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> prevProd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IUpdateSuspender suspender <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> SPChartData spchartdata <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPChartData<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> prodCode <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> selectedTimeIndex<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> decInPrice <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> ChartDataSeries pseries <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> ChartDataOHLC price_last <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> BaseRenderableSeriesViewModel chart_series <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> IndexRange _xAxisVisibleRange<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> ObservableCollection<span style='color:#308080; '>&lt;</span>SPBaseChartPaneViewModel<span style='color:#308080; '>></span> _chartPaneViewModels <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ObservableCollection<span style='color:#308080; '>&lt;</span>SPBaseChartPaneViewModel<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> _verticalChartGroupId<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IViewportManager _viewportManager<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> ChartAnalysisProControl parentControl <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> Action<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> OnUpdateProd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> Action<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> OnPeriodChange <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ICommand TimeSequencerCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>new</span> ActionCommand<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span>OnTimePeriodChange<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ChartAnalysisProControlViewModel<span style='color:#308080; '>(</span>ChartAnalysisProControl parent<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            parentControl <span style='color:#308080; '>=</span> parent<span style='color:#406080; '>;</span>
+            apiProxy <span style='color:#308080; '>=</span> SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>ApiProxyWrapper<span style='color:#406080; '>;</span>
+
+            InitAnnotations<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// following will render the chart and any changes to style/interval</span>
+            chart_series <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> CandlestickRenderableSeriesViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// ChartGroup is an ID which is used to synchronize chart pane heights and mouse events. it must be unique per SciChartGroup, but differ if you have many top level SciChartGroups</span>
+            _verticalChartGroupId <span style='color:#308080; '>=</span> Guid<span style='color:#308080; '>.</span>NewGuid<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnTimePeriodChange<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> duration<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            OnPeriodChange?<span style='color:#308080; '>.</span>Invoke<span style='color:#308080; '>(</span>duration<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> RenderChartForProduct<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> prod<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> time_idx<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>IsNullOrEmpty<span style='color:#308080; '>(</span>prod<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            prodCode <span style='color:#308080; '>=</span> prod<span style='color:#406080; '>;</span>
+            OnUpdateProd?<span style='color:#308080; '>.</span>Invoke<span style='color:#308080; '>(</span>prodCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> product <span style='color:#308080; '>=</span> apiProxy<span style='color:#308080; '>.</span>MarketDataService<span style='color:#308080; '>.</span>GetProductData<span style='color:#308080; '>(</span>prod<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            parentControl<span style='color:#308080; '>.</span>tbProdName<span style='color:#308080; '>.</span>Text <span style='color:#308080; '>=</span> product<span style='color:#308080; '>.</span>StaticData<span style='color:#308080; '>.</span>ProductName<span style='color:#406080; '>;</span>
+            decInPrice <span style='color:#308080; '>=</span> product<span style='color:#308080; '>.</span>StaticData<span style='color:#308080; '>.</span>DecInPrice<span style='color:#406080; '>;</span>
+
+            apiProxy<span style='color:#308080; '>.</span>MarketDataService<span style='color:#308080; '>.</span>UnsubscribeTicker<span style='color:#308080; '>(</span>prevProd<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>   <span style='color:#595979; '>// move to Close</span>
+            apiProxy<span style='color:#308080; '>.</span>MarketDataService<span style='color:#308080; '>.</span>SubscribeTicker<span style='color:#308080; '>(</span>prodCode<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            prevProd <span style='color:#308080; '>=</span> prodCode<span style='color:#406080; '>;</span>
+
+            RenderChartAtTime<span style='color:#308080; '>(</span>time_idx<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> RenderChartAtTime<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> time_idx<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>int</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>60</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>switch</span> <span style='color:#308080; '>(</span>time_idx<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>5</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 5s</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>30</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 30s</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>60</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 1m</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>3</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>300</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 5m</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>4</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>600</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 10m</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>5</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>900</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 15m</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>6</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1800</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 30m</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>7</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>3600</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 1h</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>8</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>7200</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 2h</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>9</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>86400</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 1d</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>10</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>604800</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 1w</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>11</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>2592000</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 1month</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> <span style='color:#008c00; '>12</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>31536000</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 1y</span>
+
+                <span style='color:#200080; font-weight:bold; '>default</span><span style='color:#308080; '>:</span> intsec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>86400</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// 1d</span>
+            <span style='color:#406080; '>}</span>
+            RenderNewChart<span style='color:#308080; '>(</span>intsec<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> async <span style='color:#200080; font-weight:bold; '>void</span> RenderNewChart<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> intsec<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>IsNullOrEmpty<span style='color:#308080; '>(</span>prodCode<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//// save current annotations</span>
+            <span style='color:#595979; '>//if (_chartPaneViewModels.Count > 0)</span>
+            <span style='color:#595979; '>//{</span>
+            <span style='color:#595979; '>//    CurrentAnnotationMap[prevProd] = new ObservableCollection&lt;IAnnotationViewModel>(_chartPaneViewModels[0].AnnotationViewModels);</span>
+            <span style='color:#595979; '>//}</span>
+
+            price_last <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>// reset and block ticker push until we get chart data</span>
+
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> sw <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Stopwatch<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                sw<span style='color:#308080; '>.</span>Start<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                pseries <span style='color:#308080; '>=</span> await spchartdata<span style='color:#308080; '>.</span>GetChartDataSeriesAsync<span style='color:#308080; '>(</span>prodCode<span style='color:#308080; '>,</span> intsec<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                sw<span style='color:#308080; '>.</span>Stop<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Chart: Query took: {0} seconds</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> sw<span style='color:#308080; '>.</span>ElapsedMilliseconds <span style='color:#308080; '>/</span> <span style='color:#008000; '>1000.0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception e<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>EXCEPTION: GetChartDataSeriesAsync {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> e<span style='color:#308080; '>.</span>StackTrace<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            _chartPaneViewModels<span style='color:#308080; '>.</span>Clear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                _viewportManager <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DefaultViewportManager<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                SetZoomMode<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// first series is chart</span>
+                Pricevm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPPricePaneViewModel<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> pseries<span style='color:#308080; '>,</span> chart_series<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> IsFirstChartPane <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>,</span> ViewportManager <span style='color:#308080; '>=</span> _viewportManager <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+                _chartPaneViewModels<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>Pricevm<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                _chartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>decInPrice <span style='color:#308080; '>=</span> decInPrice<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span>Exception e<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>EXCEPTION: New PricePaneViewModel {0}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> e<span style='color:#308080; '>.</span>StackTrace<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#595979; '>//// load current annotation</span>
+            <span style='color:#595979; '>//if (CurrentAnnotationMap.ContainsKey(prodCode))</span>
+            <span style='color:#595979; '>//{</span>
+            <span style='color:#595979; '>//    var annovm = CurrentAnnotationMap[prodCode];</span>
+            <span style='color:#595979; '>//    annovm.ForEach(o => ChartPaneViewModels[0].AnnotationViewModels.Add(o));                </span>
+            <span style='color:#595979; '>//}</span>
+
+            AddSavedAnnotations<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>          <span style='color:#595979; '>// show previous annotations added by user</span>
+            ShowIndicator<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>                <span style='color:#595979; '>// initialize all indicators</span>
+
+            <span style='color:#595979; '>// set the last price and enable ticker push data</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>pseries <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp; pseries<span style='color:#308080; '>.</span>Size <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                price_last <span style='color:#308080; '>=</span> pseries<span style='color:#308080; '>[</span>pseries<span style='color:#308080; '>.</span>Size <span style='color:#308080; '>-</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+                AddCurrentPriceAnnotation<span style='color:#308080; '>(</span>price_last<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                AddCutoffLineAnnotation<span style='color:#308080; '>(</span>pseries<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                ToggleShowCutOffAnnotations<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#595979; '>// default dont show cutoff line</span>
+
+                <span style='color:#595979; '>//AddBuyMarkerAnnotation();</span>
+                <span style='color:#595979; '>//AddSellMarkerAnnotation();</span>
+            <span style='color:#406080; '>}</span>
+            RaisePropertyChanged<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>ChartPaneViewModels</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> IEnumerable<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> AllThemes <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> ThemeManager<span style='color:#308080; '>.</span>AllThemes<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> VerticalChartGroupId
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _verticalChartGroupId<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _verticalChartGroupId<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>/// &lt;summary></span>
+        <span style='color:#595979; '>/// Shared XAxis VisibleRange for all charts</span>
+        <span style='color:#595979; '>/// &lt;/summary></span>
+        <span style='color:#200080; font-weight:bold; '>public</span> IndexRange XVisibleRange
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _xAxisVisibleRange<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _xAxisVisibleRange<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ObservableCollection<span style='color:#308080; '>&lt;</span>SPBaseChartPaneViewModel<span style='color:#308080; '>></span> ChartPaneViewModels
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _chartPaneViewModels<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _chartPaneViewModels<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnTickerPush<span style='color:#308080; '>(</span>TickerPushMessage message<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>apiProxy<span style='color:#308080; '>.</span>UIHelper<span style='color:#308080; '>.</span>CanRefreshUI<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> AppConstants<span style='color:#308080; '>.</span>REFRESH_UI_THROTTLE<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> data <span style='color:#308080; '>=</span> message<span style='color:#308080; '>.</span>data<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>price_last <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp; prodCode<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>ProductCode<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                price_last<span style='color:#308080; '>.</span>Close <span style='color:#308080; '>=</span> data<span style='color:#308080; '>.</span>Price<span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>price_last<span style='color:#308080; '>.</span>Close <span style='color:#308080; '>></span> price_last<span style='color:#308080; '>.</span>High<span style='color:#308080; '>)</span>
+                    price_last<span style='color:#308080; '>.</span>High <span style='color:#308080; '>=</span> price_last<span style='color:#308080; '>.</span>Close<span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>price_last<span style='color:#308080; '>.</span>Close <span style='color:#308080; '>&lt;</span> price_last<span style='color:#308080; '>.</span>Low<span style='color:#308080; '>)</span>
+                    price_last<span style='color:#308080; '>.</span>Low <span style='color:#308080; '>=</span> price_last<span style='color:#308080; '>.</span>Close<span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>var</span> price_chart <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>IOhlcDataSeries<span style='color:#308080; '>&lt;</span>DateTime<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>double</span><span style='color:#308080; '>></span><span style='color:#308080; '>)</span>_chartPaneViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>ChartSeriesViewModels<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>DataSeries<span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span>price_chart<span style='color:#308080; '>.</span>SuspendUpdates<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#595979; '>// </span><span style='color:#ffffff; background:#808000; '>FIX, change to support append, that is, sliding datetime as a new "bar" of data appears</span>
+                    <span style='color:#595979; '>//if (price_chart.XValues.IndexOf(price_last.DateTime) >= 0)</span>
+                    <span style='color:#595979; '>//    price_chart.Update(price_last.DateTime, price_last.Open, price_last.High, price_last.Low, price_last.Close);</span>
+                    <span style='color:#595979; '>//else</span>
+                    <span style='color:#595979; '>//    price_chart.Append(price_last.DateTime, price_last.Open, price_last.High, price_last.Low, price_last.Close);</span>
+
+                    price_chart<span style='color:#308080; '>.</span>Update<span style='color:#308080; '>(</span>price_last<span style='color:#308080; '>.</span>DateTime<span style='color:#308080; '>,</span> price_last<span style='color:#308080; '>.</span>Open<span style='color:#308080; '>,</span> price_last<span style='color:#308080; '>.</span>High<span style='color:#308080; '>,</span> price_last<span style='color:#308080; '>.</span>Low<span style='color:#308080; '>,</span> price_last<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                    <span style='color:#595979; '>// update current price axis</span>
+                    UpdateCurrentPriceAnnotation<span style='color:#308080; '>(</span>price_last<span style='color:#308080; '>.</span>Close<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>// SciChart ViewModel Indicators</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> partial <span style='color:#200080; font-weight:bold; '>class</span> ChartAnalysisProControlViewModel <span style='color:#308080; '>:</span> SPBindableBase
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPPricePaneViewModel Pricevm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPVolumePaneViewModel Volumevm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPRsiPaneViewModel Rsivm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPMacdPaneViewModel Macdvm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPCciPaneViewModel Ccivm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPStochPaneViewModel Stochvm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPStochRsiPaneViewModel StochRsivm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPAdxPaneViewModel Adxvm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> ShowIndicator<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>Pricevm <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>    <span style='color:#595979; '>// main chart display must have been generated</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            Volumevm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPVolumePaneViewModel<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> pseries<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Title <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Volume</span><span style='color:#800000; '>"</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span> <span style='color:#595979; '>// IsLastChartPane = true</span>
+            Macdvm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPMacdPaneViewModel<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> pseries<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Title <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>MACD</span><span style='color:#800000; '>"</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            Rsivm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPRsiPaneViewModel<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> pseries<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Title <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>RSI</span><span style='color:#800000; '>"</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            Stochvm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPStochPaneViewModel<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> pseries<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Title <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>STOCH</span><span style='color:#800000; '>"</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            Adxvm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPAdxPaneViewModel<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> pseries<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Title <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>ADX</span><span style='color:#800000; '>"</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            StochRsivm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPStochRsiPaneViewModel<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> pseries<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Title <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>STOCH-RSI</span><span style='color:#800000; '>"</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            Ccivm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SPCciPaneViewModel<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> pseries<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Title <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>CCI</span><span style='color:#800000; '>"</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// TA on main chart screen</span>
+            Pricevm<span style='color:#308080; '>.</span>ShowMovingAverages<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbSma<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Pricevm<span style='color:#308080; '>.</span>ShowExponentialMovingAverages<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbEma<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Pricevm<span style='color:#308080; '>.</span>ShowBollingerBands<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbBol<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Pricevm<span style='color:#308080; '>.</span>ShowSAR<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbSar<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// TA on sub screens</span>
+            TogglePaneCommand<span style='color:#308080; '>(</span>Macdvm<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbMacd<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TogglePaneCommand<span style='color:#308080; '>(</span>Rsivm<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbRsi<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TogglePaneCommand<span style='color:#308080; '>(</span>Volumevm<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbVol<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TogglePaneCommand<span style='color:#308080; '>(</span>Stochvm<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbStoch<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TogglePaneCommand<span style='color:#308080; '>(</span>Adxvm<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbAdx<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TogglePaneCommand<span style='color:#308080; '>(</span>StochRsivm<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbStochRsi<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            TogglePaneCommand<span style='color:#308080; '>(</span>Ccivm<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>)</span>parentControl<span style='color:#308080; '>.</span>tbCci<span style='color:#308080; '>.</span>IsChecked<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TogglePaneCommand<span style='color:#308080; '>(</span>SPBaseChartPaneViewModel pane<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>bool</span> flag<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>flag<span style='color:#308080; '>)</span>
+                OpenPaneCommand<span style='color:#308080; '>(</span>pane<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+                ClosePaneCommand<span style='color:#308080; '>(</span>pane<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>void</span> OpenPaneCommand<span style='color:#308080; '>(</span>SPBaseChartPaneViewModel pane<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            _chartPaneViewModels<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>pane<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>void</span> ClosePaneCommand<span style='color:#308080; '>(</span>SPBaseChartPaneViewModel pane<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            _chartPaneViewModels<span style='color:#308080; '>.</span>Remove<span style='color:#308080; '>(</span>pane<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-16 02:34:10 UTC -->

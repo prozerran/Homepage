@@ -1,0 +1,68 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>ObjectModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Controls<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Data<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Documents<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Input<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Media<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Media<span style='color:#308080; '>.</span>Imaging<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Navigation<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#308080; '>.</span>Shapes<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>.</span>RegularExpressions<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPTrader<span style='color:#308080; '>.</span>BusinessLayer
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> SPWindow <span style='color:#308080; '>:</span> Window
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> PriceValidationTextBox<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> TextCompositionEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Regex regex <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Regex<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>[^0-9.-]+</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            e<span style='color:#308080; '>.</span>Handled <span style='color:#308080; '>=</span> regex<span style='color:#308080; '>.</span>IsMatch<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> NumberValidationTextBox<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> TextCompositionEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Regex regex <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Regex<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>[^0-9]+</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            e<span style='color:#308080; '>.</span>Handled <span style='color:#308080; '>=</span> regex<span style='color:#308080; '>.</span>IsMatch<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> NumberCommaValidationTextBox<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> TextCompositionEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Regex regex <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Regex<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>[^0-9,]+</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            e<span style='color:#308080; '>.</span>Handled <span style='color:#308080; '>=</span> regex<span style='color:#308080; '>.</span>IsMatch<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> SPUserControl <span style='color:#308080; '>:</span> UserControl
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> Action Editing <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> PriceValidationTextBox<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> TextCompositionEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Regex regex <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Regex<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>[^0-9.-]+</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            e<span style='color:#308080; '>.</span>Handled <span style='color:#308080; '>=</span> regex<span style='color:#308080; '>.</span>IsMatch<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Editing?<span style='color:#308080; '>.</span>Invoke<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> NumberValidationTextBox<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> TextCompositionEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Regex regex <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Regex<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>[^0-9]+</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            e<span style='color:#308080; '>.</span>Handled <span style='color:#308080; '>=</span> regex<span style='color:#308080; '>.</span>IsMatch<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Editing?<span style='color:#308080; '>.</span>Invoke<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> ChangeValidationTextBox<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> TextCompositionEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Editing?<span style='color:#308080; '>.</span>Invoke<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-16 02:26:22 UTC -->

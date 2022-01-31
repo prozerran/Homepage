@@ -1,0 +1,81 @@
+Text insertion and creation reference
+-------------------------------------------------------------------------------
+a           Insert characters starting to the right of where the cursor is
+A           Insert characters at the end of the current line
+i           Insert characters starting at the cursor location
+I           Insert characters at the beginning of the current line
+o           Insert characters on a new line below the current one
+O           Insert characters on a new line above the current one
+
+Cursor movement command reference
+-------------------------------------------------------------------------------
+j           Move cursor to the next line, in the same column as the cursor
+k           Move the cursor to the previous line, in the same column as cursor
+h           Move the cursor backward one character
+l           Move the cursor forward one character
+w           Move the cursor forward one word
+b           Move the cursor backward one word
+0           Move the cursor to the beginning of the line
+$           Move the cursor to the end of the line
+(           Move the cursor to the beginning of the current sentence
+)           Move the cursor to the end of the current sentence
+{           Move the cursor to the beginning of the current paragraph
+}           Move the cursor to the end of the current paragraph
+-           Move the cursor to the beginning of the previous line
++           Move the cursor to the beginning of the next line
+Cntl-u      Move the cursor up one screen
+Cntl-d      Move the cursor down one screen
+nG, :n      Move the cursor to line number "n"; G without n is end of file
+Cntl-l      Refresh the screen
+space       Move the cursor ahead one character
+<CR>        Move the cursor to the beginning of the next line
+
+Text alternation command reference
+-------------------------------------------------------------------------------
+Nx          Delete N characters to the right with current character
+rCh         Replace the current character with Ch
+J           Join next and present lines
+dNd, Ndd    Delete N lines starting on the current line
+D, d$       Delete to end of line
+dNw, dNb    Delete N words forward or backward
+dNG         Delete from line N through the current line
+yNy, Nyy    Copy/Yank N lines starting on the current line
+yNw, yNb    Copy/Yank N words forward of backward
+P           Paste deleted or copied text above the current line
+p           Paste deleted or copied text below the current line
+u           Undo the last command; this command toggles
+.           Repeat the last command
+
+Global command reference
+-------------------------------------------------------------------------------
+/string     Search forward for string
+?string     Search backward for string
+n           Search for the next occurance of string; either direction
+:N          Go to line number N
+:s/S1/S2    Search and replace; S1 is the old string, S2 the new one
+
+File manipulation command reference
+-------------------------------------------------------------------------------
+ZZ          Save the current file and exit from vi
+:q          Exit from vi without saving the current file
+:q!         Force and exit from vi without saving the current file
+:w          Write the the file without exiting vi
+:w NEW      Write to the file NEW without exiting vi
+:w!         Force a write to the current file without exiting vi
+:wq!        Force a write to the current file and then exit
+:r FILE     Read File into the current file at the cursor location
+
+Global command reference
+-------------------------------------------------------------------------------
+:set all    List all option values in effect
+:set list   Displays with special characters tab and line feed
+:set nolist Turns off special character display
+:set ai     Set the automatic indent mode so that every new line
+            starts where the beginning of the previous line did;
+            <Cntl-d> backspaces over the indent
+:set noai   Turn off automatic indentation
+:set ic     Set the ignore case mode; when searches are performed.
+            this will treat uppercase and lowercase characters equally
+:set noic   Turn off case insensitivity
+:set nu     Show line numbers in the left margin (indented)
+:set nonu   Turn off line numbering

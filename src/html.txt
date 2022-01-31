@@ -1,0 +1,259 @@
+HTML (Hyper Text Markup Language) Tags:
+
+GENERAL
+--------------------------------------------------------------------------- 
+Document Type       <HTML></HTML>      (beginning and end of file)
+Title               <TITLE></TITLE>    (must be in header)
+Header              <HEAD></HEAD>      (descriptive info, such as title)
+Body                <BODY></BODY>      (bulk of the page)
+Body                <BODY onLoad="funcname" onUnload="funcname"></BODY>
+
+
+STRUCTURAL DEFINITION
+---------------------------------------------------------------------------
+Heading             <H?></H?>                     (the spec. defines 6 levels)
+  Align Heading     <H? ALIGN=LEFT|CENTER|RIGHT></H?>
+Division            <DIV></DIV>
+  Align Division    <DIV ALIGN=LEFT|RIGHT|CENTER|JUSTIFY></DIV>
+Block Quote         <BLOCKQUOTE></BLOCKQUOTE>     (usually indented)
+Emphasis            <EM></EM>                     (usually displayed as italic)
+Strong Emphasis     <STRONG></STRONG>             (usually displayed as bold) 
+Citation            <CITE></CITE>                 (usually italics)
+Code                <CODE></CODE>                 (for source code listings)
+Sample Output       <SAMP></SAMP>
+eyboard Input       <KBD></KBD>
+Variable            <VAR></VAR>
+Definition          <DFN></DFN>                   (not widely implemented)
+Author's Address    <ADDRESS></ADDRESS>
+Large Font Size     <BIG></BIG>
+Small Font Size     <SMALL></SMALL>
+
+
+PRESENTATION FORMATTING
+---------------------------------------------------------------------------
+Bold                <B></B>
+Italic              <I></I>
+Underline           <U></U>                   (not widely implemented yet)
+Strikeout           <STRIKE></STRIKE>         (not widely implemented yet)
+Strikeout           <S></S>                   (not widely implemented yet)
+Subscript           <SUB></SUB>
+Superscript         <SUP></SUP>
+Typewriter          <TT></TT>                 (displays in a monospaced font)
+Preformatted        <PRE></PRE>               (display text spacing as-is)
+  Width             <PRE WIDTH=?></PRE>       (in characters)
+Center              <CENTER></CENTER>         (for both text and images)
+Blinking            <BLINK></BLINK>           (the most derided tag ever)
+Font Size           <FONT SIZE=?></FONT>      (ranges from 1-7)
+Change Font Size    <FONT SIZE="+|-?"></FONT>
+Base Font Size      <BASEFONT SIZE=?>         (from 1-7; default is 3)
+Font Color          <FONT COLOR="#$$$$$$"></FONT>
+Select Font         <FONT FACE="***"></FONT>
+Multi-Column        <MULTICOL COLS=?></MULTICOL>
+  Column Gutter     <MULTICOL GUTTER=?></MULTICOL>
+  Column Width      <MULTICOL WIDTH=?></MULTICOL>
+Spacer              <SPACER>
+  Spacer Type       <SPACER TYPE=horizontal|vertical|block>
+  Size              <SPACER SIZE=?>
+  Dimensions        <SPACER WIDTH=? HEIGHT=?>
+  Alignment         <SPACER ALIGN=left|right|center>
+
+
+LINKS AND GRAPHICS
+---------------------------------------------------------------------------
+Link Something      <A HREF="URL" onMouseOut="URL" onMouseOver="URL"></A>        
+  Link to Target    <A HREF="URL#***"></A>                (if in another document)
+                    <A HREF="#***"></A>                   (if in current document)
+  Target Window     <A HREF="URL" TARGET="***"></A>
+Define Target       <A NAME="***"></A> 
+Display Image       <IMG SRC="URL">   
+  Alignment         <IMG SRC="URL" ALIGN=TOP|BOTTOM|MIDDLE|LEFT|RIGHT>    
+  Alignment         <IMG SRC="URL" ALIGN=TEXTTOP|ABSMIDDLE|BASELINE|ABSBOTTOM>
+  Alternate         <IMG SRC="URL" ALT="***"> (if image not displayed)
+  Dimensions        <IMG SRC="URL" WIDTH=? HEIGHT=?>      (in pixels)
+  Border            <IMG SRC="URL" BORDER=?>              (in pixels)
+  Runaround Space   <IMG SRC="URL" HSPACE=? VSPACE=?>     (in pixels)
+  Low-Res Proxy     <IMG SRC="URL" LOWSRC="URL">    
+  Imagemap          <IMG SRC="URL" ISMAP>                 (requires a script)
+  Imagemap          <IMG SRC="URL" USEMAP="URL">
+  Map               <MAP NAME="***"></MAP>                (describes the map)
+  Section           <AREA SHAPE="RECT" COORDS=",,," HREF="URL"|NOHREF> 
+  Client Pull       <META HTTP-EQUIV="Refresh" CONTENT="?; URL=URL">
+  Embed Object      <EMBED SRC="URL">                     (insert object into page)
+    Object Size     <EMBED SRC="URL" WIDTH=? HEIGHT=?>   
+
+
+DIVIDERS
+---------------------------------------------------------------------------
+Paragraph           <P></P>                (closing tag often unnecessary)
+  Align Text        <P ALIGN=LEFT|CENTER|RIGHT></P>
+Line Break          <BR>                   (a single carriage return)
+  Clear Textwrap    <BR CLEAR=LEFT|RIGHT|ALL>   
+Horizontal Rule     <HR>
+  Alignment         <HR ALIGN=LEFT|RIGHT|CENTER>
+  Thickness         <HR SIZE=?>           (in pixels)
+  Width             <HR WIDTH=?>          (in pixels)
+  Width Percent     <HR WIDTH="%">        (as a percentage of page width)
+  Solid Line        <HR NOSHADE>          (without the 3D cutout look)    
+No Break            <NOBR></NOBR>         (prevents line breaks)
+Word Break          <WBR>                 (where to break a line if needed)  
+
+
+LISTS
+----------------------------------------------------------------------------
+Unordered List      <UL><LI></UL>                 (<LI> before each list item)
+  Compact           <UL COMPACT></UL>
+  Bullet Type       <UL TYPE=DISC|CIRCLE|SQUARE>  (for the whole list)
+                    <LI TYPE=DISC|CIRCLE|SQUARE>  (this & subsequent)
+Ordered List        <OL><LI></OL>                 (<LI> before each list item)
+  Compact           <OL COMPACT></OL>
+  Numbering Type    <OL TYPE=A|a|I|i|1>           (for the whole list)
+                    <LI TYPE=A|a|I|i|1>           (this & subsequent)
+Starting Number     <OL START=?>                  (for the whole list)
+                   <LI VALUE=?>                   (this & subsequent)
+Definition List     <DL><DT><DD></DL>             (<DT>=term, <DD>=definition)
+  Compact          <DL COMPACT></DL>
+Menu List           <MENU><LI></MENU>             (<LI> before each list item)
+  Compact          <MENU COMPACT></MENU>
+Directory List      <DIR><LI></DIR>               (<LI> before each list item)
+  Compact          <DIR COMPACT></DIR>
+
+
+BACKGROUNDS AND COLORS
+---------------------------------------------------------------------------
+Tiled Bkground    <BODY BACKGROUND="URL">  
+Bkground Color    <BODY BGCOLOR="#$$$$$$">        (order is red/green/blue)
+  Text Color       <BODY TEXT="#$$$$$$">
+  Link Color       <BODY LINK="#$$$$$$">
+  Visited Link     <BODY VLINK="#$$$$$$">
+  Active Link      <BODY ALINK="#$$$$$$">
+
+
+SPECIAL CHARACTERS
+---------------------------------------------------------------------------
+Special Character   &#?;            
+<                   &lt;
+>                   &gt;
+&                   &amp;  
+"                   &quot;
+Registered TM       &#174;
+Registered TM       &reg;
+Copyright           &#169;
+Copyright           &copy;
+Non-Breaking Spc    &nbsp;
+
+
+FORMS
+---------------------------------------------------------------------------
+Define Form      <FORM ACTION="URL" METHOD=GET|POST></FORM>      
+  File Upload      <FORM ENCTYPE="multipart/form-data></FORM>
+  Input Field      <INPUT TYPE="TEXT|PASSWORD|CHECKBOX|RADIO|
+                    IMAGE|HIDDEN|SUBMIT|RESET">
+Field Name       <INPUT NAME="***">
+Field Value      <INPUT VALUE="***">
+Checked?         <INPUT CHECKED>          (checkboxes and radio boxes)     
+Field Size       <INPUT SIZE=?>           (in characters)
+Max Length       <INPUT MAXLENGTH=?>      (in characters)
+Selection List   <SELECT></SELECT>
+  Name of List     <SELECT NAME="***"></SELECT>
+  # of Options     <SELECT SIZE=?></SELECT>
+  Multiple Choice  <SELECT MULTIPLE>      (can select more than one)  
+Option           <OPTION>                 (items that can be selected)
+  Default Option   <OPTION SELECTED>
+Input Box Size   <TEXTAREA ROWS=? COLS=?></TEXTAREA>
+  Name of Box      <TEXTAREA NAME="***"></TEXTAREA>
+  Wrap Text        <TEXTAREA WRAP=OFF|VIRTUAL|PHYSICAL></TEXTAREA>
+
+
+TABLES
+---------------------------------------------------------------------------
+Define Table     <TABLE></TABLE>
+  Table Border     <TABLE BORDER></TABLE>       (either on or off)
+  Table Border     <TABLE BORDER=?></TABLE>     (you can set the value)
+  Cell Spacing     <TABLE CELLSPACING=?>
+  Cell Padding     <TABLE CELLPADDING=?>
+  Desired Width    <TABLE WIDTH=?>              (in pixels)
+  Width Percent    <TABLE WIDTH=%>              (percentage of page)
+Table Row        <TR></TR>
+  Alignment        <TR ALIGN=LEFT|RIGHT|CENTER  
+                    VALIGN=TOP|MIDDLE|BOTTOM>
+Table Cell       <TD></TD>                      (must appear within table rows)
+  Alignment        <TD ALIGN=LEFT|RIGHT|CENTER 
+        VALIGN=TOP|MIDDLE|BOTTOM>
+No linebreaks    <TD NOWRAP>
+  Columns to Span  <TD COLSPAN=?>
+  Rows to Span     <TD ROWSPAN=?>
+  Desired Width    <TD WIDTH=?>                 (in pixels)
+  Width Percent    <TD WIDTH="%">               (percentage of table)
+  Cell Color       <TD BGCOLOR="#$$$$$$">
+Table Header     <TH></TH>                      (same as data, except bold centered)
+  Alignment        <TH ALIGN=LEFT|RIGHT|CENTER
+                    VALIGN=TOP|MIDDLE|BOTTOM>
+  No Linebreaks    <TH NOWRAP>
+  Columns to Span  <TH COLSPAN=?>
+  Rows to Span     <TH ROWSPAN=?>
+  Desired Width    <TH WIDTH=?>                 (in pixels)
+  Width Percent    <TH WIDTH="%">               (percentage of table)
+  Cell Color       <TH BGCOLOR="#$$$$$$">
+Table Caption    <CAPTION></CAPTION>
+  Alignment        <CAPTION ALIGN=TOP|BOTTOM>   (above/below table)
+
+
+FRAMES
+---------------------------------------------------------------------------
+Frame Document   <FRAMESET></FRAMESET>                  (instead of <BODY>)
+  Row Heights      <FRAMESET ROWS=,,,></FRAMESET>       (pixels or %)
+  Row Heights      <FRAMESET ROWS=*></FRAMESET>         (* = relative size)
+  Column Widths    <FRAMESET COLS=,,,></FRAMESET>       (pixels or %)
+  Column Widths    <FRAMESET COLS=*></FRAMESET>         (* = relative size)
+  Borders          <FRAMESET FRAMEBORDER="yes|no">
+  Border Width     <FRAMESET BORDER=?>
+  Border Color     <FRAMESET BORDERCOLOR="#$$$$$$">
+Define Frame     <FRAME>                                (contents of an individual frame)
+  Display Document <FRAME SRC="URL">
+  Frame Name       <FRAME NAME="***"|_blank|_self|_parent|_top>
+  Margin Width     <FRAME MARGINWIDTH=?>                (left and right margins)
+  Margin Height    <FRAME MARGINHEIGHT=?>               (top and bottom margins)
+  Scrollbar?       <FRAME SCROLLING="YES|NO|AUTO">
+  Not Resizable    <FRAME NORESIZE>
+  Borders          <FRAME FRAMEBORDER="yes|no">
+  Border Color     <FRAME BORDERCOLOR="#$$$$$$">
+  Unframed Content <NOFRAMES></NOFRAMES>                (for non-frames browsers)
+
+
+JAVA
+---------------------------------------------------------------------------
+Applet           <APPLET></APPLET> 
+  File Name        <APPLET CODE="***"> 
+  Parameters       <APPLET PARAM NAME="***"> 
+  Location         <APPLET CODEBASE="URL"> 
+  Identifier       <APPLET NAME="***">                  (for references)
+  Alt Text         <APPLET ALT="***">                   (for non-Java browsers) 
+  Alignment        <APPLET ALIGN="LEFT|RIGHT|CENTER"> 
+  Size             <APPLET WIDTH=? HEIGHT=?>            (in pixels) 
+  Spacing          <APPLET HSPACE=? VSPACE=?>           (in pixels) 
+
+
+MISCELLANEOUS
+---------------------------------------------------------------------------
+Comment          <!-- *** -->                           (not displayed by the browser)   
+Prologue         <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2//EN">
+Searchable       <ISINDEX>                              (indicates a searchable index)   
+Prompt           <ISINDEX PROMPT="***">                 (text to prompt input)
+Send Search      <A HREF="URL?***"></a>                 (use a real question mark) 
+URL of This File <BASE HREF="URL">                      (must be in header)   
+Base Window Name <BASE TARGET="***">                    (must be in header)
+Relationship     <LINK REV="***" REL="***" HREF="URL">  (in header)
+Meta Information <META>                                 (must be in header)
+Style Sheets     <STYLE></STYLE>                        (not widely supported yet)
+Scripts          <SCRIPT></SCRIPT>                      (not widely supported yet)
+
+
+SYMBOLS USED
+---------------------------------------------------------------------------
+URL         URL of an external file       (or just file name if in the same directory)
+?           Arbitrary number              (i.e. <H?> means <H1>, <H2>, <H3>, etc.)
+%           Arbitrary percentage          (i.e. <HR WIDTH="%"> means <HR WIDTH="50%">, etc.)
+***         Arbitrary text                (i.e. ALT="***" means fill in with text)    
+$$$$$$      Arbitrary hex                 (i.e. BGCOLOR="#$$$$$$" means BGCOLOR="#00FF1C", etc.)
+,,,         Comma-delimited               (i.e. COORDS=",,," means COORDS="0,0,50,50", etc.)
+|           Alternatives                  (i.e. ALIGN=LEFT|RIGHT|CENTER means pick one of these)

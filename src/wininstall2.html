@@ -1,0 +1,47 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#308080; '>@</span><span style='color:#200080; font-weight:bold; '>REM</span><span style='color:#595979; '> BATCH </span><span style='color:#200080; font-weight:bold; '>FILE</span>
+<span style='color:#308080; '>@</span><span style='color:#200080; font-weight:bold; '>ECHO off</span>
+
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>=========================================================</span>
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>Please run this BAT script on CMD prompt as Administrator</span>
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>For Installingl/Uninstsalling C# .NET 5+ Services only</span>
+<span style='color:#200080; font-weight:bold; '>rem</span>
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>Declare global variables here.</span>
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>=========================================================</span>
+
+<span style='color:#200080; font-weight:bold; '>set</span> SERVICE_EXE<span style='color:#308080; '>=</span><span style='color:#1060b6; '>"C:\Users\sp\source\repos\LinuxService\LinuxService\bin\Release\net5.0\publish\LinuxService.exe"</span>
+<span style='color:#200080; font-weight:bold; '>set</span> SERVICE_DES<span style='color:#308080; '>=</span><span style='color:#1060b6; '>"Sample Windows/Linux Service"</span>
+<span style='color:#200080; font-weight:bold; '>set</span> SERVICE_SID<span style='color:#308080; '>=</span><span style='color:#1060b6; '>"Sample .NET 5 Working Service"</span>
+
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>=========================================================</span>
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>Install / Uninstall Windows Service</span>
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>=========================================================</span>
+
+<span style='color:#200080; font-weight:bold; '>echo</span><span style='color:#1060b6; '> Checking system service: [%SERVICE_SID%]</span>
+sc query <span style='color:#007d45; '>%SERVICE_SID%</span> <span style='color:#308080; '>|</span> <span style='color:#200080; font-weight:bold; '>findstr</span> <span style='color:#308080; '>/</span>c<span style='color:#308080; '>:</span><span style='color:#1060b6; '>"RUNNING"</span> <span style='color:#308080; '>/</span>c<span style='color:#308080; '>:</span><span style='color:#1060b6; '>"STOPPED"</span>
+<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#1060b6; '>"%ERRORLEVEL%"</span><span style='color:#308080; '>=</span><span style='color:#308080; '>=</span><span style='color:#1060b6; '>"0"</span> <span style='color:#200080; font-weight:bold; '>goto</span><span style='color:#e34adc; '> UninstallPrompt</span>
+
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>====== Install Service ===========================</span>
+<span style='color:#200080; font-weight:bold; '>echo</span><span style='color:#1060b6; '> Service not installed. Install and start service?</span>
+<span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#308080; '>/</span>P c<span style='color:#308080; '>=</span>Answer <span style='color:#308080; '>[</span>y<span style='color:#308080; '>/</span>n<span style='color:#308080; '>]</span><span style='color:#308080; '>?</span> 
+<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>/</span>I <span style='color:#1060b6; '>"%c%"</span> <span style='color:#200080; font-weight:bold; '>EQU</span> <span style='color:#1060b6; '>"Y"</span> <span style='color:#200080; font-weight:bold; '>goto</span><span style='color:#e34adc; '> :Install</span>
+<span style='color:#200080; font-weight:bold; '>goto:eof</span>
+
+<span style='color:#e34adc; '>:Install</span>
+sc create <span style='color:#007d45; '>%SERVICE_SID%</span> binpath<span style='color:#308080; '>=</span> <span style='color:#007d45; '>%SERVICE_EXE%</span> <span style='color:#200080; font-weight:bold; '>start</span><span style='color:#308080; '>=</span> delayed<span style='color:#308080; '>-</span><span style='color:#200080; font-weight:bold; '>auto</span>
+sc description <span style='color:#007d45; '>%SERVICE_SID%</span> <span style='color:#007d45; '>%SERVICE_DES%</span>
+sc <span style='color:#200080; font-weight:bold; '>start</span> <span style='color:#007d45; '>%SERVICE_SID%</span>
+<span style='color:#200080; font-weight:bold; '>goto:eof</span>
+
+<span style='color:#200080; font-weight:bold; '>rem </span><span style='color:#595979; '>====== Uninstall Service ========================</span>
+<span style='color:#e34adc; '>:UninstallPrompt</span>
+<span style='color:#200080; font-weight:bold; '>echo</span><span style='color:#1060b6; '> Service installed. Stop and uninstall service?</span>
+<span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#308080; '>/</span>P c<span style='color:#308080; '>=</span>Answer <span style='color:#308080; '>[</span>y<span style='color:#308080; '>/</span>n<span style='color:#308080; '>]</span><span style='color:#308080; '>?</span> 
+<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>/</span>I <span style='color:#1060b6; '>"%c%"</span> <span style='color:#200080; font-weight:bold; '>EQU</span> <span style='color:#1060b6; '>"Y"</span> <span style='color:#200080; font-weight:bold; '>goto</span><span style='color:#e34adc; '> :Uninstall</span>
+<span style='color:#200080; font-weight:bold; '>goto:eof</span>
+
+<span style='color:#e34adc; '>:Uninstall</span>
+sc <span style='color:#200080; font-weight:bold; '>stop</span> <span style='color:#007d45; '>%SERVICE_SID%</span>
+sc delete <span style='color:#007d45; '>%SERVICE_SID%</span>
+<span style='color:#200080; font-weight:bold; '>goto:eof</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-03 05:53:37 UTC -->

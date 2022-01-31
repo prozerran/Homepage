@@ -1,0 +1,94 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>ifndef</span><span style='color:#004a43; '> _SHARED_MEMORY_HPP</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> _SHARED_MEMORY_HPP</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> SHARED_MEM_SIZE 65536</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>boost/interprocess/shared_memory_object.hpp</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>boost/interprocess/mapped_region.hpp</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>string</span><span style='color:#800000; '>></span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SHAREDMEMORY
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#200080; font-weight:bold; '>namespace</span> boost<span style='color:#406080; '>::</span>interprocess<span style='color:#406080; '>;</span>
+
+    <span style='color:#200080; font-weight:bold; '>class</span> SharedMemory <span style='color:#406080; '>{</span>
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#200080; font-weight:bold; '>public</span><span style='color:#e34adc; '>:</span>
+
+        <span style='color:#200080; font-weight:bold; '>static</span> SharedMemory<span style='color:#308080; '>&amp;</span> Instance<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>static</span> SharedMemory _instance<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> _instance<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>void</span> PurgeSharedMemory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            shared_memory_object<span style='color:#406080; '>::</span><span style='color:#003060; '>remove</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>KEY</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>void</span> SetSettings<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> sKey<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> sValue<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            shared_memory_object shm<span style='color:#308080; '>(</span>open_or_create<span style='color:#308080; '>,</span> sKey<span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> read_write<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            shm<span style='color:#308080; '>.</span>truncate<span style='color:#308080; '>(</span>SHARED_MEM_SIZE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            mapped_region region<span style='color:#308080; '>(</span>shm<span style='color:#308080; '>,</span> read_write<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>memset</span><span style='color:#308080; '>(</span>region<span style='color:#308080; '>.</span>get_address<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> SHARED_MEM_SIZE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>memcpy</span><span style='color:#308080; '>(</span>region<span style='color:#308080; '>.</span>get_address<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> sValue<span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> sValue<span style='color:#308080; '>.</span>size<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>void</span> GetSettings<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> sKey<span style='color:#308080; '>,</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span><span style='color:#308080; '>&amp;</span> sValue<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>try</span>
+            <span style='color:#406080; '>{</span>
+                shared_memory_object shm<span style='color:#308080; '>(</span>open_only<span style='color:#308080; '>,</span> sKey<span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> read_only<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                mapped_region region<span style='color:#308080; '>(</span>shm<span style='color:#308080; '>,</span> read_only<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>char</span><span style='color:#308080; '>*</span> str <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>static_cast</span><span style='color:#406080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>char</span><span style='color:#308080; '>*</span><span style='color:#406080; '>></span><span style='color:#308080; '>(</span>region<span style='color:#308080; '>.</span>get_address<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                sValue<span style='color:#308080; '>.</span>assign<span style='color:#308080; '>(</span>str<span style='color:#308080; '>,</span> <span style='color:#003060; '>strlen</span><span style='color:#308080; '>(</span>str<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>catch</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>.</span><span style='color:#308080; '>.</span><span style='color:#308080; '>.</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span><span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> GetKey<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>KEY</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>void</span> DemonstrationOfSharingEntireClassObject<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+            shared_memory_object shm<span style='color:#308080; '>(</span>open_or_create<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TEST_SELF_OBJ</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> read_write<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            shm<span style='color:#308080; '>.</span>truncate<span style='color:#308080; '>(</span>SHARED_MEM_SIZE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            mapped_region region<span style='color:#308080; '>(</span>shm<span style='color:#308080; '>,</span> read_write<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Store it</span>
+            <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>memset</span><span style='color:#308080; '>(</span>region<span style='color:#308080; '>.</span>get_address<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> SHARED_MEM_SIZE<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>memcpy</span><span style='color:#308080; '>(</span>region<span style='color:#308080; '>.</span>get_address<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>sizeof</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Retrieve it</span>
+            <span style='color:#200080; font-weight:bold; '>auto</span> ptr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>static_cast</span><span style='color:#406080; '>&lt;</span>SharedMemory<span style='color:#308080; '>*</span><span style='color:#406080; '>></span><span style='color:#308080; '>(</span>region<span style='color:#308080; '>.</span>get_address<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>ptr<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#595979; '>// display something</span>
+                <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> str<span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// notice i make use of ptr pointer, which is pointer to the class object!</span>
+                ptr<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>GetSettings<span style='color:#308080; '>(</span>ptr<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>GetKey<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> str<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#003060; '>printf</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Key: [</span><span style='color:#007997; '>%s</span><span style='color:#1060b6; '>] Value[</span><span style='color:#007997; '>%s</span><span style='color:#1060b6; '>]</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> ptr<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>GetKey<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> str<span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#200080; font-weight:bold; '>private</span><span style='color:#e34adc; '>:</span>
+
+        SharedMemory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+<span style='color:#e34adc; '>&#xa0;&#xa0;&#xa0;&#xa0;</span><span style='color:#200080; font-weight:bold; '>private</span><span style='color:#e34adc; '>:</span>
+
+        <span style='color:#595979; '>// no private members!</span>
+    <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>endif</span>
+</pre>
+<!--Created using ToHtml.com on 2021-07-26 02:36:30 UTC -->

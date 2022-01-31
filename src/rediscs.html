@@ -1,0 +1,90 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> StackExchange<span style='color:#308080; '>.</span>Redis<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/StackExchange/StackExchange.Redis/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://stackexchange.github.io/StackExchange.Redis/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://stackexchange.github.io/StackExchange.Redis/Basics</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://redis.io/download#installation</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainRedisDriver <span style='color:#308080; '>:</span> IDisposable
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> ConnectionMultiplexer redis<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> MainRedisDriver<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            redis <span style='color:#308080; '>=</span> ConnectionMultiplexer<span style='color:#308080; '>.</span>Connect<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>localhost</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>     <span style='color:#595979; '>// default port 6379</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Dispose<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            redis<span style='color:#308080; '>.</span>Dispose<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestRedisCache<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IDatabase db <span style='color:#308080; '>=</span> redis<span style='color:#308080; '>.</span>GetDatabase<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> keyname <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>KEYNAME1</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> keyvalue <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TimHsu1</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+            db<span style='color:#308080; '>.</span>StringSet<span style='color:#308080; '>(</span>keyname<span style='color:#308080; '>,</span> keyvalue<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> value <span style='color:#308080; '>=</span> db<span style='color:#308080; '>.</span>StringGet<span style='color:#308080; '>(</span>keyname<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>GOT REDIS KEY:[{keyname}] VALUE:[{value}]</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            db<span style='color:#308080; '>.</span>KeyDelete<span style='color:#308080; '>(</span>keyname<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Need Debug, wait, then works</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> async Task<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>></span> TestRedisCacheAsync<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IDatabase db <span style='color:#308080; '>=</span> redis<span style='color:#308080; '>.</span>GetDatabase<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> keyname <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>KEYNAME2</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> keyvalue <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TimHsu2</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+            await db<span style='color:#308080; '>.</span>StringSetAsync<span style='color:#308080; '>(</span>keyname<span style='color:#308080; '>,</span> keyvalue<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            await Task<span style='color:#308080; '>.</span>Delay<span style='color:#308080; '>(</span><span style='color:#008c00; '>100</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> value <span style='color:#308080; '>=</span> await db<span style='color:#308080; '>.</span>StringGetAsync<span style='color:#308080; '>(</span>keyname<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>GOT REDIS ASYNC KEY:[{keyname}] VALUE:[{value}]</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            db<span style='color:#308080; '>.</span>KeyDelete<span style='color:#308080; '>(</span>keyname<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Need Debug, wait, then works</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestRedisPubSub<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ISubscriber sub <span style='color:#308080; '>=</span> redis<span style='color:#308080; '>.</span>GetSubscriber<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> channel <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>CHANNEL1</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> message <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>HELLO WORLD</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Synchronous handler</span>
+            sub<span style='color:#308080; '>.</span>Subscribe<span style='color:#308080; '>(</span>channel<span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>OnMessage<span style='color:#308080; '>(</span>channelMessage <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> msg <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>)</span>channelMessage<span style='color:#308080; '>.</span>Message<span style='color:#406080; '>;</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>GOT PUB/SUB msg: {msg}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//// Asynchronous handler</span>
+            <span style='color:#595979; '>//sub.Subscribe(channel).OnMessage(async channelMessage =></span>
+            <span style='color:#595979; '>//{</span>
+            <span style='color:#595979; '>//    await Task.Delay(100);</span>
+
+            <span style='color:#595979; '>//    var msg = (string)channelMessage.Message;</span>
+            <span style='color:#595979; '>//    Console.WriteLine($"GOT PUB/SUB msg: {msg}");</span>
+            <span style='color:#595979; '>//});</span>
+
+            <span style='color:#595979; '>// ADD DEBUG BREAK HERE</span>
+            sub<span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span>channel<span style='color:#308080; '>,</span> message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-02 05:10:41 UTC -->

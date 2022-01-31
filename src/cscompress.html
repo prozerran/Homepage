@@ -1,0 +1,96 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>IO<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> ICSharpCode<span style='color:#308080; '>.</span>SharpZipLib<span style='color:#308080; '>.</span>Core<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> ICSharpCode<span style='color:#308080; '>.</span>SharpZipLib<span style='color:#308080; '>.</span>Lzw<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> SharpCompress<span style='color:#308080; '>.</span>Archives<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SharpCompress<span style='color:#308080; '>.</span>Archives<span style='color:#308080; '>.</span>Zip<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SharpCompress<span style='color:#308080; '>.</span>Common<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SharpCompress<span style='color:#308080; '>.</span>Readers<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/icsharpcode/SharpZipLib</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://icsharpcode.github.io/SharpZipLib/help/api/index.html</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://icsharpcode.github.io/SharpZipLib/help/api/ICSharpCode.SharpZipLib.Lzw.LzwInputStream.html</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/adamhathcock/sharpcompress</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/adamhathcock/sharpcompress/blob/master/USAGE.md</span>
+
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainSharpZipLibDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> ZFileName <span style='color:#308080; '>=</span> Directory<span style='color:#308080; '>.</span>GetCurrentDirectory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>\..\..\..\Resources\Test1.txt.Z</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> Z7FileName <span style='color:#308080; '>=</span> Directory<span style='color:#308080; '>.</span>GetCurrentDirectory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>\..\..\..\Resources\Test1.7z</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> ZipFileName <span style='color:#308080; '>=</span> Directory<span style='color:#308080; '>.</span>GetCurrentDirectory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>\..\..\..\Resources\Test1.zip</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> OutFileName <span style='color:#308080; '>=</span> Directory<span style='color:#308080; '>.</span>GetCurrentDirectory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>\..\..\..\Resources\Test1.txt</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// Create Zip on entire folder</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Compress<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> archive <span style='color:#308080; '>=</span> ZipArchive<span style='color:#308080; '>.</span>Create<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                archive<span style='color:#308080; '>.</span>AddAllFromDirectory<span style='color:#308080; '>(</span><span style='color:#800000; '>@"</span><span style='color:#1060b6; '>D:\temp</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                archive<span style='color:#308080; '>.</span>SaveTo<span style='color:#308080; '>(</span><span style='color:#800000; '>@"</span><span style='color:#1060b6; '>D:\dtemp.zip</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> CompressionType<span style='color:#308080; '>.</span>Deflate<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// uses LZW algorithm to decompress</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> LZW_Decompress<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>File<span style='color:#308080; '>.</span>Exists<span style='color:#308080; '>(</span>ZFileName<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span>Stream inStream <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> LzwInputStream<span style='color:#308080; '>(</span>File<span style='color:#308080; '>.</span>OpenRead<span style='color:#308080; '>(</span>ZFileName<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>long</span> length <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> FileInfo<span style='color:#308080; '>(</span>ZFileName<span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Length<span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>byte</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> buffer <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> <span style='color:#200080; font-weight:bold; '>byte</span><span style='color:#308080; '>[</span>length <span style='color:#308080; '>*</span> <span style='color:#008c00; '>10</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>    <span style='color:#595979; '>// Approximate enough size</span>
+                <span style='color:#200080; font-weight:bold; '>int</span> read <span style='color:#308080; '>=</span> inStream<span style='color:#308080; '>.</span>Read<span style='color:#308080; '>(</span>buffer<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> buffer<span style='color:#308080; '>.</span>Length<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span>FileStream fs <span style='color:#308080; '>=</span> File<span style='color:#308080; '>.</span>Create<span style='color:#308080; '>(</span>OutFileName<span style='color:#308080; '>,</span> read<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    fs<span style='color:#308080; '>.</span>Write<span style='color:#308080; '>(</span>buffer<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> read<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>            
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Can auto detect which compressing and decompress to file</span>
+        <span style='color:#595979; '>// Have limited compression format supported</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Zip_Decompress<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>File<span style='color:#308080; '>.</span>Exists<span style='color:#308080; '>(</span>ZipFileName<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span>Stream stream <span style='color:#308080; '>=</span> File<span style='color:#308080; '>.</span>OpenRead<span style='color:#308080; '>(</span>ZipFileName<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> reader <span style='color:#308080; '>=</span> ReaderFactory<span style='color:#308080; '>.</span>Open<span style='color:#308080; '>(</span>stream<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span>reader<span style='color:#308080; '>.</span>MoveToNextEntry<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>reader<span style='color:#308080; '>.</span>Entry<span style='color:#308080; '>.</span>IsDirectory<span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>reader<span style='color:#308080; '>.</span>Entry<span style='color:#308080; '>.</span>Key<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        reader<span style='color:#308080; '>.</span>WriteEntryToDirectory<span style='color:#308080; '>(</span><span style='color:#800000; '>@"</span><span style='color:#1060b6; '>C:\temp</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> ExtractionOptions<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                        <span style='color:#406080; '>{</span>
+                            ExtractFullPath <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>,</span>
+                            Overwrite <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span>
+                        <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Main driver to compress/uncompress files</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Compress<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            LZW_Decompress<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Zip_Decompress<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-06 07:26:11 UTC -->

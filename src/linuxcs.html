@@ -1,0 +1,61 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> Newtonsoft<span style='color:#308080; '>.</span>Json<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>/// &lt;summary></span>
+<span style='color:#595979; '>/// Demonstration of new .NET 5 feature with C# 9.0</span>
+<span style='color:#595979; '>/// Also includes information on how to build and run on Linux.</span>
+<span style='color:#595979; '>/// See linked http pages for reference.</span>
+<span style='color:#595979; '>/// &lt;/summary></span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://www.youtube.com/watch?v=cvOjkQtK3qU</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-9</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> LinuxMacOS
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>class</span> Program
+    <span style='color:#406080; '>{</span>
+        <span style='color:#595979; '>// immutable records with inheritence</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>abstract</span> record Person<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> FirstName<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> LastName<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> Age <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> init<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> PhoneNumbers <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> init<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> record Teacher<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> FirstName<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> LastName<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> Grade<span style='color:#308080; '>)</span>
+            <span style='color:#308080; '>:</span> Person<span style='color:#308080; '>(</span>FirstName<span style='color:#308080; '>,</span> LastName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> record Student<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> FirstName<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> LastName<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> Grade<span style='color:#308080; '>)</span>
+            <span style='color:#308080; '>:</span> Person<span style='color:#308080; '>(</span>FirstName<span style='color:#308080; '>,</span> LastName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// pattern matching</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>bool</span> IsLetter<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span> <span style='color:#200080; font-weight:bold; '>char</span> c<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> c <span style='color:#200080; font-weight:bold; '>is</span> <span style='color:#308080; '>></span><span style='color:#308080; '>=</span> <span style='color:#1060b6; '>'a'</span> and <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>=</span> <span style='color:#1060b6; '>'z'</span> or <span style='color:#308080; '>></span><span style='color:#308080; '>=</span> <span style='color:#1060b6; '>'A'</span> and <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>=</span> <span style='color:#1060b6; '>'Z'</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>bool</span> IsLetterOrSeparator<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span> <span style='color:#200080; font-weight:bold; '>char</span> c<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> c <span style='color:#200080; font-weight:bold; '>is</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>></span><span style='color:#308080; '>=</span> <span style='color:#1060b6; '>'a'</span> and <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>=</span> <span style='color:#1060b6; '>'z'</span><span style='color:#308080; '>)</span> or <span style='color:#308080; '>(</span><span style='color:#308080; '>></span><span style='color:#308080; '>=</span> <span style='color:#1060b6; '>'A'</span> and <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>=</span> <span style='color:#1060b6; '>'Z'</span><span style='color:#308080; '>)</span> or <span style='color:#1060b6; '>'.'</span> or <span style='color:#1060b6; '>','</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>void</span> Main<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> args<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Hello World! This should run on Linux.</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>This is demonstration of .NET 5 C# 9.0 features.</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> person1 <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Teacher<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Nancy</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Davolio</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Age <span style='color:#308080; '>=</span> <span style='color:#008c00; '>50</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>person1<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// known object with new</span>
+            Student person2 <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Tim</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Hsu</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Age <span style='color:#308080; '>=</span> <span style='color:#008c00; '>30</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>person2<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Newtonsoft Serialize</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> json <span style='color:#308080; '>=</span> JsonConvert<span style='color:#308080; '>.</span>SerializeObject<span style='color:#308080; '>(</span>person2<span style='color:#308080; '>,</span> Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>json <span style='color:#200080; font-weight:bold; '>is</span> not <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>    <span style='color:#595979; '>// check not null</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>json<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-07-28 06:26:06 UTC -->

@@ -1,0 +1,206 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>ComponentModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>IO<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Runtime<span style='color:#308080; '>.</span>CompilerServices<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// C# WPF Multi-Language support</span>
+<span style='color:#595979; '>// Please setup language files and follow these steps....</span>
+<span style='color:#595979; '>//</span>
+<span style='color:#595979; '>// 1. Create all language files in folder Resource/Language, such as...</span>
+<span style='color:#595979; '>//      Resource/Language/MutiLangEng.xaml</span>
+<span style='color:#595979; '>//      Resource/Language/MutiLangSChi.xaml</span>
+<span style='color:#595979; '>//      Resource/Language/MutiLangTChi.xaml</span>
+<span style='color:#595979; '>//</span>
+<span style='color:#595979; '>// 2. App constructor must call LanguageSetting.Initialize();</span>
+<span style='color:#595979; '>//</span>
+<span style='color:#595979; '>// 3. All language files must set to Content/[Copy Always]</span>
+<span style='color:#595979; '>//</span>
+<span style='color:#595979; '>// 4. Using the language should be DynamicResource, such as....</span>
+<span style='color:#595979; '>//      &lt;TextBlock Text="{DynamicResource CONNECT_CONNECTIONSTATUS}" /></span>
+<span style='color:#595979; '>//</span>
+<span style='color:#595979; '>// 5. On Language Change, make sure to call LanguageSetting.SetLanguage((LanguageEnum) theLang);</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> WpfBrowserApp1<span style='color:#308080; '>.</span>Common
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>abstract</span> <span style='color:#200080; font-weight:bold; '>class</span> SPBindableBase <span style='color:#308080; '>:</span> INotifyPropertyChanged
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>event</span> PropertyChangedEventHandler PropertyChanged<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>void</span> OnPropertyChanged<span style='color:#308080; '>(</span><span style='color:#308080; '>[</span>CallerMemberName<span style='color:#308080; '>]</span> <span style='color:#200080; font-weight:bold; '>string</span> propertyName <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            PropertyChanged?<span style='color:#308080; '>.</span>Invoke<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> PropertyChangedEventArgs<span style='color:#308080; '>(</span>propertyName<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>void</span> RaisePropertyChanged<span style='color:#308080; '>(</span><span style='color:#308080; '>[</span>CallerMemberName<span style='color:#308080; '>]</span> <span style='color:#200080; font-weight:bold; '>string</span> propertyName <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            OnPropertyChanged<span style='color:#308080; '>(</span>propertyName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>virtual</span> <span style='color:#200080; font-weight:bold; '>bool</span> SetProperty<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> T storage<span style='color:#308080; '>,</span> T value<span style='color:#308080; '>,</span> <span style='color:#308080; '>[</span>CallerMemberName<span style='color:#308080; '>]</span> <span style='color:#200080; font-weight:bold; '>string</span> propertyName <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>EqualityComparer<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span><span style='color:#308080; '>.</span>Default<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span>storage<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                storage <span style='color:#308080; '>=</span> value<span style='color:#406080; '>;</span>
+                OnPropertyChanged<span style='color:#308080; '>(</span>propertyName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>LanguageModel</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> LanguageModel <span style='color:#308080; '>:</span> SPBindableBase
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> _languageCode<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> _languageName<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> _languageDisplayName<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> _resourcefile<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> _languageenabled<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> LanguageCode
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _languageCode<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _languageCode<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> LanguageName
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _languageName<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _languageName<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> LanguageDisplayName
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _languageDisplayName<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _languageDisplayName<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> Resourcefile
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _resourcefile<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _resourcefile<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> LanguageEnabled
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _languageenabled<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _languageenabled<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Language</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> Language <span style='color:#308080; '>:</span> LanguageModel
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> ResourceDictionary _resource<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> ResourceDictionary Resource
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _resource<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> _resource<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>enum</span> LanguageEnum
+    <span style='color:#406080; '>{</span>
+        ENG <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span>
+        TCHI_UNICODE <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span>
+        SCHI_UNICODE <span style='color:#308080; '>=</span> <span style='color:#008c00; '>2</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> LanguageSetting
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>string</span> _currentLanguage <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>en</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>  <span style='color:#595979; '>//zh-cn</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>string</span> CurrentLanguage
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _currentLanguage<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>UpdateCurrentLanguage<span style='color:#308080; '>(</span>value<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                    _currentLanguage <span style='color:#308080; '>=</span> value<span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> List<span style='color:#308080; '>&lt;</span>Language<span style='color:#308080; '>></span> _languageIndex<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> List<span style='color:#308080; '>&lt;</span>Language<span style='color:#308080; '>></span> LanguageIndex
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> _languageIndex<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>void</span> Initialize<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            _languageIndex <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span>Language<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> dirstring <span style='color:#308080; '>=</span> AppDomain<span style='color:#308080; '>.</span>CurrentDomain<span style='color:#308080; '>.</span>BaseDirectory <span style='color:#308080; '>+</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Resource\\Language\\</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            DirectoryInfo directory <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DirectoryInfo<span style='color:#308080; '>(</span>dirstring<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            FileInfo<span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> files <span style='color:#308080; '>=</span> directory<span style='color:#308080; '>.</span>GetFiles<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> item <span style='color:#200080; font-weight:bold; '>in</span> files<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Language language <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Language<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                ResourceDictionary rd <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ResourceDictionary<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                rd<span style='color:#308080; '>.</span>Source <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Uri<span style='color:#308080; '>(</span>item<span style='color:#308080; '>.</span>FullName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                language<span style='color:#308080; '>.</span>LanguageCode <span style='color:#308080; '>=</span> rd<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LanguageCode</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> ? <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Unknown</span><span style='color:#800000; '>"</span> <span style='color:#308080; '>:</span> rd<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LanguageCode</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                language<span style='color:#308080; '>.</span>LanguageName <span style='color:#308080; '>=</span> rd<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LanguageName</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> ? <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Unknown</span><span style='color:#800000; '>"</span> <span style='color:#308080; '>:</span> rd<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LanguageName</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                language<span style='color:#308080; '>.</span>LanguageDisplayName <span style='color:#308080; '>=</span> rd<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LanguageDisplayName</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> ? <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Unknown</span><span style='color:#800000; '>"</span> <span style='color:#308080; '>:</span> rd<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LanguageDisplayName</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                language<span style='color:#308080; '>.</span>LanguageEnabled <span style='color:#308080; '>=</span> rd<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LanguageEnabled</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> ? <span style='color:#200080; font-weight:bold; '>false</span> <span style='color:#308080; '>:</span> <span style='color:#200080; font-weight:bold; '>bool</span><span style='color:#308080; '>.</span>Parse<span style='color:#308080; '>(</span>rd<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>LanguageEnabled</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                language<span style='color:#308080; '>.</span>Resourcefile <span style='color:#308080; '>=</span> item<span style='color:#308080; '>.</span>FullName<span style='color:#406080; '>;</span>
+                language<span style='color:#308080; '>.</span>Resource <span style='color:#308080; '>=</span> rd<span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>language<span style='color:#308080; '>.</span>LanguageEnabled<span style='color:#308080; '>)</span>
+                    _languageIndex<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>language<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>bool</span> UpdateCurrentLanguage<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> LanguageCode<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>LanguageIndex<span style='color:#308080; '>.</span>Exists<span style='color:#308080; '>(</span>P <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> P<span style='color:#308080; '>.</span>LanguageCode <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> LanguageCode &amp;&amp; P<span style='color:#308080; '>.</span>LanguageEnabled <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Language language <span style='color:#308080; '>=</span> LanguageIndex<span style='color:#308080; '>.</span>Find<span style='color:#308080; '>(</span>P <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> P<span style='color:#308080; '>.</span>LanguageCode <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> LanguageCode &amp;&amp; P<span style='color:#308080; '>.</span>LanguageEnabled <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>language <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> item <span style='color:#200080; font-weight:bold; '>in</span> LanguageIndex<span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>{</span>
+                        Application<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Resources<span style='color:#308080; '>.</span>MergedDictionaries<span style='color:#308080; '>.</span>Remove<span style='color:#308080; '>(</span>item<span style='color:#308080; '>.</span>Resource<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#406080; '>}</span>
+                    Application<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Resources<span style='color:#308080; '>.</span>MergedDictionaries<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>language<span style='color:#308080; '>.</span>Resource<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>string</span> GetLanguageValue<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> key<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ResourceDictionary rd <span style='color:#308080; '>=</span> Application<span style='color:#308080; '>.</span>Current<span style='color:#308080; '>.</span>Resources<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>rd <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>object</span> obj <span style='color:#308080; '>=</span> rd<span style='color:#308080; '>[</span>key<span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> obj <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> ? <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty <span style='color:#308080; '>:</span> obj<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>void</span> SetLanguage<span style='color:#308080; '>(</span>LanguageEnum lang<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>switch</span> <span style='color:#308080; '>(</span>lang<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> LanguageEnum<span style='color:#308080; '>.</span>ENG<span style='color:#308080; '>:</span> LanguageSetting<span style='color:#308080; '>.</span>CurrentLanguage <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>en</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> LanguageEnum<span style='color:#308080; '>.</span>TCHI_UNICODE<span style='color:#308080; '>:</span> LanguageSetting<span style='color:#308080; '>.</span>CurrentLanguage <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>zht</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>case</span> LanguageEnum<span style='color:#308080; '>.</span>SCHI_UNICODE<span style='color:#308080; '>:</span> LanguageSetting<span style='color:#308080; '>.</span>CurrentLanguage <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>zh</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>default</span><span style='color:#308080; '>:</span> LanguageSetting<span style='color:#308080; '>.</span>CurrentLanguage <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>en</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> LanguageEnum GetLanguage<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>string</span> lang <span style='color:#308080; '>=</span> LanguageSetting<span style='color:#308080; '>.</span>CurrentLanguage<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>lang<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>zht</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> LanguageEnum<span style='color:#308080; '>.</span>TCHI_UNICODE<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>else</span> <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>lang<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>zh</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> LanguageEnum<span style='color:#308080; '>.</span>SCHI_UNICODE<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> LanguageEnum<span style='color:#308080; '>.</span>ENG<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-09-30 07:50:49 UTC -->

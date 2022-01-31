@@ -1,0 +1,53 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Polly<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/App-vNext/Polly</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainPollyDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>int</span> times_exec <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> MAX_TRIES <span style='color:#308080; '>=</span> <span style='color:#008c00; '>3</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> MAX_WAIT_SEC <span style='color:#308080; '>=</span> <span style='color:#008c00; '>2</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> OnHandleFunc<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            times_exec<span style='color:#308080; '>+</span><span style='color:#308080; '>+</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>times_exec <span style='color:#308080; '>></span> MAX_TRIES<span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>throw</span> <span style='color:#200080; font-weight:bold; '>new</span> NotImplementedException<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Fault-handling library that allows retry, circuit break, timeout, etc.</span>
+        <span style='color:#595979; '>// Good for repeating methods that have high chance of failure, such as DB connection,</span>
+        <span style='color:#595979; '>// http reads, other networking or file based processing.</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> ret <span style='color:#308080; '>=</span> Policy
+                        <span style='color:#308080; '>.</span>Handle<span style='color:#308080; '>&lt;</span>NotImplementedException<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                        <span style='color:#308080; '>.</span>WaitAndRetry<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>new</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span> <span style='color:#406080; '>{</span>
+                            <span style='color:#595979; '>// retry 3 times after x seconds</span>
+                            TimeSpan<span style='color:#308080; '>.</span>FromSeconds<span style='color:#308080; '>(</span>MAX_WAIT_SEC<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+                            TimeSpan<span style='color:#308080; '>.</span>FromSeconds<span style='color:#308080; '>(</span>MAX_WAIT_SEC<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span>
+                            TimeSpan<span style='color:#308080; '>.</span>FromSeconds<span style='color:#308080; '>(</span>MAX_WAIT_SEC<span style='color:#308080; '>)</span>
+                        <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span>exception<span style='color:#308080; '>,</span> timeSpan<span style='color:#308080; '>,</span> retryCount<span style='color:#308080; '>,</span> context<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#406080; '>{</span>
+
+                            <span style='color:#200080; font-weight:bold; '>var</span> dt <span style='color:#308080; '>=</span> DateTime<span style='color:#308080; '>.</span>Now<span style='color:#406080; '>;</span>
+                            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>{dt} [{retryCount}] : {exception.Message}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                        <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span>
+                        <span style='color:#308080; '>.</span>Execute<span style='color:#308080; '>(</span>OnHandleFunc<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>ret <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>Success after {MAX_TRIES} tries!</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-02 05:11:58 UTC -->

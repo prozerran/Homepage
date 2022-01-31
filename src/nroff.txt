@@ -1,0 +1,155 @@
+NROFF formatting utilities
+-------------------------------------------------------------------------------
+pic     Generates line graphics
+eqn     Generates equations
+tbl     Generates tables
+refer   Generates bibliographic references
+
+NROFF page control option reference
+-------------------------------------------------------------------------------
+.pl +/- Ni  Page length, where Ni is the number of inches (default 11)
+.bp         Start a new page
+.pn +/- N   The next page will be numbered N
+
+NROFF line control option reference
+-------------------------------------------------------------------------------
+.ll Ni  Line length, where Ni si the number of inches (default is 6.5)
+.na No adjust on justification; leaves ragged right page
+.nf No fill; same as verbatim (left justify; for code display)
+.fi Fill; same as full justification left and right
+.ce N   Center the next N lines
+.ul N   Underline the next N lines
+.cu Continuous underline
+.sp N   Space vertically N lines
+.ls N   line spacing (e.g., single spaced: N = 1)
+.nm N M S I
+    N   Line number starts with, or increment to N,
+        (e.g., N = 3 starts line numbering at 3)
+    M   Line numbers for lines of multiple of M,
+        (e.g., M = 2 numbers every other line)
+    S   Line numbers and lines are separated by S spaces
+    I   Line numbers are indented by I spaces
+
+NROFF margin and tab control option reference
+-------------------------------------------------------------------------------
+.in +/- Ni  Indentation, when Ni specifies the number of inches offset
+.ti +/- Ni  Temporary indentation. + before paragraph and - after
+.ta Nt      Tab, N identifies location and t the type as declared by
+        the characters below:
+        R   Right justified tab
+        C   Center adjusted tab
+        L   Left adjusted tab
+
+NROFF font type/size control option reference
+-------------------------------------------------------------------------------
+.ps +/- N   Set point size, can also use ps +/- N inline
+.ft F       Font changed to F, where F is the font name (def Roman)
+        R   Times Roman
+        I   Times italic
+        B   Times bold
+        S   Symbol
+.fp N F     Font position, where font is loaded (1-4) where the
+        correspondence between character font type and font
+        position is tabulated below
+        F1  Roman
+        F2  italic
+        F3  bold
+        F4  courier
+
+NROFF hyphenation control option reference
+-------------------------------------------------------------------------------
+.nh No hyphenation
+.hy N   Automatic hyphenation on; the number N indicates how many
+    characters to keep together before splitting
+
+NROFF miscelaneous options reference
+-------------------------------------------------------------------------------
+.tl 'left'center'right' Three part title; text between quotes will be left
+            justified, center justified, and right justified with
+            the current margins of a line
+.de xx              Define a macro xx
+..                  End a macro definition
+.ds xx string       Define a string xx containing string
+
+MACROS
+ME heading control option reference
+-------------------------------------------------------------------------------
+.sh LEVEL "LABEL"   Create a section heading, with LABEL as its title,
+                    and LEVEL as its depth; level values are associated
+                    with the following section types (0<=LEVEL<=6):
+                    0   Title (no number, left justified)
+                    1   Section (1.)
+                    2   Subsection (1.1)
+                    3   Subsubsection (1.1.1)
+.$c "LABEL"         Start a new chapter, with LABEL as the chap title
+.he 'x'y'z'         Make a page header with x being left justified, y
+                    being center justified, and z being right justified
+.fo 'x'y'z'         Make a page footer with x being left justified, y
+                    being center justified, and z being right justified
+
+ME column control option reference
+-------------------------------------------------------------------------------
+.1c             Single-column text
+.2c             Two-column text
+.bc             Begin a new column here
+.pp             Begin a new paragraph here
+.xp N           Print index N here
+
+ME              paragraph style option reference
+-------------------------------------------------------------------------------
+.(c CP .)c      Begin a centered paragraph enviornment for paragraphs CP;
+                end a centered paragraph enviornment
+.)f FN .)f      Begin a footnote definition for footnote FN; end a footnote
+                definition
+.(l LI .)l      Begin a list enviornment for list item LI; end the list
+                enviornment
+.(q QP .)q      Begin a quote enviornment for quote paragraph QP; end the
+                quota environment
+.(x IX .)       Begin an index definition for index item IX; end the index
+                item definition
+.bu             Begin a bulleted paragraph
+.ip x y         Begin a hanging indent (aka description) paragraph, where
+                x is the hanging item and y is the indentation space for the
+                rest of the paragraph
+.np             Begin a numbered paragraph
+
+NROFF Man macro options reference
+-------------------------------------------------------------------------------
+.B [TEXT...]    Sets text in boldface; if no text is specified, the next
+                line is set in boldface
+.CT CHAR        Prints the keyboard control character indicator
+                <Cntl-CHAR>; for example, .CT A prints <Cntl-A>
+.CW             Sets text in constant width font until another font change
+                is found
+.EE             Ends an example and restores basic text defaults and
+                indents
+.EX [i]         Starts an example. Text between .EX and .EE is printed in a
+                constant width font with 'no fill' mode (no wrapping and blank
+                lines allowed) in effect
+.HB [words...]  Sets the text in underline mode
+.I1 word        Sets a temporary indent to the length of the specified
+                word
+.I2 word        Reverses one line and then sets temporary indent to the
+                length of the specified word
+.PN x[y]        Sets x in a constant width typeface and then reverts to
+                the previous typeface, y
+.PP             Starts na block paragraph; sets the prevailing indent to
+                .5i
+.R              Sets the text in a Roman typeface until another font
+                change is encountered. Also ends nroff underline mode if it
+                was in effect
+.RN             Prints the return character indicater, <RET> or <CR>
+.RS [i]         Shifts the left margin to the right (relatively) the
+                amount of i indents. The .RS macro can be nested up to nine
+                levels deep
+.SH TEXT        Creates a section header with TEXT
+.SS TEXT        Creates a subsection header with TEXT
+.TH ncafx       Begins a new reference page and sets the page title; n
+                refers to the file name; c to the section; a to an optional
+                machine architecture, such as "VAX", f to a footer
+                component; and x to an extra optional commentary such as
+                "unsupported"
+.TP [i]         Sets the prevailing indent to i, then begins the indented
+                paragraph with a hanging tag given by the next text line; if
+                the tag goes not fit, the macro places the next text on a
+                separate line

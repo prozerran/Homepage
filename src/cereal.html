@@ -1,0 +1,81 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>cereal/types/unordered_map.hpp</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>cereal/types/memory.hpp</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>cereal/archives/binary.hpp</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>cereal/archives/json.hpp</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>cereal/types/concepts/pair_associative_container.hpp</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>cereal/types/vector.hpp</span><span style='color:#800000; '>></span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>stdio.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>string</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>iostream</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>fstream</span><span style='color:#800000; '>></span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/USCiLab/cereal</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://uscilab.github.io/cereal/stl_support.html</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://stackoverflow.com/questions/47297648/using-cereal-to-deserialize-a-json-string</span>
+
+<span style='color:#200080; font-weight:bold; '>struct</span> Foo
+<span style='color:#406080; '>{</span>
+	<span style='color:#595979; '>// data types</span>
+	<span style='color:#200080; font-weight:bold; '>int</span> n<span style='color:#406080; '>;</span>
+	<span style='color:#200080; font-weight:bold; '>double</span> dd<span style='color:#406080; '>;</span>
+	<span style='color:#200080; font-weight:bold; '>char</span> arr<span style='color:#308080; '>[</span><span style='color:#008c00; '>128</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> <span style='color:#406080; '>{</span> <span style='color:#008c00; '>0</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> sss<span style='color:#406080; '>;</span>
+	<span style='color:#200080; font-weight:bold; '>short</span> s<span style='color:#406080; '>;</span>
+	<span style='color:#200080; font-weight:bold; '>float</span> f<span style='color:#406080; '>;</span>
+
+	<span style='color:#595979; '>// serialization/archive method</span>
+	<span style='color:#200080; font-weight:bold; '>template</span><span style='color:#406080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>class</span> Archive<span style='color:#406080; '>></span>
+	<span style='color:#200080; font-weight:bold; '>void</span> serialize<span style='color:#308080; '>(</span>Archive<span style='color:#308080; '>&amp;</span> ar<span style='color:#308080; '>)</span>
+	<span style='color:#406080; '>{</span>
+		ar<span style='color:#308080; '>(</span>n<span style='color:#308080; '>,</span> dd<span style='color:#308080; '>,</span> arr<span style='color:#308080; '>,</span> sss<span style='color:#308080; '>,</span> s<span style='color:#308080; '>,</span> f<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>int</span> <span style='color:#400000; '>main</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> argc<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>char</span><span style='color:#308080; '>*</span> argv<span style='color:#308080; '>[</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span>
+<span style='color:#406080; '>{</span>
+	<span style='color:#595979; '>// construct our object</span>
+	Foo f<span style='color:#406080; '>;</span>
+	f<span style='color:#308080; '>.</span>n <span style='color:#308080; '>=</span> <span style='color:#008c00; '>5</span><span style='color:#406080; '>;</span>
+	f<span style='color:#308080; '>.</span>dd <span style='color:#308080; '>=</span> <span style='color:#008000; '>6.891</span><span style='color:#406080; '>;</span>
+	<span style='color:#003060; '>memcpy</span><span style='color:#308080; '>(</span>f<span style='color:#308080; '>.</span>arr<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Hello World</span><span style='color:#0f69ff; '>\0</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>12</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	f<span style='color:#308080; '>.</span>sss <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Suck it</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+	f<span style='color:#308080; '>.</span>s <span style='color:#308080; '>=</span> <span style='color:#008c00; '>4</span><span style='color:#406080; '>;</span>
+	f<span style='color:#308080; '>.</span>f <span style='color:#308080; '>=</span> <span style='color:#008000; '>3.12456</span><span style='color:#006600; '>f</span><span style='color:#406080; '>;</span>
+
+	<span style='color:#595979; '>// output first</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> f<span style='color:#308080; '>.</span>n <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> f<span style='color:#308080; '>.</span>dd <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> f<span style='color:#308080; '>.</span>arr <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> f<span style='color:#308080; '>.</span>sss<span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> f<span style='color:#308080; '>.</span>s <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> f<span style='color:#308080; '>.</span>f <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+
+	<span style='color:#595979; '>// Serialize to JSON</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>stringstream</span> os<span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>{</span>
+		cereal<span style='color:#406080; '>::</span>JSONOutputArchive archive_out<span style='color:#308080; '>(</span>os<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		archive_out<span style='color:#308080; '>(</span>CEREAL_NVP<span style='color:#308080; '>(</span>f<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>string</span> json_str <span style='color:#308080; '>=</span> os<span style='color:#308080; '>.</span>str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> json_str <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+
+	<span style='color:#595979; '>// Deserialize from JSON</span>
+	<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>stringstream</span> is<span style='color:#308080; '>(</span>json_str<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+	Foo data_new<span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>{</span>
+		cereal<span style='color:#406080; '>::</span>JSONInputArchive archive_in<span style='color:#308080; '>(</span>is<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		archive_in<span style='color:#308080; '>(</span>data_new<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+		<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> data_new<span style='color:#308080; '>.</span>n <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+		<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> data_new<span style='color:#308080; '>.</span>dd <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+		<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> data_new<span style='color:#308080; '>.</span>arr <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+		<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> data_new<span style='color:#308080; '>.</span>sss<span style='color:#308080; '>.</span>c_str<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+		<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> data_new<span style='color:#308080; '>.</span>s <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+		<span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>cout</span> <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> data_new<span style='color:#308080; '>.</span>f <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>&lt;</span> <span style='color:#0066ee; '>std</span><span style='color:#406080; '>::</span><span style='color:#003060; '>endl</span><span style='color:#406080; '>;</span>
+	<span style='color:#406080; '>}</span>
+	<span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2022-01-06 03:09:33 UTC -->

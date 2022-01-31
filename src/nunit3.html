@@ -1,45 +1,53 @@
-<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
 <span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>poco<span style='color:#308080; '>.</span>order<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTraderWebApi<span style='color:#308080; '>.</span>Model<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTraderWebApi<span style='color:#308080; '>.</span>Controllers<span style='color:#406080; '>;</span>
+
 <span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>AspNetCore<span style='color:#308080; '>.</span>Mvc<span style='color:#406080; '>;</span>
 
 <span style='color:#200080; font-weight:bold; '>using</span> NUnit<span style='color:#308080; '>.</span>Framework<span style='color:#406080; '>;</span>
-<span style='color:#200080; font-weight:bold; '>using</span> WebSocketCore<span style='color:#308080; '>.</span>Controllers<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Autofac<span style='color:#308080; '>.</span>Extras<span style='color:#308080; '>.</span>Moq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTraderWebApi<span style='color:#308080; '>.</span>Services<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> FakeItEasy<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>Extensions<span style='color:#308080; '>.</span>Logging<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Moq<span style='color:#406080; '>;</span>
 
 <span style='color:#595979; '>// NUnit3 Test setup/cases</span>
 <span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://nunit.org/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://docs.nunit.org/articles/nunit/writing-tests/attributes/testcase.html</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://www.youtube.com/watch?v=_hqRpzZ7HGs</span>
 <span style='color:#595979; '>// TEST -> Right click, debug test [Test Explorer]</span>
 <span style='color:#595979; '>// Following sample test WebApi2 MVC endpoints</span>
 
-<span style='color:#200080; font-weight:bold; '>namespace</span> WebSocketTest
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPTraderWebApiUnitTest
 <span style='color:#406080; '>{</span>
     <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> Tests
     <span style='color:#406080; '>{</span>
         <span style='color:#200080; font-weight:bold; '>private</span> HomeController ctr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> OrderCacheController occ <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
 
         <span style='color:#308080; '>[</span>OneTimeSetUp<span style='color:#308080; '>]</span>
         <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OneTimeSetUp<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
         <span style='color:#406080; '>{</span>
             ctr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> HomeController<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>OneTimeSetUp</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            occ <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> OrderCacheController<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
         <span style='color:#406080; '>}</span>
 
         <span style='color:#308080; '>[</span>SetUp<span style='color:#308080; '>]</span>
         <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> SetUp<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
-        <span style='color:#406080; '>{</span>
-            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>SetUp</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-        <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
 
         <span style='color:#308080; '>[</span>TearDown<span style='color:#308080; '>]</span>
         <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TearDown<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
-        <span style='color:#406080; '>{</span>
-            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TearDown</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-        <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
 
         <span style='color:#308080; '>[</span>OneTimeTearDown<span style='color:#308080; '>]</span>
         <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OneTimeTearDown<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
-        <span style='color:#406080; '>{</span>
-            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>OneTimeTearDown</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-        <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
 
         <span style='color:#308080; '>[</span>Test<span style='color:#308080; '>]</span>
         <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestGet<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
@@ -53,27 +61,9 @@
             <span style='color:#595979; '>// Assert</span>
             Assert<span style='color:#308080; '>.</span>IsNotNull<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
             Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span><span style='color:#008c00; '>200</span><span style='color:#308080; '>,</span> okResult<span style='color:#308080; '>.</span>StatusCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-        <span style='color:#406080; '>}</span>
 
-        <span style='color:#308080; '>[</span>Test<span style='color:#308080; '>]</span>
-        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestPost<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
-        <span style='color:#406080; '>{</span>
-            <span style='color:#595979; '>// Arrange</span>
-            <span style='color:#200080; font-weight:bold; '>var</span> req <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ReqMessage <span style='color:#406080; '>{</span> Name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TimHsu</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> Age <span style='color:#308080; '>=</span> <span style='color:#008c00; '>23</span> <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
-
-            <span style='color:#595979; '>// Act</span>
-            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> ctr<span style='color:#308080; '>.</span>GetJsonString<span style='color:#308080; '>(</span>req<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-            <span style='color:#200080; font-weight:bold; '>var</span> okResult <span style='color:#308080; '>=</span> res <span style='color:#200080; font-weight:bold; '>as</span> OkObjectResult<span style='color:#406080; '>;</span>
-
-            <span style='color:#595979; '>// Assert</span>
-            Assert<span style='color:#308080; '>.</span>IsNotNull<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span><span style='color:#008c00; '>200</span><span style='color:#308080; '>,</span> okResult<span style='color:#308080; '>.</span>StatusCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-            Assert<span style='color:#308080; '>.</span>IsTrue<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>is</span> ReqMessage<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-            <span style='color:#595979; '>//Assert.IsType&lt;ReqMessage>(okResult.Value);</span>
-
-            <span style='color:#200080; font-weight:bold; '>var</span> val <span style='color:#308080; '>=</span> okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> ReqMessage<span style='color:#406080; '>;</span>
-            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>val<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TimHsu</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
-            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>val<span style='color:#308080; '>.</span>Age<span style='color:#308080; '>,</span> <span style='color:#008c00; '>23</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> val <span style='color:#308080; '>=</span> okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> HomePage<span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>IsTrue<span style='color:#308080; '>(</span>val<span style='color:#308080; '>.</span>Title<span style='color:#308080; '>.</span>Length <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
         <span style='color:#406080; '>}</span>
 
         <span style='color:#308080; '>[</span>Test<span style='color:#308080; '>]</span>
@@ -94,7 +84,125 @@
             <span style='color:#200080; font-weight:bold; '>var</span> val <span style='color:#308080; '>=</span> okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#406080; '>;</span>
             Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>val<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>this is async call</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
         <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Tim</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>40</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Elsa</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>23</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Luna</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>19</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestPost<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> name<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> age<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> rm <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ReqMessage<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Name <span style='color:#308080; '>=</span> name<span style='color:#308080; '>,</span>
+                Age <span style='color:#308080; '>=</span> age
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Act</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> ctr<span style='color:#308080; '>.</span>GetJsonString<span style='color:#308080; '>(</span>rm<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> okResult <span style='color:#308080; '>=</span> res <span style='color:#200080; font-weight:bold; '>as</span> OkObjectResult<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>IsNotNull<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span><span style='color:#008c00; '>200</span><span style='color:#308080; '>,</span> okResult<span style='color:#308080; '>.</span>StatusCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>That<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>.</span>Value<span style='color:#308080; '>,</span> Is<span style='color:#308080; '>.</span>TypeOf<span style='color:#308080; '>&lt;</span>ReqMessage<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> val <span style='color:#308080; '>=</span> okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> ReqMessage<span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>val<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>,</span> name<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>val<span style='color:#308080; '>.</span>Age<span style='color:#308080; '>,</span> age<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>Ignore<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Ignore this test</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TIMHSU01</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestGetOrders<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> accNo<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+            <span style='color:#595979; '>// DOESN'T WORK, WAIT ONE ON ANOTHER THREAD CAUSES ISSUES</span>
+
+            <span style='color:#595979; '>// Act</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> occ<span style='color:#308080; '>.</span>GetOrders<span style='color:#308080; '>(</span>accNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> okResult <span style='color:#308080; '>=</span> res <span style='color:#200080; font-weight:bold; '>as</span> OkObjectResult<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>IsNotNull<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span><span style='color:#008c00; '>200</span><span style='color:#308080; '>,</span> okResult<span style='color:#308080; '>.</span>StatusCode<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>That<span style='color:#308080; '>(</span>okResult<span style='color:#308080; '>.</span>Value<span style='color:#308080; '>,</span> Is<span style='color:#308080; '>.</span>TypeOf<span style='color:#308080; '>&lt;</span>List<span style='color:#308080; '>&lt;</span>SPOrder<span style='color:#308080; '>></span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> ords <span style='color:#308080; '>=</span> okResult<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> List<span style='color:#308080; '>&lt;</span>SPOrder<span style='color:#308080; '>></span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> ord <span style='color:#200080; font-weight:bold; '>in</span> ords<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>ord<span style='color:#308080; '>.</span>AccNo<span style='color:#308080; '>,</span> accNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Mock Demo</span>
+        <span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://www.youtube.com/watch?v=DwbYxP-etMY</span>
+
+        <span style='color:#308080; '>[</span>Ignore<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Ignore this test</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Tim</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>43</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Edea</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>45</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestMock_Post<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> name<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> age<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> req <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ReqMessage <span style='color:#406080; '>{</span> Name <span style='color:#308080; '>=</span> name<span style='color:#308080; '>,</span> Age <span style='color:#308080; '>=</span> age <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            <span style='color:#595979; '>// DOESN'T WORK, UNKNOWN HOW TO USE MOCK</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> cls <span style='color:#308080; '>=</span> Mock<span style='color:#308080; '>.</span>Of<span style='color:#308080; '>&lt;</span>HomeController<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> cls<span style='color:#308080; '>.</span>GetJsonString<span style='color:#308080; '>(</span>req<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Assert<span style='color:#308080; '>.</span>That<span style='color:#308080; '>(</span>res<span style='color:#308080; '>,</span> Is<span style='color:#308080; '>.</span>TypeOf<span style='color:#308080; '>&lt;</span>OkObjectResult<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> actual <span style='color:#308080; '>=</span> res <span style='color:#200080; font-weight:bold; '>as</span> OkObjectResult<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> actual_value <span style='color:#308080; '>=</span> actual<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> ReqMessage<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>actual_value<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>,</span> name<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>actual_value<span style='color:#308080; '>.</span>Age<span style='color:#308080; '>,</span> age<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>Test<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestMock_Login<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> mock <span style='color:#308080; '>=</span> AutoMock<span style='color:#308080; '>.</span>GetLoose<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#595979; '>// Arrange</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> cls <span style='color:#308080; '>=</span> mock<span style='color:#308080; '>.</span>Mock<span style='color:#308080; '>&lt;</span>ILoginService<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                    <span style='color:#308080; '>.</span>Setup<span style='color:#308080; '>(</span>x <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> x<span style='color:#308080; '>.</span>LoginTServer<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                    <span style='color:#308080; '>.</span>Returns<span style='color:#308080; '>(</span>GetLoginResult<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// Act</span>
+                Assert<span style='color:#308080; '>.</span>IsNotNull<span style='color:#308080; '>(</span>cls<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> GetLoginResult<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Tim</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>43</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Edea</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>45</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>TestCase<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Lightning</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>23</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Test_FakeItEasy_Logger<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> name<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> age<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Arrange</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> fakeLog <span style='color:#308080; '>=</span> A<span style='color:#308080; '>.</span>Fake<span style='color:#308080; '>&lt;</span>ILoginService<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            A<span style='color:#308080; '>.</span>CallTo<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> fakeLog<span style='color:#308080; '>.</span>LoginTServer<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Returns<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                
+            <span style='color:#595979; '>// Act</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> ctrl <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> HomeController<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>    <span style='color:#595979; '>// should replace null with fakeLog</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> ctrl<span style='color:#308080; '>.</span>GetJsonString<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>new</span> ReqMessage <span style='color:#406080; '>{</span> Name <span style='color:#308080; '>=</span> name<span style='color:#308080; '>,</span> Age <span style='color:#308080; '>=</span> age <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>That<span style='color:#308080; '>(</span>res<span style='color:#308080; '>,</span> Is<span style='color:#308080; '>.</span>TypeOf<span style='color:#308080; '>&lt;</span>OkObjectResult<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> actual <span style='color:#308080; '>=</span> res <span style='color:#200080; font-weight:bold; '>as</span> OkObjectResult<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> actual_value <span style='color:#308080; '>=</span> actual<span style='color:#308080; '>.</span>Value <span style='color:#200080; font-weight:bold; '>as</span> ReqMessage<span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>actual_value<span style='color:#308080; '>.</span>Name<span style='color:#308080; '>,</span> name<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>actual_value<span style='color:#308080; '>.</span>Age<span style='color:#308080; '>,</span> age<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
     <span style='color:#406080; '>}</span>
 <span style='color:#406080; '>}</span>
 </pre>
-<!--Created using ToHtml.com on 2021-06-08 05:56:28 UTC -->
+<!--Created using ToHtml.com on 2021-08-02 08:51:10 UTC -->

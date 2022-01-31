@@ -1,0 +1,348 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> SPTraderStandardLib<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTraderStandardLib<span style='color:#308080; '>.</span>Models<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTraderStandardLib<span style='color:#308080; '>.</span>Common<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTraderStandardLib<span style='color:#308080; '>.</span>Interface<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Newtonsoft<span style='color:#308080; '>.</span>Json<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>VisualStudio<span style='color:#308080; '>.</span>TestTools<span style='color:#308080; '>.</span>UnitTesting<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Autofac<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Autofac<span style='color:#308080; '>.</span>Extras<span style='color:#308080; '>.</span>Moq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Moq<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPCoreUnitTest
+<span style='color:#406080; '>{</span>
+    <span style='color:#308080; '>[</span>TestClass<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> TestMethods <span style='color:#308080; '>:</span> IDisposable<span style='color:#308080; '>,</span> IWebSocketHeartBeat<span style='color:#308080; '>,</span> IServerResult<span style='color:#308080; '>,</span> IOrderListener
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> ClientPortalApi obj <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> targetAccNo <span style='color:#308080; '>=</span> SPConstants<span style='color:#308080; '>.</span>targetAccNo<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> userAccName <span style='color:#308080; '>=</span> SPConstants<span style='color:#308080; '>.</span>userAccName<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> userAccPass <span style='color:#308080; '>=</span> SPConstants<span style='color:#308080; '>.</span>userAccPass<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> prodCode <span style='color:#308080; '>=</span> SPConstants<span style='color:#308080; '>.</span>prodCode<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> targetSysId <span style='color:#308080; '>=</span> SPConstants<span style='color:#308080; '>.</span>targetSysId<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> ManualResetEvent addEvent <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> once <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#308080; '>[</span>AssemblyInitialize<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>void</span> AssemblyInit<span style='color:#308080; '>(</span>TestContext context<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>context<span style='color:#308080; '>.</span>TestName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>ClassInitialize<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>         <span style='color:#595979; '>// calls once per instance</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>void</span> ClassInit<span style='color:#308080; '>(</span>TestContext context<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Real constructor</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> TestMethods<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            obj <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ClientPortalApi<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>accessRight/UserLogin</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t0 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>UserLogin<span style='color:#308080; '>(</span>userAccName<span style='color:#308080; '>,</span> userAccPass<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t0<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestInitialize<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> SetUp<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>         <span style='color:#595979; '>// calls before every test case</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>once<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                obj<span style='color:#308080; '>.</span>webSocketData<span style='color:#308080; '>.</span>RegisterListener<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>IWebSocketHeartBeat<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                obj<span style='color:#308080; '>.</span>webSocketData<span style='color:#308080; '>.</span>RegisterListener<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>IServerResult<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                obj<span style='color:#308080; '>.</span>webSocketData<span style='color:#308080; '>.</span>RegisterListener<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>IOrderListener<span style='color:#308080; '>)</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                obj<span style='color:#308080; '>.</span>webSocketData<span style='color:#308080; '>.</span>Connect<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                obj<span style='color:#308080; '>.</span>webSocketData<span style='color:#308080; '>.</span>SubscribeEvents<span style='color:#308080; '>(</span>DataMaskType<span style='color:#308080; '>.</span>All<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                once <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestCleanup<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TearDown<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>  <span style='color:#595979; '>// calls after every test case</span>
+
+        <span style='color:#308080; '>[</span>ClassCleanup<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>            <span style='color:#595979; '>// calls once per instance</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>void</span> OneTimeTearDown<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// real cleanup</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Dispose<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>accessRight/SessionTokenHeartbeat</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>SessionTokenHeartbeat<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>accessRight/UserLogout</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>UserLogout<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                    Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Done.</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Account Related</span>
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AccountInfo<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>account/AccountInfo</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t1 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>account<span style='color:#308080; '>.</span>AccountInfo<span style='color:#308080; '>(</span>targetAccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t1<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AccountSummary<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>account/AccountSummary</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t2 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>account<span style='color:#308080; '>.</span>AccountSummary<span style='color:#308080; '>(</span>targetAccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t2<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AccountPosition<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>account/AccountPosition</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t3 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>account<span style='color:#308080; '>.</span>AccountPosition<span style='color:#308080; '>(</span>targetAccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t3<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AccountOrder<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>account/AccountOrder</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t4 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>account<span style='color:#308080; '>.</span>AccountOrder<span style='color:#308080; '>(</span>targetAccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t4<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> AccountBalance<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>account/AccountBalance</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t5 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>account<span style='color:#308080; '>.</span>AccountBalance<span style='color:#308080; '>(</span>targetAccNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t5<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Reporting Related</span>
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> CashMovementList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>reporting/CashMovementList</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t1 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>reporting<span style='color:#308080; '>.</span>CashMovementList<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>D</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> targetAccNo<span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>2021-05-01</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>2020-12-06</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t1<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OrderHist<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>reporting/OrderHist</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> req <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> RestOrderHistReq<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                targetAccNo <span style='color:#308080; '>=</span> targetAccNo<span style='color:#308080; '>,</span>
+                targetSystemId <span style='color:#308080; '>=</span> targetSysId<span style='color:#308080; '>,</span>
+                sessionToken <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>loginResp<span style='color:#308080; '>.</span>sessionToken
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t2 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>reporting<span style='color:#308080; '>.</span>OrderHist<span style='color:#308080; '>(</span>req<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t2<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoneTrade<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>reporting/DoneTrade</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> reqdone <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> RestDoneTradeReq<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                targetAccNo <span style='color:#308080; '>=</span> targetAccNo<span style='color:#308080; '>,</span>
+                targetSystemId <span style='color:#308080; '>=</span> targetSysId<span style='color:#308080; '>,</span>
+                sessionToken <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>loginResp<span style='color:#308080; '>.</span>sessionToken
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t3 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>reporting<span style='color:#308080; '>.</span>DoneTrade<span style='color:#308080; '>(</span>reqdone<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t3<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> UserLog<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>reporting/UserLog</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> requser <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> RestUserLogReq<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                logUserId <span style='color:#308080; '>=</span> userAccName<span style='color:#308080; '>,</span>
+                accNo <span style='color:#308080; '>=</span> targetAccNo<span style='color:#308080; '>,</span>
+                targetSystemId <span style='color:#308080; '>=</span> targetSysId<span style='color:#308080; '>,</span>
+                sessionToken <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>loginResp<span style='color:#308080; '>.</span>sessionToken
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t4 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>reporting<span style='color:#308080; '>.</span>UserLog<span style='color:#308080; '>(</span>requser<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t4<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> WorkingOrder<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> req <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> RestOrderHistReq<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                targetAccNo <span style='color:#308080; '>=</span> targetAccNo<span style='color:#308080; '>,</span>
+                targetSystemId <span style='color:#308080; '>=</span> targetSysId<span style='color:#308080; '>,</span>
+                sessionToken <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>accessRight<span style='color:#308080; '>.</span>loginResp<span style='color:#308080; '>.</span>sessionToken
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>reporting/WorkingOrder</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t5 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>reporting<span style='color:#308080; '>.</span>WorkingOrder<span style='color:#308080; '>(</span>req<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t5<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Order Related</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> RestOrderResp AddOrder<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>double</span> price<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> exOrderNo<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> neword <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> RestOrderReq
+            <span style='color:#406080; '>{</span>
+                accNo <span style='color:#308080; '>=</span> targetAccNo<span style='color:#308080; '>,</span>
+                buySell <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>B</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                <span style='color:#595979; '>//clOrderId = "123456789ASDA",</span>
+                condType <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span>
+                extOrderNo <span style='color:#308080; '>=</span> exOrderNo<span style='color:#308080; '>,</span>
+                priceInDec <span style='color:#308080; '>=</span> price<span style='color:#308080; '>,</span>
+                qty <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span>
+                <span style='color:#595979; '>// options = 1,    // T+1</span>
+                <span style='color:#595979; '>// orderType = 6,  // Market order</span>
+                orderType <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span>
+                validType <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span>
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>return</span> obj<span style='color:#308080; '>.</span>order<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>neword<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>DataTestMethod<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>DataRow<span style='color:#308080; '>(</span><span style='color:#008000; '>27000.00</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>12345555</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>DataRow<span style='color:#308080; '>(</span><span style='color:#008000; '>27200.00</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>12345666</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>DataRow<span style='color:#308080; '>(</span><span style='color:#008000; '>27400.00</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>12345777</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Add<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>double</span> price<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> exOrdNo<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            addEvent <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ManualResetEvent<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>order/Add</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t1 <span style='color:#308080; '>=</span> AddOrder<span style='color:#308080; '>(</span>price<span style='color:#308080; '>,</span> exOrdNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t1<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> addEvent<span style='color:#308080; '>.</span>WaitOne<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Assert<span style='color:#308080; '>.</span>IsTrue<span style='color:#308080; '>(</span>res<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>DataTestMethod<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>DataRow<span style='color:#308080; '>(</span><span style='color:#008000; '>27000.00</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>12346666</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>DataRow<span style='color:#308080; '>(</span><span style='color:#008000; '>27200.00</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>12346777</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#308080; '>[</span>DataRow<span style='color:#308080; '>(</span><span style='color:#008000; '>27400.00</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>12346888</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Change<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>double</span> price<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> exOrdNo<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>order/Add</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t1 <span style='color:#308080; '>=</span> AddOrder<span style='color:#308080; '>(</span>price<span style='color:#308080; '>,</span> exOrdNo<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t1<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> chgord <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> RestOrdExtReq
+            <span style='color:#406080; '>{</span>
+                accNo <span style='color:#308080; '>=</span> t1<span style='color:#308080; '>.</span>accNo<span style='color:#308080; '>,</span>
+                accOrderNo <span style='color:#308080; '>=</span> t1<span style='color:#308080; '>.</span>accOrderNo<span style='color:#308080; '>,</span>
+                buySell <span style='color:#308080; '>=</span> t1<span style='color:#308080; '>.</span>buySell<span style='color:#308080; '>,</span>
+                priceInDec <span style='color:#308080; '>=</span> t1<span style='color:#308080; '>.</span>tradePrice <span style='color:#308080; '>+</span> <span style='color:#008000; '>100.0</span><span style='color:#308080; '>,</span>
+                qty <span style='color:#308080; '>=</span> t1<span style='color:#308080; '>.</span>qty<span style='color:#308080; '>,</span>
+                extOrderNo <span style='color:#308080; '>=</span> t1<span style='color:#308080; '>.</span>extOrderNo<span style='color:#308080; '>,</span>
+                prodCode <span style='color:#308080; '>=</span> t1<span style='color:#308080; '>.</span>prodCode<span style='color:#308080; '>,</span>
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>order/Change</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> t2 <span style='color:#308080; '>=</span> obj<span style='color:#308080; '>.</span>order<span style='color:#308080; '>.</span>Change<span style='color:#308080; '>(</span>chgord<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>t2<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span>Formatting<span style='color:#308080; '>.</span>Indented<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Delete<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>//var delord = new RestOrdReq</span>
+            <span style='color:#595979; '>//{</span>
+            <span style='color:#595979; '>//    accNo = t1.accNo,</span>
+            <span style='color:#595979; '>//    accOrderNo = t1.accOrderNo,</span>
+            <span style='color:#595979; '>//    buySell = t1.buySell,</span>
+            <span style='color:#595979; '>//    extOrderNo = t1.extOrderNo,</span>
+            <span style='color:#595979; '>//    prodCode = t1.prodCode,</span>
+            <span style='color:#595979; '>//};</span>
+
+            <span style='color:#595979; '>//Console.WriteLine("order/Delete");</span>
+            <span style='color:#595979; '>//var t3 = dd.order.Delete(delord);</span>
+            <span style='color:#595979; '>//Console.WriteLine(t3.ToJsonString(Formatting.Indented));</span>
+        <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Callbacks</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnHeartBeatReceived<span style='color:#308080; '>(</span>ServerPingPong data<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Act</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>IsTrue<span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>last_ping <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnRequestResultReponse<span style='color:#308080; '>(</span>ServerResult data<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>IsTrue<span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>result_code<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>0</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> OnOrderResponse<span style='color:#308080; '>(</span>ServerAccountOrder data<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// Act</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>ToJsonString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            addEvent?<span style='color:#308080; '>.</span>Set<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Assert</span>
+            Assert<span style='color:#308080; '>.</span>IsFalse<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>IsNullOrEmpty<span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>clOrderId<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#region </span><span style='color:#595979; '>Mock Demo</span>
+        <span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://www.youtube.com/watch?v=DwbYxP-etMY</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestMock_Callback<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> mock <span style='color:#308080; '>=</span> AutoMock<span style='color:#308080; '>.</span>GetLoose<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> pp <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> PriceResponse<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> Open <span style='color:#308080; '>=</span> <span style='color:#008000; '>2.</span>5M <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+                mock<span style='color:#308080; '>.</span>Mock<span style='color:#308080; '>&lt;</span>IPriceListener<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                    <span style='color:#308080; '>.</span>Setup<span style='color:#308080; '>(</span>x <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> x<span style='color:#308080; '>.</span>OnPriceUpdate<span style='color:#308080; '>(</span>pp<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                    <span style='color:#308080; '>.</span>Callback<span style='color:#308080; '>&lt;</span>PriceResponse<span style='color:#308080; '>></span><span style='color:#308080; '>(</span>MockPriceUpdate<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// TOBE: completed, not sure how to mock callbacks</span>
+                <span style='color:#595979; '>//var loginResp = obj.accessRight.loginResp;</span>
+                <span style='color:#595979; '>//var dd = new Mock&lt;MarketData>(loginResp.userId, loginResp.spServerKey);</span>
+                <span style='color:#595979; '>//dd.Setup(x => x.RegisterListener((IPriceListener) mock));</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> MockPriceUpdate<span style='color:#308080; '>(</span>PriceResponse data<span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#308080; '>[</span>TestMethod<span style='color:#308080; '>]</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TestMock_Methods<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>using</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> mock <span style='color:#308080; '>=</span> AutoMock<span style='color:#308080; '>.</span>GetLoose<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#595979; '>// Arrange</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> cls <span style='color:#308080; '>=</span> mock<span style='color:#308080; '>.</span>Create<span style='color:#308080; '>&lt;</span>ClientPortalApi<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// Act</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> expected <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> actual <span style='color:#308080; '>=</span> cls<span style='color:#308080; '>.</span>Foo<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+                <span style='color:#595979; '>// Assert</span>
+                Assert<span style='color:#308080; '>.</span>AreEqual<span style='color:#308080; '>(</span>expected<span style='color:#308080; '>,</span> actual<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+<span style='color:#004a43; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;#endregion</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-07-21 05:48:25 UTC -->

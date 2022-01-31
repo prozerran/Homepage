@@ -1,0 +1,59 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Net<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Net<span style='color:#308080; '>.</span>Mail<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> FluentEmail<span style='color:#308080; '>.</span>Core<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> FluentEmail<span style='color:#308080; '>.</span>Smtp<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://github.com/lukencode/FluentEmail</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://stackoverflow.com/questions/20906077/gmail-error-the-smtp-server-requires-a-secure-connection-or-the-client-was-not</span>
+
+<span style='color:#595979; '>// Checkout...</span>
+<span style='color:#595979; '>// MailKit              - support SSL, crytography, authentication</span>
+<span style='color:#595979; '>// Papercut-SMTP        - for testing, mocking, pretend SMTP server, etc</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainFluentEmailDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> FromEmail <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>zaken520@gmail.com</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> FromEmailPassword <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>SECRET</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> ToEmail <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// easily send an email</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> smtp <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SmtpClient
+            <span style='color:#406080; '>{</span>
+                Host <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>smtp.gmail.com</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                Port <span style='color:#308080; '>=</span> <span style='color:#008c00; '>587</span><span style='color:#308080; '>,</span>
+                EnableSsl <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#308080; '>,</span>
+                UseDefaultCredentials <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>,</span>
+                DeliveryMethod <span style='color:#308080; '>=</span> SmtpDeliveryMethod<span style='color:#308080; '>.</span>Network<span style='color:#308080; '>,</span>
+                Credentials <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> NetworkCredential<span style='color:#308080; '>(</span>FromEmail<span style='color:#308080; '>,</span> FromEmailPassword<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>}</span><span style='color:#406080; '>;</span>
+
+            Email<span style='color:#308080; '>.</span>DefaultSender <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> SmtpSender<span style='color:#308080; '>(</span>smtp<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> email <span style='color:#308080; '>=</span> Email
+              <span style='color:#308080; '>.</span>From<span style='color:#308080; '>(</span>FromEmail<span style='color:#308080; '>)</span>
+              <span style='color:#308080; '>.</span>To<span style='color:#308080; '>(</span>ToEmail<span style='color:#308080; '>)</span>
+              <span style='color:#308080; '>.</span>Subject<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Test Email Subject Line</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span>
+              <span style='color:#308080; '>.</span>Body<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>HELLO WORLD</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> resp <span style='color:#308080; '>=</span> email<span style='color:#308080; '>.</span>Send<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>resp<span style='color:#308080; '>.</span>Successful<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>Send Successful: {resp.MessageId}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>Send Failed: {resp.ErrorMessages}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-05 08:06:19 UTC -->

@@ -1,0 +1,99 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>IO<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> WebSocket4Net<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://archive.codeplex.com/?p=websocket4net</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> WebSocketMainDriver <span style='color:#308080; '>:</span> ITopNugetPackages
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> WebSocket websocket <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> UserId <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>TIM</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> LoginKey <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>sp</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>int</span> AppId <span style='color:#308080; '>=</span> <span style='color:#008c00; '>3</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> VersionNo <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>8.7</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> ReleaseNo <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>1.0</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> BuildNo <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>1.0</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>string</span> SystemId <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>SP_F</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>readonly</span> <span style='color:#200080; font-weight:bold; '>int</span> LangNo <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> _loggedIn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> WebSocketMainDriver<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            websocket <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> WebSocket<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>ws://192.168.123.136:8063/</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            websocket<span style='color:#308080; '>.</span>Opened <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> Websocket_Opened<span style='color:#406080; '>;</span>
+            websocket<span style='color:#308080; '>.</span>Error <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> Websocket_Error<span style='color:#406080; '>;</span>
+            websocket<span style='color:#308080; '>.</span>Closed <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> Websocket_Closed<span style='color:#406080; '>;</span>
+            websocket<span style='color:#308080; '>.</span>MessageReceived <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> Websocket_MessageReceived<span style='color:#406080; '>;</span>
+            websocket<span style='color:#308080; '>.</span>DataReceived <span style='color:#308080; '>+</span><span style='color:#308080; '>=</span> Websocket_DataReceived<span style='color:#406080; '>;</span>
+            websocket<span style='color:#308080; '>.</span>Open<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Websocket_Error<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> SuperSocket<span style='color:#308080; '>.</span>ClientEngine<span style='color:#308080; '>.</span>ErrorEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Websocket_Closed<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> EventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Websocket_Opened<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> EventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// login</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> LoginTime <span style='color:#308080; '>=</span> DateTime<span style='color:#308080; '>.</span>Now<span style='color:#308080; '>.</span>ToFileTime<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> loginStr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>4104,0,{UserId},{LoginKey},{AppId},{VersionNo},{ReleaseNo},{BuildNo},{SystemId},{LoginTime},{LangNo}\r\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            websocket<span style='color:#308080; '>.</span>Send<span style='color:#308080; '>(</span>loginStr<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Websocket_DataReceived<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> DataReceivedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> str <span style='color:#308080; '>=</span> Encoding<span style='color:#308080; '>.</span>Default<span style='color:#308080; '>.</span>GetString<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>str <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                HandleReceived<span style='color:#308080; '>(</span>str<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> Websocket_MessageReceived<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> MessageReceivedEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            HandleReceived<span style='color:#308080; '>(</span>e<span style='color:#308080; '>.</span>Message<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> OnError<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>object</span> sender<span style='color:#308080; '>,</span> SuperSocket<span style='color:#308080; '>.</span>ClientEngine<span style='color:#308080; '>.</span>ErrorEventArgs e<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> HandleReceived<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> data<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>StartsWith<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>4104</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>EndsWith<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>0\r\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    _loggedIn <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                    websocket<span style='color:#308080; '>.</span>Send<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>4107,0,HSIH1,0,1,0</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>   <span style='color:#595979; '>// subscribe price</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>else</span> <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>data<span style='color:#308080; '>.</span>StartsWith<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>4102</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>    <span style='color:#595979; '>// price response data</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Sample to use Websocket4Net</span>
+        <span style='color:#595979; '>// Connect, send and receive data</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>100000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-09 06:16:36 UTC -->

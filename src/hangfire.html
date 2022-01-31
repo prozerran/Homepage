@@ -1,0 +1,61 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Hangfire<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Hangfire<span style='color:#308080; '>.</span>MemoryStorage<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://www.hangfire.io/</span>
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://docs.hangfire.io/en/latest/getting-started/index.html</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainHangFireDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#595979; '>// Probably need to use a REAL storage class such as SQL Server to make work.</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> MainHangFireDriver<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            GlobalConfiguration<span style='color:#308080; '>.</span>Configuration<span style='color:#308080; '>.</span>UseMemoryStorage<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//GlobalConfiguration.Configuration</span>
+            <span style='color:#595979; '>//    .UseSqlServerStorage(@"Server=.\SQLEXPRESS; Database=Hangfire.Sample; Integrated Security=True");</span>
+
+        <span style='color:#406080; '>}</span>  
+        
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> TheJob<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Inside TheJob</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Schedular, and scheduling services, for timers and background task</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Hangfire Starts</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Fire-and-forget jobs are executed only once and almost immediately after creation.</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> jobId0 <span style='color:#308080; '>=</span> BackgroundJob<span style='color:#308080; '>.</span>Enqueue<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> TheJob<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> jobId1 <span style='color:#308080; '>=</span> BackgroundJob<span style='color:#308080; '>.</span>Enqueue<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Fire-and-forget!</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>1000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Delayed jobs are executed only once too, but not immediately, after a certain time interval.</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> jobId2 <span style='color:#308080; '>=</span> BackgroundJob<span style='color:#308080; '>.</span>Schedule<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Delayed!</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> TimeSpan<span style='color:#308080; '>.</span>FromMilliseconds<span style='color:#308080; '>(</span><span style='color:#008c00; '>100</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>1000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Recurring jobs fire many times on the specified CRON schedule.</span>
+            RecurringJob<span style='color:#308080; '>.</span>AddOrUpdate<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>JobId</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Recurring!</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> Cron<span style='color:#308080; '>.</span>Minutely<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>1000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Continuations are executed when its parent job has been finished.</span>
+            BackgroundJob<span style='color:#308080; '>.</span>ContinueJobWith<span style='color:#308080; '>(</span>jobId1<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Continuation!</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>1000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Hangfire Ends</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-05 09:00:50 UTC -->

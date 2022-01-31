@@ -1,0 +1,182 @@
+Unix Command Codes
+
+Command     Function                                Example
+-------------------------------------------------------------------------------
+archie      search for string in FTP                archie -m 5 LaTeX
+alias       shortcut macro for commands             alias aliasname command
+apropos     help functions on commands              apropos command
+awk         pattern scanning language               finger -l | awk '/name/'
+banner      poster message to unix user             banner mes|write username
+bc          desktop calculator                      bc
+bg          exec last command on background         bg
+biff        give notice of incoming mail            biff n
+cal         display calender                        cal 12 2000
+cat         concatenate or display files            cat file1 file2>file3
+cd          change working directory                cd dirname
+chdir       change directory                        chdir dirname
+chfn        change user information                 chfn
+chmod       change mode permission of file          chmod og+r filename
+clear       clear screen                            clear
+compress    compress files                          compress filename
+cp          copy file                               cp filename
+date        display day and time                    date
+df          report disk block and file              df
+du          disk usage                              du
+echo        write to a user                         echo mes|write username
+elm         interactive mail system                 elm
+env         set and print enviornments              env
+fg          resume suspended session                fg
+figlet      character text to user                  figlet|write username
+file        determine file type                     file filename
+find        find files                              find . -name file -print
+finger      who, where is username                  finger username
+frm         display selected messages               frm -s new
+fs          file server                             see_example_at_bottom
+ftp         file transfer protocol                  ftp joker.sfsu.edu
+grep        search a file for a pattern             grep word filename
+history     display last 30 commands                history
+jobs        list jobs status                        jobs
+kill        terminate suspended job                 kill %1
+klog        authenticate to obtain token            klog
+kpasswd     change password                         kpasswd
+last        last login of user                      last username
+latex       text formatter                          latex filename
+ln          link to file or directory               ln -s linkdirfile dirname
+locate      find files                              locate filename
+logout      disconnect current host                 logout
+look        looks up similar words                  look word
+ls          list files in database                  ls -F
+lynx        Information browser for www             lynx
+mail        send or receive mail                    mail user@domain<filename
+mailx       interactive mail system                 mailx
+man         get manual pages for commands           man command_function
+menu        menu list                               menu
+mesg        permit or deny messages                 mesg n
+more        read file                               more filename
+mutt        mail user agent                         mutt -a filename addr@
+mv          rename file                             mv oldfilename newfilename
+mv          move file                               mv filename directory
+mvdir       move directory                          mvdir dirname
+netstat     show network status                     netstat -nat
+newmail     notify of new mail                      newmail
+nroff       text formatter                          nroff filename
+ntalk       talk on different system                ntalk username@server
+od          octal dump                              od filename
+pack        compress files                          pack filename
+page        read file                               page filename
+pico        editor                                  pico filename
+pilot       read, rename files                      pilot filename
+pine        read, compose e-mail                    pine
+ping        test network connectivity               ping ip
+ps          display process status                  ps
+pts         pseudo-tty subsystem                    see_example_at_bottom
+pwd         display current working dir             pwd
+quota       display quota used                      quota
+rcp         remote file copy                        ???
+rlogin      remote login                            rlogin joker.sfsu.edu
+rm          remove file                             rm filename
+rmdir       remove directory                        rmdir dirname
+rsh         remote shell process                    rsh joker -l cs41 "ls"
+rwall       write to all users in network           rwall server
+script      make typescript of session              script filename
+sed         stream editor                           sed '1,$ s/1/2/g' filename
+service     start / status / stop a service         service httpd restart
+set         set and declare variables               set term=vt100
+setup       configure terminals                     setup
+sleep       suspend execution in interval           sleep 10
+source      execute commands in file                source filename
+spell       check spelling errors                   spell filename
+stty        set options for terminal                stty erase '^H'
+talk        talk to unix user                       talk username
+tar         tape files in archive                   tar cvf file.tar filenames
+telnet      connect to different host               telnet ip
+tin         netnews group                           tin
+touch       update access time on file              touch filename
+trn         news program                            trn
+tty         type of terminal using                  tty
+uptime      display system load                     uptime
+uncompress  expand files                            uncompress filename
+unpack      expand files                            unpack filename
+users       list current users                      users
+vi          visual editor                           vi filename
+w           who is logon, what are doing            w username
+wall        write to all users                      wall
+wc          count line, word, char in file          wc filename
+whereis     locate programs                         whereis command
+which       display pathname or alias               which command
+who         who is logon, where are they            who
+whoami      display current username                whoami
+whodo       who is doing what                       whodo username
+write       write message to unix user              write username<filename
+www         world wide web                          www
+
+
+[Solaris] Admin
+Commands    Functions                           Example
+-------------------------------------------------------------------------------
+admintool   GUI administrative tool             admintool
+at          execute batch at a later time       at -f file -t 1200
+crontab     edit cron file                      crontab -e
+dig         gather information from DNS         dig hostname@domain
+dmesg       display system message buffer       dmesg
+eeprom      view and modify OpenBoot param      eeprom
+fsck        file system check                   fsck
+init        process control initialization      init
+mount       make file/disk available            mount /mnt/floppy
+netstat     show network status                 netstat -r
+newfs       contruct a new file system          ???
+nslookup    query Internet DNS                  nslookup domain
+patchadd    installs a patch                    patchadd patch
+patchrm     removes a patch                     patchrm patch
+pkgadd      installs a package                  pkgadd package
+pkginfo     list installed packages             pkginfo
+pkgrm       removes a package                   pkgrm package
+printenv    print enviornment                   printenv
+prtconf     print configurations                prtconf
+rusers      list users on all network           rusers -l hostname
+showrev     list installed package              showrev -p
+shutdown    shuts the system down               shutdown -h now
+tip         connect to a remote system          ???
+traceroute  print the route packets             traceroute host
+umount      unmount file/disk system            umount /mnt/cdrom
+useradd     add a user to the system            useradd -m username
+userdel     remove a user from the system       userdel -r username
+who         system runlevel                     who -r
+
+
+AFS (Andrew File System) ACLs (Access Control List)
+Commands        Example
+-------------------------------------------------------------------------------
+fs setacl       fs setacl dirname system:useronly all
+fs setacl       fs setacl dirname system:useronly none
+fs setacl       fs setacl dirname system:administrators rl
+
+fs listacl      fs listacl filename
+fs listquota    fs listquota    (list quota  of space)
+fs listv        fs listv    (list volume of space)
+
+pts creategroup username:groupname
+pts delete  username:groupname
+pts membership  username:groupname
+
+pts adduser user username:groupname
+pts removeuser  user username:groupname
+
+
+Micellaneous
+Command     Function                    Shell
+-------------------------------------------------------------------------------
+r           redo last command           /bin/ksh
+!!          redo last command           /bin/csh
+!string     redo command with string    bin/csh
+
+
+File Field Paramaters
+File        Field Param
+-------------------------------------------------------------------------------
+/etc/group  $NAME:$PASSWD:$GID:$USER,$USER,...
+/etc/passwd $USER:$PASSWD:$UID:$GID:$COMMENT:$HOME:$SHELL
+/etc/shadow $UID:$PASSWD:$LAST_CHGED:$MIN:$MAX:$WARN:$INACT:$EXPIRE:$FLAG
+
+-------------------------------------------------------------------------------
+** more unix commands in file .cshrc as alias commands

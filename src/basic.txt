@@ -1,0 +1,170 @@
+BASIC Language
+----------------------------------------------------------------------
+BEEP                                Beeps the speaker. PRINT CHR$(7)
+CALL subroutine[(arg)]              Calls a subroutine
+CASE ConstantList                   Used in SELECT CASE structure
+CIRCLE [STEP] (X, Y), radius [,P_Color [,S_Angle, E_Angle [,A_Ratio]]]
+CLEAR                               Reinitializes variables and close files
+CLOSE #filenum                      Closes a file
+CLS                                 Clear screen
+COLOR [fore][,[back][,border]]      Sets colors in screen mode 0
+COLOR [background][,palette]]       Sets color choices in screen mode 1
+COLOR [foreground][,background]     Sets color in SCREEN mode 7-10
+COLOR [foreground]                  Sets color in SCREEN mode 11-13
+COMMON variable [,variable2,..]     Passes vasriavle to a chained program
+COMMON SHARED                       Defines variable as global
+DATA constant [,constant2,...]      Provides constants to be read by READ
+DATE$ = DateString                  Sets the current date
+DECLARE funcname(arg)               Declares a function or subprogram
+DEF FN name(arg(s)) = expr          Defines a function for later execution
+DEF [DBL | INT | LNG] letter [-letter][,letter[-letter]]
+                                    Declare that variables beginning with the named letters
+                                    will be [double | integer | long integer]
+DEF SEG [=segment.start]            Defines the beginning of the current
+                                    segment of mem for subsequent
+                                    BLOAD, SAVE, PEEK, or POKE.
+DEF [SNG | STR] letter [-letter][,letter[letter]]
+                                    Declares that variables beginning with the named letters
+                                    will be [single-precision | string variables]
+DIM arrname(emt) [,arr2(emt),.]     Create arrays with num elements
+DO [WHILE | UNTIL] condition        Begin a loop. End with LOOP
+DRAW string                         Draws string
+END                                 Stops execution of program
+END IF                              End of IF block
+END SUB                             End of a subprogram
+ERASE arrayname [,arrayname]        Zeros out arrays
+EXIT [DEF|FOR|FUNCTION|SUB]         Provides an exit from constructs
+FOR i = 0 TO 1 [STEP increment]     For loop
+FUNCTION name[(para)][STATIC]       Establish a function
+GET #filenum [,recordnumber]        Reads data from a random file
+GOSUB linelabel                     Begins execution of subroutine
+IF condtion THEN statement          If-else-if statement
+INPUT "prompt" [;|,] variable       Input at keyboard after prompt
+INPUT #filenum, var [,var2,...]     Reads data from sequential data file
+KILL "filename"                     Deletes a file from disk
+[LET] variable = expression         Assign expression to variable
+LINE [XStart, YStart]-(XEnd, YEnd) [,[ColorAttrib][,B[F]]]
+                                    Draws a line or box in graphics modes
+LINE INPUT [;]["PROMPT";] Var       Inputs all characters typed until ENTER
+LINE INPUT #filenumber, strvar      Read characters from a disk until ENTER
+LOCATE  row, column [,cursor]       Place cursor at coor & blink or not
+LOOP[WHILE | UNTIL] condition       Close a do loop
+LPRINT [items to print]             Prints data on printer
+LPRINT USING "String"; var          Prints data on printer
+LPRINT USING StrVar; var            Prints data on printer
+MID$(StrVar, S, E) = expr           Replace string var with string expr
+NAME  "oldfile" AS "newfile"        Renames a disk file
+NEXT [loop index]                   Increment FOR loop or terminates
+ON ERROR GOTO linelabel             Program error trapping and interrupt
+ON expr GOSUB list of lables        Evaluate expr and execute subroutine
+ON expr GOTO list of lables         Evaluate expr and branch to subroutine
+OPEN mode, #filename, "f_name"      Opens file for mode = [I | O |A]
+OPEN "f_name" FOR mode AS #num      Opens file for mode=[INPUT|OUTPUT|APPEND]
+OPEN "R", #f_n, "f_n", rec_len      Opens a random data file
+OPEN "filename" [FOR RANDOM] AS #filenum [LEN = rec_length]
+OPTION BASE number                  Sets the minimum array element [0 | 1]
+PAINT (X,Y)[,Fill][,Border]         Fills area of screen with color
+PALETTE                             Assigns colors tp attributes
+PLAY string                         Plays music specified in string
+POKE MemoryOffset, value            Writes value (0-65535) into byte
+PRESET (X,Y)[,PaletteColor]         Resets a point in graphics mode
+PRINT [items to print]              Display data on screen
+PRINT #filenumber, var [,var2]      Prints data on sequential file
+PRINT USING "string"; items         Display data on screen
+PRINT USING strvar; items           Display data on screen
+PSET (X,Y)[,ColorAttribute]         Draws a point on graphics mode
+PUT #filenum [,RecNum], RecName     Writes data from record to random file
+RANDOMIZE [expression | TIMER]      Reseeds the random number generator
+READ variable [,var2,...]           Reads constants from DATA statements
+REM remark                          Documentation. Also "'"
+RESTORE                             Resets the data pointer
+RESUME                              Resumes execution of program
+RESUME NEXT                         Resumes execution of program
+RESUME linelabel                    Resumes execution of program
+RETURN                              Returns to calling GOSUB statement
+SCREEN [Mode][,[b][,[AP][,V]]]      Set to low, medium, high resolution
+SELECT CASE expression              Begins a CASE structure
+SHARED variable list                Define variables as global
+SHELL [common string]               Allows execution of DOS commands
+SOUND frequency, duration           Gernerates sound through speaker
+STOP                                Halts program execution.
+SUB func_name[(para)][STATIC]       Begins a subprogram
+SWAP variable1, variable2           Exchanges the contents of the variables
+TIME$ = string                      Sets the current time. "hh:mm:ss".
+TYPE VariableType                   Defines data with multiple elements
+VIEW (V.left, V.top)-(V.right, V.bottom)[,[ColorAttribute][,boundary]]
+                                    Defines a rectangular for drawing graphs in graphics mode
+VIEW PRINT [T.Line to B.Line]       Establish boundaries of a text viewport
+WEND                                Terminates a WHILE loop
+WHILE condition                     Begins a program loop
+WIDTH [columns][,lines]             Set number of columns and lines to print
+WIDTH "LPT1:", LineLength           Set length of the lines on the printer
+WINDOW (WL, WT)-(WR, WB)            Redefines the coor of screen or viewport
+WRITE #filename, var1 [,var2]       Writes data in a sequential data file
+
+BASIC FUNCTIONS
+---------------------------------------------------------------------------
+ABS(X)                  Absolute value of X
+ASC(X$)                 ASCII code number of the first character of X$
+ATN(X)                  Arctangent of X (in radians)
+CDBL(X)                 Double-precision value of X
+CHR$(X)                 Character represented by the ASCII code of X
+CINT(X)                 X rounded to an integer
+CLNG(X)                 X rounded to a long integer
+COS(X)                  Cosine of angle X. (in radians)
+CSNG(X)                 Single-precision value of X
+CSRLIN                  Current row of cursor
+CVD(X$)                 Double-precision equivalent of an 8-byte string
+CVI(X$)                 Integer equivalent of a 2-byte string
+CVL(X$)                 Long integer equivalent of a 2-byte string
+CVS(X$)                 Single-precision equivalent of a 4-byte string
+DATE$                   Retrieves the current date as a 10-char string
+EOF(#filenum)           Tests for an EOf condition
+ERR                     Code for error
+EXP(X)                  Calculates e to the power of X
+FIX(X)                  Trucated integer portion of X
+HEX$(X)                 A string that represents the hex value of X
+INKEY$                  Returns one character from the keyboard
+INPUT$(X)               Returns a string of characters from keyboard
+INSTR([B,]X$,Y$)        Position of X$ where substring Y$ begins
+INT(X)                  Largest integer less than or equal to X
+LBOUND(array[,n])       Lowest element allowable for array
+LCASE$                  Lower-case equivalent of X$
+LEFT$(X$, N)            Leftmost N characters of X$
+LEN(X$)                 Number of characters in X$
+LOC(#filenumber)        Record number of last record read/written in file
+LOF(#filenumber)        Number of bytes in the fle specified
+LOG(X)                  Natural logarithm of X. (x is positive)
+LPOS(1)                 Current position of the print head in print queue
+LTRIM$                  X$ with leading spaces removed
+MID$(X$,B[,N])          Substring of X$, begin at B for length of N
+MKD$(D)                 8-byte string from a double-precision value
+MKI$(I)                 2-byte string from an integer numeric value
+MKS$(S)                 4-byte string froma single-precision value
+NUMERIC expr MOD expr   Returns the remainder of a division
+OCT$(X)                 A string that represents the octal value of X
+PEEK(X)                 The byte read from memory location X
+PMAP(coor, selection)   Corresponding physical screen coordinate...
+                        Selection:  0 = map world corr x to screen x
+                                    1 = map world coor y to screen y
+                                    2 = map screen coor x to world x
+                                    3 = map screen coor y to world y
+POS(X)                  Current horizontal positio of the cursor
+RIGHT$(X$,N)            Rightmost N characters of X$
+RND[(x)]                A double-precision random number between 0 and 1
+RTRIM(X$)               X$ with trailing spaces removed
+SGN(X)                  Sign of X. 1 = pos; -1 = neg; 0 = zero
+SIN(X)                  Sine of angle X (x in radians)
+SPACES$(N)              A string of N spaces
+SPC(N)                  N spaces inserted in a PRINT or LPRINT statement
+SQR(X)                  Square root of X
+STR$(X)                 The string representation of X
+STRING$(N,C$)           A string of length N comprised of the single
+STRING$(N,X)            character C$ or ASCII code numer x
+TAB(X)                  Pint pinter moved to position X on the line
+TAN(X)                  Tangent of angle X. (x in radians)
+TIME$                   Retrieve the current time as an 8-char string
+TIMER                   Number of seconds elapsed since midnight
+UBOUND(array[,N])       Largest element allowable for array
+USR                     Calls an assembly language subroutine
+VAL(X$)                 Numeric value of X$

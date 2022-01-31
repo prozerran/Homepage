@@ -1,0 +1,94 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Data<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>IO<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> OfficeOpenXml<span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// </span><span style='color:#5555dd; '>https://www.epplussoftware.com/docs/5.6/api/index.html</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> MainEPPlusDriver
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> Xls1FileName <span style='color:#308080; '>=</span> Directory<span style='color:#308080; '>.</span>GetCurrentDirectory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>\..\..\..\Resources\New.xlsx</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> Xls2FileName <span style='color:#308080; '>=</span> Directory<span style='color:#308080; '>.</span>GetCurrentDirectory<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>+</span> <span style='color:#800000; '>@"</span><span style='color:#1060b6; '>\..\..\..\Resources\Sample.xlsx</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> MainEPPlusDriver<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// NEED license for commercial product</span>
+            ExcelPackage<span style='color:#308080; '>.</span>LicenseContext <span style='color:#308080; '>=</span> LicenseContext<span style='color:#308080; '>.</span>NonCommercial<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> CreateExcel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> newFile <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> FileInfo<span style='color:#308080; '>(</span>Xls1FileName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> pck <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ExcelPackage<span style='color:#308080; '>(</span>newFile<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//Add the Content sheet</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> ws <span style='color:#308080; '>=</span> pck<span style='color:#308080; '>.</span>Workbook<span style='color:#308080; '>.</span>Worksheets<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Content</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>View<span style='color:#308080; '>.</span>ShowGridLines <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+
+            ws<span style='color:#308080; '>.</span>Column<span style='color:#308080; '>(</span><span style='color:#008c00; '>4</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>OutlineLevel <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>Column<span style='color:#308080; '>(</span><span style='color:#008c00; '>4</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Collapsed <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>Column<span style='color:#308080; '>(</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>OutlineLevel <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>Column<span style='color:#308080; '>(</span><span style='color:#008c00; '>5</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Collapsed <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>OutLineSummaryRight <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>//Headers</span>
+            ws<span style='color:#308080; '>.</span>Cells<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>B1</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>Value <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Name</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>Cells<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>C1</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>Value <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Size</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>Cells<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>D1</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>Value <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Created</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>Cells<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>E1</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>Value <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Last modified</span><span style='color:#800000; '>"</span><span style='color:#406080; '>;</span>
+            ws<span style='color:#308080; '>.</span>Cells<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>B1:E1</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>.</span>Style<span style='color:#308080; '>.</span>Font<span style='color:#308080; '>.</span>Bold <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+            pck<span style='color:#308080; '>.</span>Save<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> ReadSampleExcel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>Path<span style='color:#308080; '>.</span>GetExtension<span style='color:#308080; '>(</span>Xls2FileName<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>.xlsx</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Stream fs <span style='color:#308080; '>=</span> File<span style='color:#308080; '>.</span>OpenRead<span style='color:#308080; '>(</span>Xls2FileName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                ExcelPackage package <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ExcelPackage<span style='color:#308080; '>(</span>fs<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                DataTable dt <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DataTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                dt <span style='color:#308080; '>=</span> ToDataTable<span style='color:#308080; '>(</span>package<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                List<span style='color:#308080; '>&lt;</span>DataRow<span style='color:#308080; '>></span> listOfRows <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span>DataRow<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                listOfRows <span style='color:#308080; '>=</span> dt<span style='color:#308080; '>.</span>AsEnumerable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>ToList<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> DataTable ToDataTable<span style='color:#308080; '>(</span>ExcelPackage package<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ExcelWorksheet workSheet <span style='color:#308080; '>=</span> package<span style='color:#308080; '>.</span>Workbook<span style='color:#308080; '>.</span>Worksheets<span style='color:#308080; '>.</span>First<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            DataTable table <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DataTable<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> firstRowCell <span style='color:#200080; font-weight:bold; '>in</span> workSheet<span style='color:#308080; '>.</span>Cells<span style='color:#308080; '>[</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> workSheet<span style='color:#308080; '>.</span>Dimension<span style='color:#308080; '>.</span>End<span style='color:#308080; '>.</span>Column<span style='color:#308080; '>]</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                table<span style='color:#308080; '>.</span>Columns<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>firstRowCell<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+
+            <span style='color:#200080; font-weight:bold; '>for</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> rowNumber <span style='color:#308080; '>=</span> <span style='color:#008c00; '>2</span><span style='color:#406080; '>;</span> rowNumber <span style='color:#308080; '>&lt;</span><span style='color:#308080; '>=</span> workSheet<span style='color:#308080; '>.</span>Dimension<span style='color:#308080; '>.</span>End<span style='color:#308080; '>.</span>Row<span style='color:#406080; '>;</span> rowNumber<span style='color:#308080; '>+</span><span style='color:#308080; '>+</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> row <span style='color:#308080; '>=</span> workSheet<span style='color:#308080; '>.</span>Cells<span style='color:#308080; '>[</span>rowNumber<span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> rowNumber<span style='color:#308080; '>,</span> workSheet<span style='color:#308080; '>.</span>Dimension<span style='color:#308080; '>.</span>End<span style='color:#308080; '>.</span>Column<span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> newRow <span style='color:#308080; '>=</span> table<span style='color:#308080; '>.</span>NewRow<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>var</span> cell <span style='color:#200080; font-weight:bold; '>in</span> row<span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    newRow<span style='color:#308080; '>[</span>cell<span style='color:#308080; '>.</span>Start<span style='color:#308080; '>.</span>Column <span style='color:#308080; '>-</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> cell<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                table<span style='color:#308080; '>.</span>Rows<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>newRow<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>return</span> table<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Main driver for reading data from excel</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            CreateExcel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ReadSampleExcel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-06 08:15:41 UTC -->

@@ -1,0 +1,175 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>ObjectModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>ComponentModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Runtime<span style='color:#308080; '>.</span>CompilerServices<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>IO<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Mvvm<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>Models<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Commands<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>poco<span style='color:#308080; '>.</span>order<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Windows<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> SPTrader<span style='color:#308080; '>.</span>BusinessLayer<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Prism<span style='color:#308080; '>.</span>Events<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> apiwrappercli<span style='color:#308080; '>.</span>poco<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> SPTrader<span style='color:#308080; '>.</span>ViewModels
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>abstract</span> <span style='color:#200080; font-weight:bold; '>class</span> EditViewModel <span style='color:#308080; '>:</span> BindableBase
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IEventAggregator ea <span style='color:#308080; '>=</span> EventService<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>EventAggregator<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> SPApiProxyWrapper apiProxy<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>readonly</span> Int32 maxQty <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1000</span><span style='color:#406080; '>;</span>
+
+        #region
+        <span style='color:#200080; font-weight:bold; '>protected</span> SPOrder order<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> SPOrder Order
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> order<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> order<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>string</span> priceStr <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> PriceStr
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> priceStr<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> priceStr<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> qty<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> Qty
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> qty<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> qty<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>int</span> selectedOrderType <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> SelectedOrderType
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> selectedOrderType<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> selectedOrderType<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> DateTime selectedDateTime <span style='color:#308080; '>=</span> DateTime<span style='color:#308080; '>.</span>Now<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DateTime SelectedDateTime
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> selectedDateTime<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> selectedDateTime<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> IsModified <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> isModified <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> IsModified
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> isModified<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> isModified<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>bool</span> isChangeClicked <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> IsChangeClicked
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> isChangeClicked<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> isChangeClicked<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>int</span> longticksize <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>int</span> LongTickSize
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> longticksize<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> longticksize<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>sbyte</span> decinprice <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>sbyte</span> DecInPrice
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> decinprice<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#406080; '>{</span> SetProperty<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>ref</span> decinprice<span style='color:#308080; '>,</span> value<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+        #endregion
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>string</span> prodCode <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Empty<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> OrderTypeEnum ordertype <span style='color:#308080; '>=</span> OrderTypeEnum<span style='color:#308080; '>.</span>Limit<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand ChangeCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand ConfirmCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand CancelCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> PriceCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> DelegateCommand<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span> QtyCommand <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> Action SetCancel <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> Action SetClose <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>abstract</span> <span style='color:#200080; font-weight:bold; '>void</span> SetOrderData<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> ordno<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>abstract</span> <span style='color:#200080; font-weight:bold; '>void</span> PlaceEditOrder<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>abstract</span> <span style='color:#200080; font-weight:bold; '>void</span> UpdatePrice<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>double</span> price<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>int</span> offset<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> EditViewModel<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            apiProxy <span style='color:#308080; '>=</span> SPCLI<span style='color:#308080; '>.</span>Instance<span style='color:#308080; '>.</span>ApiProxyWrapper<span style='color:#406080; '>;</span>            
+
+            ChangeCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>(</span>OnChangeCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            ConfirmCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>(</span>OnConfirmCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            CancelCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>(</span>OnCancelCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            PriceCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span>OnPriceCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            QtyCommand <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> DelegateCommand<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span>OnQtyCommand<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>virtual</span> <span style='color:#200080; font-weight:bold; '>void</span> OnChangeCommand<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IsChangeClicked <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>virtual</span> <span style='color:#200080; font-weight:bold; '>void</span> OnConfirmCommand<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            PlaceEditOrder<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// close window</span>
+            ea<span style='color:#308080; '>.</span>GetEvent<span style='color:#308080; '>&lt;</span>ClosePendingDetailEvent<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>Publish<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>virtual</span> <span style='color:#200080; font-weight:bold; '>void</span> OnCancelCommand<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IsModified <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            IsChangeClicked <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            SetCancel?<span style='color:#308080; '>.</span>Invoke<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>virtual</span> <span style='color:#200080; font-weight:bold; '>void</span> OnPriceCommand<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> sign<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IsModified <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> dir <span style='color:#308080; '>=</span> AdjustDirectionEnum<span style='color:#308080; '>.</span>Up<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>sign<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>+</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                dir <span style='color:#308080; '>=</span> AdjustDirectionEnum<span style='color:#308080; '>.</span>Down<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> apiProxy<span style='color:#308080; '>.</span>UIHelper<span style='color:#308080; '>.</span>AdjustInputPrice<span style='color:#308080; '>(</span>PriceStr<span style='color:#308080; '>,</span> prodCode<span style='color:#308080; '>,</span> dir<span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> ordertype<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>res<span style='color:#308080; '>.</span>Item1<span style='color:#308080; '>)</span>
+                PriceStr <span style='color:#308080; '>=</span> res<span style='color:#308080; '>.</span>Item3<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>virtual</span> <span style='color:#200080; font-weight:bold; '>void</span> OnQtyCommand<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> sign<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            IsModified <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> dir <span style='color:#308080; '>=</span> AdjustDirectionEnum<span style='color:#308080; '>.</span>Up<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>!</span>sign<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>+</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                dir <span style='color:#308080; '>=</span> AdjustDirectionEnum<span style='color:#308080; '>.</span>Down<span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> res <span style='color:#308080; '>=</span> apiProxy<span style='color:#308080; '>.</span>UIHelper<span style='color:#308080; '>.</span>AdjustInputQty<span style='color:#308080; '>(</span>Qty<span style='color:#308080; '>.</span>ToString<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> prodCode<span style='color:#308080; '>,</span> dir<span style='color:#308080; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>,</span> ordertype<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>,</span> maxQty<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>res<span style='color:#308080; '>.</span>Item1<span style='color:#308080; '>)</span>
+                Qty <span style='color:#308080; '>=</span> res<span style='color:#308080; '>.</span>Item2<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-16 02:58:55 UTC -->

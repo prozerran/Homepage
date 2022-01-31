@@ -1,0 +1,89 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>ObjectModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>ComponentModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Diagnostics<span style='color:#308080; '>.</span>CodeAnalysis<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> ObservableCollection<span style='color:#308080; '>.</span>Ex
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> IndexedObservableCollection<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>,</span> K<span style='color:#308080; '>></span> <span style='color:#308080; '>:</span> INotifyPropertyChanged
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> ObservableCollection<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span> dataList <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ObservableCollection<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> Dictionary<span style='color:#308080; '>&lt;</span>K<span style='color:#308080; '>,</span> Int32<span style='color:#308080; '>></span> indexedMap <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Dictionary<span style='color:#308080; '>&lt;</span>K<span style='color:#308080; '>,</span> Int32<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> T selectedItem<span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>event</span> PropertyChangedEventHandler PropertyChanged<span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>protected</span> <span style='color:#200080; font-weight:bold; '>virtual</span> <span style='color:#200080; font-weight:bold; '>void</span> OnPropertyChanged<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> propertyName<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            PropertyChangedEventHandler handler <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>PropertyChanged<span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>handler <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>var</span> e <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> PropertyChangedEventArgs<span style='color:#308080; '>(</span>propertyName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                handler<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>,</span> e<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ObservableCollection<span style='color:#308080; '>&lt;</span>T<span style='color:#308080; '>></span> DataList <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> dataList<span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>set</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> dataList <span style='color:#308080; '>=</span> value<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> T SelectedItem
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> selectedItem<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+            <span style='color:#200080; font-weight:bold; '>set</span>
+            <span style='color:#406080; '>{</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>value <span style='color:#308080; '>!</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span> &amp;&amp;
+                    <span style='color:#308080; '>!</span>value<span style='color:#308080; '>.</span>Equals<span style='color:#308080; '>(</span>selectedItem<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    selectedItem <span style='color:#308080; '>=</span> value<span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>.</span>OnPropertyChanged<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>SelectedItem</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> SaveOrUpdate<span style='color:#308080; '>(</span>T data<span style='color:#308080; '>,</span> K key<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>lock</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Int32 storedIndex<span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>indexedMap<span style='color:#308080; '>.</span>TryGetValue<span style='color:#308080; '>(</span>key<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>out</span> storedIndex<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    DataList<span style='color:#308080; '>[</span>storedIndex<span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> data<span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+                <span style='color:#200080; font-weight:bold; '>else</span>
+                <span style='color:#406080; '>{</span>
+                    DataList<span style='color:#308080; '>.</span>Add<span style='color:#308080; '>(</span>data<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                    indexedMap<span style='color:#308080; '>[</span>key<span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> DataList<span style='color:#308080; '>.</span>Count <span style='color:#308080; '>-</span> <span style='color:#008c00; '>1</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>bool</span> TryGetValue<span style='color:#308080; '>(</span>K key<span style='color:#308080; '>,</span> <span style='color:#308080; '>[</span>MaybeNullWhen<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>false</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span> <span style='color:#200080; font-weight:bold; '>out</span> T data<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>lock</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Int32 storedIndex<span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>indexedMap<span style='color:#308080; '>.</span>TryGetValue<span style='color:#308080; '>(</span>key<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>out</span> storedIndex<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    data <span style='color:#308080; '>=</span> DataList<span style='color:#308080; '>[</span>storedIndex<span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+                    <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>true</span><span style='color:#406080; '>;</span>
+                <span style='color:#406080; '>}</span>
+
+                data <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>default</span><span style='color:#308080; '>(</span>T<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>false</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> Clear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#200080; font-weight:bold; '>lock</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>this</span><span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                indexedMap<span style='color:#308080; '>.</span>Clear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+                dataList<span style='color:#308080; '>.</span>Clear<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-16 02:38:59 UTC -->

@@ -1,0 +1,67 @@
+<pre style='color:#000020;background:#f6f8ff;'>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>ObjectModel<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>using</span> OpenQA<span style='color:#308080; '>.</span>Selenium<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> OpenQA<span style='color:#308080; '>.</span>Selenium<span style='color:#308080; '>.</span>Chrome<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> TopNugetPackages
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>class</span> SeleniumMainDriver <span style='color:#308080; '>:</span> ITopNugetPackages
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> IWebDriver driver <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> SeleniumMainDriver<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            <span style='color:#595979; '>// actual finds file chromedriver.exe that matches version of browser installed</span>
+            driver <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> ChromeDriver<span style='color:#308080; '>(</span><span style='color:#800000; '>@"</span><span style='color:#1060b6; '>C:\Users\sp\Downloads</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>void</span> GoogleSearch<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            driver<span style='color:#308080; '>.</span>Navigate<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>GoToUrl<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>http://google.com</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            IWebElement element <span style='color:#308080; '>=</span> driver<span style='color:#308080; '>.</span>FindElement<span style='color:#308080; '>(</span>By<span style='color:#308080; '>.</span>Id<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>gbqfq</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            element<span style='color:#308080; '>.</span>SendKeys<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>selenium webdriver</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Get the search results panel that contains the link for each result.</span>
+            IWebElement resultsPanel <span style='color:#308080; '>=</span> driver<span style='color:#308080; '>.</span>FindElement<span style='color:#308080; '>(</span>By<span style='color:#308080; '>.</span>Id<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>search</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Get all the links only contained within the search result panel.</span>
+            ReadOnlyCollection<span style='color:#308080; '>&lt;</span>IWebElement<span style='color:#308080; '>></span> searchResults <span style='color:#308080; '>=</span> resultsPanel<span style='color:#308080; '>.</span>FindElements<span style='color:#308080; '>(</span>By<span style='color:#308080; '>.</span>XPath<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>.//a</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#595979; '>// Print the text for every link in the search results.</span>
+            <span style='color:#200080; font-weight:bold; '>foreach</span> <span style='color:#308080; '>(</span>IWebElement result <span style='color:#200080; font-weight:bold; '>in</span> searchResults<span style='color:#308080; '>)</span>
+            <span style='color:#406080; '>{</span>
+                Console<span style='color:#308080; '>.</span>WriteLine<span style='color:#308080; '>(</span>result<span style='color:#308080; '>.</span>Text<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#406080; '>}</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> SimpleTest<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            driver<span style='color:#308080; '>.</span>Navigate<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>.</span>GoToUrl<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>https://www.computerhope.com/htmcolor.htm</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>2000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            IWebElement element <span style='color:#308080; '>=</span> driver<span style='color:#308080; '>.</span>FindElement<span style='color:#308080; '>(</span>By<span style='color:#308080; '>.</span>ClassName<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>sbar</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            element<span style='color:#308080; '>.</span>SendKeys<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>blue</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            Thread<span style='color:#308080; '>.</span>Sleep<span style='color:#308080; '>(</span><span style='color:#008c00; '>1000</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            element<span style='color:#308080; '>.</span>SendKeys<span style='color:#308080; '>(</span>Keys<span style='color:#308080; '>.</span>Enter<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+
+        <span style='color:#595979; '>// Demonstration on how to use Selenium Web Driver to perform testing on Web functionalities</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>void</span> DoIt<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            SimpleTest<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-09 08:19:49 UTC -->

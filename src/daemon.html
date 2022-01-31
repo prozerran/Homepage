@@ -1,0 +1,186 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#595979; '>/* global includs and libraries */</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>sys/stat.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>sys/types.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>sys/socket.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>stdio.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>arpa/inet.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>unistd.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>string.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>pthread.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>stdlib.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>netinet/in.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>netdb.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>time.h</span><span style='color:#800000; '>></span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>include </span><span style='color:#800000; '>&lt;</span><span style='color:#40015a; '>signal.h</span><span style='color:#800000; '>></span>
+
+<span style='color:#595979; '>/* global constants and defines */</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAX_CLIENT  8192</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> MAX_BUFFER  4096</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> NUM_PORT    0</span>
+
+<span style='color:#595979; '>/*</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;On exit procedure.</span>
+<span style='color:#595979; '>*/</span>
+<span style='color:#200080; font-weight:bold; '>void</span> exiterr<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>const</span> <span style='color:#200080; font-weight:bold; '>char</span><span style='color:#308080; '>*</span> szMsg<span style='color:#308080; '>)</span>
+<span style='color:#406080; '>{</span>
+    <span style='color:#003060; '>fprintf</span><span style='color:#308080; '>(</span><span style='color:#003060; '>stderr</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#007997; '>%s</span><span style='color:#0f69ff; '>\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> szMsg<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#003060; '>exit</span><span style='color:#308080; '>(</span><span style='color:#308080; '>-</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+
+<span style='color:#595979; '>/*</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;Make the process a daemon.</span>
+<span style='color:#595979; '>*/</span>
+<span style='color:#200080; font-weight:bold; '>void</span> Daemonize<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>void</span><span style='color:#308080; '>)</span>
+<span style='color:#406080; '>{</span>
+    pid_t pid<span style='color:#308080; '>,</span> sid<span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>/* already a daemon */</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span> getppid<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span> <span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>return</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>/* Fork off the parent process */</span>
+    pid <span style='color:#308080; '>=</span> fork<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>pid <span style='color:#308080; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+        <span style='color:#003060; '>exit</span><span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+    <span style='color:#595979; '>/* If we got a good PID, then we can exit the parent process. */</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>pid <span style='color:#308080; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+        <span style='color:#003060; '>exit</span><span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>/* At this point we are executing as the child process */</span>
+
+    <span style='color:#595979; '>/* Change the file mode mask */</span>
+    umask<span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>/* Create a new SID for the child process */</span>
+    sid <span style='color:#308080; '>=</span> setsid<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>sid <span style='color:#308080; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+        <span style='color:#003060; '>exit</span><span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>/* Change the current working directory.  This prevents the current</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;directory from being locked; hence not being able to remove it. */</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>chdir<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>/</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span> <span style='color:#406080; '>{</span>
+        <span style='color:#003060; '>exit</span><span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+
+    <span style='color:#595979; '>/* Redirect standard files to /dev/null */</span>
+    <span style='color:#003060; '>freopen</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>/dev/null</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>r</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#003060; '>stdin</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#003060; '>freopen</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>/dev/null</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>w</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#003060; '>stdout</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#003060; '>freopen</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>/dev/null</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>w</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#003060; '>stderr</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+
+<span style='color:#595979; '>/*</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;Client Thread. Each client is executed on its own thread.</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;Continueously read and serve client until it closes the connection.</span>
+<span style='color:#595979; '>*/</span>
+<span style='color:#200080; font-weight:bold; '>void</span><span style='color:#308080; '>*</span> ServeClientThread<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>void</span><span style='color:#308080; '>*</span> pArg<span style='color:#308080; '>)</span>
+<span style='color:#406080; '>{</span>
+    pthread_detach<span style='color:#308080; '>(</span>pthread_self<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>/* This is the critical section object (statically allocated). */</span>
+    <span style='color:#200080; font-weight:bold; '>static</span> pthread_mutex_t cs_mutex <span style='color:#308080; '>=</span> PTHREAD_MUTEX_INITIALIZER<span style='color:#406080; '>;</span>
+
+    <span style='color:#200080; font-weight:bold; '>int</span> paddrlen<span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>*</span> pclientsd <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> pArg<span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>int</span> clientsd <span style='color:#308080; '>=</span> pclientsd<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>char</span> buffer<span style='color:#308080; '>[</span>MAX_BUFFER<span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#200080; font-weight:bold; '>struct</span> sockaddr_in clientsock<span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>struct</span> <span style='color:#400000; '>hostent</span> <span style='color:#308080; '>*</span>phe<span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>struct</span> in_addr addr<span style='color:#406080; '>;</span>
+
+    paddrlen <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>sizeof</span><span style='color:#308080; '>(</span>clientsock<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// get client port number</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#400000; '>getpeername</span><span style='color:#308080; '>(</span>clientsd<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>struct</span> <span style='color:#400000; '>sockaddr</span><span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&amp;</span>clientsock<span style='color:#308080; '>,</span> <span style='color:#308080; '>&amp;</span>paddrlen<span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#7d0045; '>NULL</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// get client doman name</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>phe <span style='color:#308080; '>=</span> <span style='color:#400000; '>gethostbyaddr</span><span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>char</span><span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&amp;</span>clientsock<span style='color:#308080; '>.</span>sin_addr<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>sizeof</span><span style='color:#308080; '>(</span>clientsock<span style='color:#308080; '>.</span>sin_addr<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> AF_INET<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#7d0045; '>NULL</span><span style='color:#308080; '>)</span>
+        <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#7d0045; '>NULL</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// get client ip address</span>
+    addr<span style='color:#308080; '>.</span>s_addr <span style='color:#308080; '>=</span> <span style='color:#308080; '>*</span><span style='color:#308080; '>(</span>u_long<span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> phe<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>h_addr_list<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+    <span style='color:#003060; '>printf</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Client Connected: [</span><span style='color:#007997; '>%d</span><span style='color:#1060b6; '>][</span><span style='color:#007997; '>%s</span><span style='color:#1060b6; '>][</span><span style='color:#007997; '>%s</span><span style='color:#1060b6; '>][</span><span style='color:#007997; '>%d</span><span style='color:#1060b6; '>]</span><span style='color:#0f69ff; '>\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> clientsd<span style='color:#308080; '>,</span> phe<span style='color:#308080; '>-</span><span style='color:#308080; '>></span>h_name<span style='color:#308080; '>,</span> <span style='color:#400000; '>inet_ntoa</span><span style='color:#308080; '>(</span>addr<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> <span style='color:#400000; '>ntohs</span><span style='color:#308080; '>(</span>clientsock<span style='color:#308080; '>.</span>sin_port<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#003060; '>memset</span><span style='color:#308080; '>(</span>buffer<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>sizeof</span><span style='color:#308080; '>(</span>buffer<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#400000; '>recv</span><span style='color:#308080; '>(</span>clientsd<span style='color:#308080; '>,</span> buffer<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>sizeof</span><span style='color:#308080; '>(</span>buffer<span style='color:#308080; '>)</span><span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#003060; '>strlen</span><span style='color:#308080; '>(</span>buffer<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+            <span style='color:#200080; font-weight:bold; '>break</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>/* Enter the critical section -- other threads are locked out */</span>
+        pthread_mutex_lock<span style='color:#308080; '>(</span> <span style='color:#308080; '>&amp;</span>cs_mutex <span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>/* Do some thread-safe processing! */</span>
+        <span style='color:#003060; '>printf</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#007997; '>%d</span><span style='color:#1060b6; '>:</span><span style='color:#007997; '>%s</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> clientsd<span style='color:#308080; '>,</span> buffer<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>/*Leave the critical section -- other threads can now pthread_mutex_lock()  */</span>
+        pthread_mutex_unlock<span style='color:#308080; '>(</span> <span style='color:#308080; '>&amp;</span>cs_mutex <span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#406080; '>}</span>
+    <span style='color:#003060; '>printf</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Closed: [</span><span style='color:#007997; '>%d</span><span style='color:#1060b6; '>]</span><span style='color:#0f69ff; '>\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> clientsd<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    close<span style='color:#308080; '>(</span>clientsd<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    pthread_exit<span style='color:#308080; '>(</span><span style='color:#7d0045; '>NULL</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+
+<span style='color:#595979; '>/*</span>
+<span style='color:#595979; '>&#xa0;&#xa0;&#xa0;&#xa0;Main Driver Routine</span>
+<span style='color:#595979; '>*/</span>
+<span style='color:#200080; font-weight:bold; '>int</span> <span style='color:#400000; '>main</span><span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span> argc<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>char</span><span style='color:#308080; '>*</span> argv<span style='color:#308080; '>[</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span>
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>int</span> sd<span style='color:#308080; '>,</span> err<span style='color:#308080; '>,</span> clientsd<span style='color:#308080; '>,</span> paddrlen<span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>int</span> paramlist<span style='color:#308080; '>[</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>]</span><span style='color:#406080; '>;</span>
+    pthread_t tid<span style='color:#406080; '>;</span>
+
+    <span style='color:#200080; font-weight:bold; '>struct</span> sockaddr_in localsock<span style='color:#406080; '>;</span>
+    <span style='color:#200080; font-weight:bold; '>struct</span> sockaddr_in remotesock<span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// cancel certain signals</span>
+    <span style='color:#003060; '>signal</span><span style='color:#308080; '>(</span>SIGINT<span style='color:#308080; '>,</span>  SIG_IGN<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#003060; '>signal</span><span style='color:#308080; '>(</span>SIGPIPE<span style='color:#308080; '>,</span> SIG_IGN<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    <span style='color:#003060; '>signal</span><span style='color:#308080; '>(</span>SIGTERM<span style='color:#308080; '>,</span> SIG_IGN<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// setup local socket</span>
+    <span style='color:#003060; '>memset</span><span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>localsock<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>sizeof</span><span style='color:#308080; '>(</span>localsock<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    localsock<span style='color:#308080; '>.</span>sin_family <span style='color:#308080; '>=</span> AF_INET<span style='color:#406080; '>;</span>
+    localsock<span style='color:#308080; '>.</span>sin_addr<span style='color:#308080; '>.</span>s_addr <span style='color:#308080; '>=</span> INADDR_ANY<span style='color:#406080; '>;</span>
+    localsock<span style='color:#308080; '>.</span>sin_port <span style='color:#308080; '>=</span> <span style='color:#400000; '>htons</span><span style='color:#308080; '>(</span>NUM_PORT<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// create a socket</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>sd <span style='color:#308080; '>=</span> <span style='color:#400000; '>socket</span><span style='color:#308080; '>(</span>PF_INET<span style='color:#308080; '>,</span> SOCK_STREAM<span style='color:#308080; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+        exiterr<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Error: socket()</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// bind to socket</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#400000; '>bind</span><span style='color:#308080; '>(</span>sd<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>struct</span> <span style='color:#400000; '>sockaddr</span><span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&amp;</span>localsock<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>sizeof</span><span style='color:#308080; '>(</span>localsock<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+        exiterr<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Error: bind()</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    paddrlen <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>int</span><span style='color:#308080; '>)</span> <span style='color:#200080; font-weight:bold; '>sizeof</span><span style='color:#308080; '>(</span>remotesock<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// get socket name</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#400000; '>getsockname</span><span style='color:#308080; '>(</span>sd<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>struct</span> <span style='color:#400000; '>sockaddr</span><span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&amp;</span>remotesock<span style='color:#308080; '>,</span> <span style='color:#308080; '>&amp;</span>paddrlen<span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+        exiterr<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Error: getsockname()</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#595979; '>// listen on socket</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span><span style='color:#400000; '>listen</span><span style='color:#308080; '>(</span>sd<span style='color:#308080; '>,</span> MAX_CLIENT<span style='color:#308080; '>)</span> <span style='color:#308080; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>)</span>
+        exiterr<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Error: listen()</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#003060; '>printf</span><span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>TCP Multi-threaded Server online. Port number: </span><span style='color:#007997; '>%d</span><span style='color:#0f69ff; '>\n</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#400000; '>ntohs</span><span style='color:#308080; '>(</span>remotesock<span style='color:#308080; '>.</span>sin_port<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    <span style='color:#200080; font-weight:bold; '>while</span> <span style='color:#308080; '>(</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span>
+    <span style='color:#406080; '>{</span>
+        <span style='color:#595979; '>// acccept incomming client connection</span>
+        paramlist<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> clientsd <span style='color:#308080; '>=</span> accept<span style='color:#308080; '>(</span>sd<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>struct</span> <span style='color:#400000; '>sockaddr</span><span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>&amp;</span>remotesock<span style='color:#308080; '>,</span> <span style='color:#308080; '>&amp;</span>paddrlen<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// serve each client with its own thread</span>
+        pthread_create<span style='color:#308080; '>(</span><span style='color:#308080; '>&amp;</span>tid<span style='color:#308080; '>,</span> <span style='color:#7d0045; '>NULL</span><span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>void</span><span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> ServeClientThread<span style='color:#308080; '>,</span> <span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>void</span><span style='color:#308080; '>*</span><span style='color:#308080; '>)</span> paramlist<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+        <span style='color:#595979; '>// pthread_join(tid, NULL);</span>
+        <span style='color:#595979; '>// close(clientsd);</span>
+    <span style='color:#406080; '>}</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#008c00; '>0</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-08-04 06:15:10 UTC -->
