@@ -1,0 +1,91 @@
+Yee Feng (Tim) Hsu
+徐宇鋒
+http://yeehsu.freeshell.org
+zaken520@gmail.com
+(852) 9273 7829
+
+
+Summary
+
+Worked in software development for 15+ years. Started in Silicon Valley, then moved to HK. 
+Majority time was a C++ developer but moved to C# .NET. 
+Consider myself a fullstack developer focusing on financial markets.
+
+
+
+Professional Working History
+
+
+Senior Software Engineer 🔸 10kM Trading Ltd.
+April 2022 - November 2022
+Lead agile team to develop high freqency-low latency Market Making services/strategies
+Lead the development of Market Data, OMS, FIX connectivity, WebUI, etc in C# .Net Core
+Developed quant and algorithms for real-time automated trading/hedging for Spot/Futures
+Developed in house hedger/executor for traders in C# WPF to easily liquidate crypto assets
+
+
+Senior System Analyst 🔸 Sharp Point Ltd.
+January 2019 - March 2022
+Developed new derivatives trading platform in C# .NET Core, WPF, Prism MVVM
+Developed FIX4.2 connectivity with brokers written in C++11, Boost ASIO
+Wrote various micro-services in both C++/C#, C++/CLI, scripts
+Implemented web services, web sockets, web api, windows services, AWS cloud
+
+
+Senior .NET Consultant 🔸 Avanade
+November 2017 - December 2018
+Provided .NET consultancy to various fortune 500 clients, including Accenture
+Used C# Web API 2.0, MVC, Message Queue, Asynchronous calls, MSSQL, MSUnit
+Worked in Agile/SCRUM methods including CI/CD, TDD, BDD, SpecFlow, refactoring
+Helped in DevOps, releases, Jenkins, JIRA, Confluence, Selenium, Microsoft Azure
+
+
+Lead Analyst Programmer 🔸 Concord Pacific Satellite Technologies Ltd.
+November 2015 - June 2017
+Lead cross-regional Agile team to develop GPS Fleet Management SAAS solution
+Lead front-end development team using Javascript, JQuery, AngularJS, JSON, Bootstrap
+Revamped SOA backend using C# .NET, MySQL, TCP/IP sockets, threads, SOAP & WCF APIs
+Introduced to team: Agile, TDD, NUnit, MantisBT, SVN, GIT, Skype, Google Maps
+
+
+Contrator / Developer 🔸 Global Talent Services Ltd. - Unisys Hong Kong Ltd.
+January 2015 - November 2015
+Independant contractor implemented banking Signature Web Viewer Verification system
+Fullstack using VB/C# .NET, WCF, HTML5, CSS3, AngularJS, JQuery, AJAX, REST, MSSQL
+Part of full SDLC in various phases, staging, SIT, UAT, then LIVE
+
+
+Software Engineer 🔸 Sungard Global Trading Ltd.
+August 2011 - December 2014
+Participated in development of real-time trading platform in WIN32 C++
+Worked with various teams OMS, FIX, Market Data, Market Access, and Exchange PMs
+Debugged trading algorithms, strategies on cash, equities and derivative market
+Cross functional teams using Agile, TDD, and daily SCRUM to meet sprint targets
+
+
+Sr. Software Engineer 🔸 QVIVO Ltd.
+October 2010 - August 2011
+Developed cross platform media player in standard C++/STL, Boost library, threads
+Integrated Facebook API, cURL, AWS Cloud, IPC and memory sharing libraries
+Used Agile, TDD, Google unit testing, FFMpeg, Scaleform GFX, DirectX, OpenGL
+
+
+Sr. Software Engineer 🔸 Concord Pacific Satellite Technologies Ltd.
+November 2008 - October 2010
+Web Traffic & GPS related fleet management software control
+Embedded media player development using WinCE C++ MFC, WIN32, COM, HTTP, FTP
+Developed backend in C Linux, sockets, POSIX threads, MySQL tunning
+
+
+Sr. Software Engineer 🔸 OPSWAT, Inc.
+April 2005 - October 2008
+Part of team to develop Antivirus/Antispyware/Firewall SDK
+Implemented API library in OOP C++, C#, Java, PHP, HTTP/FTP/SMTP, XML, STL
+Integrated computer security, encryption, hashing MD5, SHA256, digital signatures
+
+
+
+Education
+San Francisco State University - B.S. Computer Science. 2002.
+
+Certified SCRUM Master

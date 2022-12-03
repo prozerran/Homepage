@@ -1,0 +1,48 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> CommonLib<span style='color:#308080; '>.</span>Enum<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> CommonLib<span style='color:#308080; '>.</span>Utils<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Collections<span style='color:#308080; '>.</span>Generic<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Linq<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Reflection<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Text<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> System<span style='color:#308080; '>.</span>Threading<span style='color:#308080; '>.</span>Tasks<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>namespace</span> ExchangeExecutor
+<span style='color:#406080; '>{</span>
+    <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>class</span> ExchangeServiceController
+    <span style='color:#406080; '>{</span>
+        <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>static</span> <span style='color:#200080; font-weight:bold; '>readonly</span> Lazy<span style='color:#308080; '>&lt;</span>ExchangeServiceController<span style='color:#308080; '>></span> lazy <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> Lazy<span style='color:#308080; '>&lt;</span>ExchangeServiceController<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span> <span style='color:#200080; font-weight:bold; '>new</span> ExchangeServiceController<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>static</span> ExchangeServiceController Instance <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span> <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>return</span> lazy<span style='color:#308080; '>.</span>Value<span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span> <span style='color:#406080; '>}</span>
+        <span style='color:#200080; font-weight:bold; '>public</span> <span style='color:#200080; font-weight:bold; '>string</span> ApiAccount <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>private</span> ExchangeServiceController<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ExchangeServiceBase ExchangeServiceInstance <span style='color:#406080; '>{</span> <span style='color:#200080; font-weight:bold; '>get</span><span style='color:#406080; '>;</span> <span style='color:#200080; font-weight:bold; '>private</span> <span style='color:#200080; font-weight:bold; '>set</span><span style='color:#406080; '>;</span> <span style='color:#406080; '>}</span>
+
+        <span style='color:#200080; font-weight:bold; '>public</span> ExchangeServiceBase SetExchangeInstance<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>string</span> exchange<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> key<span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>string</span> secret<span style='color:#308080; '>)</span>
+        <span style='color:#406080; '>{</span>
+            ApiAccount <span style='color:#308080; '>=</span> CommonUtil<span style='color:#308080; '>.</span>GetMd5HashedString<span style='color:#308080; '>(</span>key <span style='color:#308080; '>+</span> secret<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>string</span> instName <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>.</span>Format<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>ExchangeExecutor.ExchangeService.{exchange}Service</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            Type typename <span style='color:#308080; '>=</span> Type<span style='color:#308080; '>.</span>GetType<span style='color:#308080; '>(</span>instName<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>typename <span style='color:#308080; '>=</span><span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span>
+                <span style='color:#200080; font-weight:bold; '>return</span> <span style='color:#200080; font-weight:bold; '>null</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>var</span> property <span style='color:#308080; '>=</span> typename<span style='color:#308080; '>.</span>GetProperty<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Instance</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> BindingFlags<span style='color:#308080; '>.</span>Public | BindingFlags<span style='color:#308080; '>.</span>Static<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            <span style='color:#200080; font-weight:bold; '>var</span> instance <span style='color:#308080; '>=</span> property<span style='color:#308080; '>.</span>GetValue<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>null</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+            
+            <span style='color:#595979; '>// CAREFUL</span>
+            <span style='color:#595979; '>// As this method uses reflection to dynamically find the correct singleton class to instantiate.</span>
+            <span style='color:#595979; '>// It expects the name to be in the form [ExchangeNameService] so a class with that name MUST exist prior to execution.</span>
+
+            ExchangeServiceInstance <span style='color:#308080; '>=</span> <span style='color:#308080; '>(</span>ExchangeServiceBase<span style='color:#308080; '>)</span>instance<span style='color:#406080; '>;</span>
+            ExchangeServiceInstance?<span style='color:#308080; '>.</span>Init<span style='color:#308080; '>(</span>key<span style='color:#308080; '>,</span> secret<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+            <span style='color:#200080; font-weight:bold; '>return</span> ExchangeServiceInstance<span style='color:#406080; '>;</span>
+        <span style='color:#406080; '>}</span>
+    <span style='color:#406080; '>}</span>
+<span style='color:#406080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2022-12-03 07:20:13 UTC -->

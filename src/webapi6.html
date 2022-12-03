@@ -1,0 +1,100 @@
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>using</span> CommonLib<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Microsoft<span style='color:#308080; '>.</span>OpenApi<span style='color:#308080; '>.</span>Models<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> MMWebApi<span style='color:#308080; '>.</span>Filters<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> MMWebApiEngine<span style='color:#308080; '>.</span>Components<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> MMWebApiEngine<span style='color:#308080; '>.</span>Services<span style='color:#406080; '>;</span>
+<span style='color:#200080; font-weight:bold; '>using</span> Serilog<span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>var</span> builder <span style='color:#308080; '>=</span> WebApplication<span style='color:#308080; '>.</span>CreateBuilder<span style='color:#308080; '>(</span>args<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+ConfigurationManager configuration <span style='color:#308080; '>=</span> builder<span style='color:#308080; '>.</span>Configuration<span style='color:#406080; '>;</span>
+<span style='color:#595979; '>// Add Filter with config to scope</span>
+
+builder<span style='color:#308080; '>.</span>Services<span style='color:#308080; '>.</span>AddScoped<span style='color:#308080; '>&lt;</span>HttpAuthroizationFilter<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+builder<span style='color:#308080; '>.</span>Services<span style='color:#308080; '>.</span>AddScoped<span style='color:#308080; '>&lt;</span>ILoginService<span style='color:#308080; '>,</span> LoginService<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+builder<span style='color:#308080; '>.</span>Services<span style='color:#308080; '>.</span>AddSingleton<span style='color:#308080; '>&lt;</span>IDatabase<span style='color:#308080; '>,</span> Database<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+builder<span style='color:#308080; '>.</span>Services<span style='color:#308080; '>.</span>AddSingleton<span style='color:#308080; '>&lt;</span>IMessage<span style='color:#308080; '>,</span> Message<span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// Add services to the container.</span>
+builder<span style='color:#308080; '>.</span>Services<span style='color:#308080; '>.</span>AddControllers<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#595979; '>// Learn more about configuring Swagger/OpenAPI at </span><span style='color:#5555dd; '>https://aka.ms/aspnetcore/swashbuckle</span>
+builder<span style='color:#308080; '>.</span>Services<span style='color:#308080; '>.</span>AddEndpointsApiExplorer<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#595979; '>// Swagger</span>
+builder<span style='color:#308080; '>.</span>Services<span style='color:#308080; '>.</span>AddSwaggerGen<span style='color:#308080; '>(</span>
+    c <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+<span style='color:#406080; '>{</span>
+    c<span style='color:#308080; '>.</span>SwaggerDoc<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>v1</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> OpenApiInfo <span style='color:#406080; '>{</span> Title <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>MMWebApi</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> Version <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>v1</span><span style='color:#800000; '>"</span> <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    c<span style='color:#308080; '>.</span>AddSecurityDefinition<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>SessionId</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span> <span style='color:#200080; font-weight:bold; '>new</span> OpenApiSecurityScheme
+    <span style='color:#406080; '>{</span>
+        Description <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Enter SessionId</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+        Name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>Authorization</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+        In <span style='color:#308080; '>=</span> ParameterLocation<span style='color:#308080; '>.</span>Header<span style='color:#308080; '>,</span>
+        Type <span style='color:#308080; '>=</span> SecuritySchemeType<span style='color:#308080; '>.</span>ApiKey<span style='color:#308080; '>,</span>
+        Scheme <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>SessionId</span><span style='color:#800000; '>"</span>
+    <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+    c<span style='color:#308080; '>.</span>AddSecurityRequirement<span style='color:#308080; '>(</span><span style='color:#200080; font-weight:bold; '>new</span> OpenApiSecurityRequirement<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                <span style='color:#406080; '>{</span>
+                    <span style='color:#406080; '>{</span>
+                        <span style='color:#200080; font-weight:bold; '>new</span> OpenApiSecurityScheme
+                        <span style='color:#406080; '>{</span>
+                            Reference <span style='color:#308080; '>=</span> <span style='color:#200080; font-weight:bold; '>new</span> OpenApiReference
+                            <span style='color:#406080; '>{</span>
+                                Type <span style='color:#308080; '>=</span> ReferenceType<span style='color:#308080; '>.</span>SecurityScheme<span style='color:#308080; '>,</span>
+                                Id <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>SessionId</span><span style='color:#800000; '>"</span>
+                            <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span>
+                            Scheme <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>oauth2</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                            Name <span style='color:#308080; '>=</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>SessionId</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+                            In <span style='color:#308080; '>=</span> ParameterLocation<span style='color:#308080; '>.</span>Header<span style='color:#308080; '>,</span>
+
+                        <span style='color:#406080; '>}</span><span style='color:#308080; '>,</span>
+                        <span style='color:#200080; font-weight:bold; '>new</span> List<span style='color:#308080; '>&lt;</span><span style='color:#200080; font-weight:bold; '>string</span><span style='color:#308080; '>></span><span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+                    <span style='color:#406080; '>}</span>
+                <span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+<span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#595979; '>// Serilog</span>
+builder<span style='color:#308080; '>.</span>Host<span style='color:#308080; '>.</span>UseSerilog<span style='color:#308080; '>(</span><span style='color:#308080; '>(</span>ctx<span style='color:#308080; '>,</span> lc<span style='color:#308080; '>)</span> <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+    lc<span style='color:#308080; '>.</span>WriteTo<span style='color:#308080; '>.</span>Console<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#308080; '>.</span>MinimumLevel<span style='color:#308080; '>.</span>Verbose<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#308080; '>.</span>WriteTo<span style='color:#308080; '>.</span>File<span style='color:#308080; '>(</span>configuration<span style='color:#308080; '>[</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Paths:LogPath</span><span style='color:#800000; '>"</span><span style='color:#308080; '>]</span><span style='color:#308080; '>,</span> rollingInterval<span style='color:#308080; '>:</span> RollingInterval<span style='color:#308080; '>.</span>Day<span style='color:#308080; '>)</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+Log<span style='color:#308080; '>.</span>Information<span style='color:#308080; '>(</span>$<span style='color:#800000; '>"</span><span style='color:#1060b6; '>MMWebApiService Started Ver.[{Globals.VERSION}]</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+builder<span style='color:#308080; '>.</span>WebHost<span style='color:#308080; '>.</span>UseUrls<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>http://*:5000</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+<span style='color:#200080; font-weight:bold; '>var</span> app <span style='color:#308080; '>=</span> builder<span style='color:#308080; '>.</span>Build<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>// Configure the HTTP request pipeline.</span>
+<span style='color:#200080; font-weight:bold; '>if</span> <span style='color:#308080; '>(</span>app<span style='color:#308080; '>.</span>Environment<span style='color:#308080; '>.</span>IsDevelopment<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span> || app<span style='color:#308080; '>.</span>Environment<span style='color:#308080; '>.</span>IsEnvironment<span style='color:#308080; '>(</span><span style='color:#800000; '>"</span><span style='color:#1060b6; '>Local</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#308080; '>)</span>
+<span style='color:#406080; '>{</span>
+    app<span style='color:#308080; '>.</span>UseDeveloperExceptionPage<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    app<span style='color:#308080; '>.</span>UseSwagger<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+    app<span style='color:#308080; '>.</span>UseSwaggerUI<span style='color:#308080; '>(</span>
+    <span style='color:#595979; '>//    c =></span>
+    <span style='color:#595979; '>//{</span>
+    <span style='color:#595979; '>//    c.SwaggerEndpoint("/swagger/v1/swagger.json", "MMWebApi v1");</span>
+    <span style='color:#595979; '>//    c.RoutePrefix = String.Empty;</span>
+    <span style='color:#595979; '>//}</span>
+    <span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span>
+
+app<span style='color:#308080; '>.</span>UseCors<span style='color:#308080; '>(</span>builder <span style='color:#308080; '>=</span><span style='color:#308080; '>></span>
+<span style='color:#406080; '>{</span>
+    builder
+    <span style='color:#308080; '>.</span>AllowAnyOrigin<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#308080; '>.</span>AllowAnyMethod<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#308080; '>.</span>AllowAnyHeader<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+<span style='color:#406080; '>}</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+app<span style='color:#308080; '>.</span>MapControllerRoute<span style='color:#308080; '>(</span>
+        name<span style='color:#308080; '>:</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>default</span><span style='color:#800000; '>"</span><span style='color:#308080; '>,</span>
+        pattern<span style='color:#308080; '>:</span> <span style='color:#800000; '>"</span><span style='color:#1060b6; '>{controller}/{action=Index}/{id?}</span><span style='color:#800000; '>"</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+
+<span style='color:#595979; '>//app.UseHttpsRedirection();</span>
+
+
+app<span style='color:#308080; '>.</span>Run<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#406080; '>;</span>
+</pre>
+<!--Created using ToHtml.com on 2022-12-01 15:08:17 UTC -->
