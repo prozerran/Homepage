@@ -1,0 +1,27 @@
+Dear Employer -
+
+I have over 16+ years of professional programming experience, have worked in US/Silicon Valley, fluent in English and spoken Cantonese, and now looking to find more challenging work. 
+My area of expertise include C/C++, C# .NET, and some web development.
+    
+In brief:
+
+- Thorough understanding of C++ and C# .NET 5/6
+- OOP, Design Patterns, MVC, WPF, SOLID principles
+- TCP/IP Socket and network programming
+- Multi-threaded, asynchronous, event driven development
+- Fullstack, DB/SQL, IIS, Bootstrap, JavaScript
+- Linux, Bash, shell scripts, cron jobs, administration
+- Agile development methodology
+
+Personal website with various programming samples:
+http://yeehsu.freeshell.org/
+
+Github account:
+https://github.com/prozerran
+
+Attached is my CV/Resume, please schedule interview/meeting with email or
+WWhatsApp: 852-9273-7829
+Email: zaken520@gmail.com
+
+Thank you,
+Tim Hsu Yee Feng
