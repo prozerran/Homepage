@@ -16,7 +16,7 @@ Consider myself a fullstack developer focusing on financial markets.
 Professional Working History
 
 
-Senior Software Engineer 🔸 10kM Trading Ltd.
+Senior Software Engineer 🔸 Undisclosed Market Maker
 April 2022 - November 2022
 Lead agile team to develop high freqency-low latency Market Making services/strategies
 Lead the development of Market Data, OMS, FIX connectivity, WebUI, etc in C# .Net Core
