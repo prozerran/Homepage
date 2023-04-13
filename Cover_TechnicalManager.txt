@@ -6,7 +6,7 @@ and now looking to find more challenging work. My area of expertise include C/C+
 In brief:
 
 - Thorough understanding of C++ and C# .NET
-- OOP, Design Patterns, MVC, WPF, MVVM, .NET Core 5/6
+- OOP, Design Patterns, MVC, WPF, MVVM, .NET Core 6/7
 - Fintech, OMS, FIX Connectivitiy, Market Data, OTC
 - High Frequency/Low Latency algorithmtic trading, market making
 - ETF, equities and derivative pricing, Black-Scholes model
