@@ -6,9 +6,10 @@ My area of expertise include C/C++, C# .NET, and some web development.
 In brief:
 
 - Thorough understanding of C++ and C# .NET 6/7
-- OOP, Design Patterns, MVC, WPF, SOLID principles
+- OOP, Design Patterns, MVC, WPF, MVVM SOLID principles
 - TCP/IP Socket and network programming
 - Multi-threaded, asynchronous, event driven development
+- WebApi, WebSockets, MessageQueues, Micro-Services
 - Fullstack, DB/SQL, IIS, Bootstrap, JavaScript
 - Linux, Bash, shell scripts, cron jobs, administration
 - Agile development methodology
@@ -20,7 +21,7 @@ Github account:
 https://github.com/prozerran
 
 Attached is my CV/Resume, please schedule interview/meeting with email or
-WWhatsApp: 852-9273-7829
+WhatsApp: 852-9273-7829
 Email: zaken520@gmail.com
 
 Thank you,
