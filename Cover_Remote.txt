@@ -3,7 +3,7 @@ Dear Employer -
 I have over 16+ years of professional programming experience, have worked in US/Silicon Valley, fluent in English and spoken Cantonese, and now looking to find more challenging work. 
 My area of expertise include C/C++, C# .NET, and some web development.
 
-I am a US citizen but currently based in Hong Kong, so I can only work remotely (unless your office is based in HK);
+I am a US citizen but currently based in Hong Kong, so I can only work remotely (unless your office is based in HK)
 therefore, I am willing to accept a lower salary compared to standard market rate.
     
 In brief:
