@@ -16,6 +16,13 @@ Consider myself a fullstack developer focusing on financial markets.
 
 Professional Working History
 
+Senior .NET Contrator 🔸 Randstad Hong Kong Ltd - FWD Hong Kong Ltd.
+May 2023 - Present
+Responsible for WebApi serverless backend development in C# .NET 6 for client FWD
+Implementation of all WebApi using AWS Cloud, RDS, S3, Api Gateway/Lambda, and Redis Cache
+Implementation of all related Engagement (Insurance) related activities on FWD OMNE App
+Requirements gathering, full SDLC on Agile, and full support on every sprint release
+
 
 Senior Software Engineer 🔸 10kM Trading Ltd.
 April 2022 - November 2022
@@ -30,7 +37,7 @@ January 2019 - March 2022
 Developed new derivatives trading platform in C# .NET Core, WPF, Prism MVVM
 Developed FIX4.2 connectivity with brokers written in C++11, Boost ASIO
 Wrote various micro-services in both C++/C#, C++/CLI, scripts
-Implemented web services, web sockets, web api, windows services, AWS cloud
+Implemented web services, web sockets, web api, windows services, AWS Secret Manager
 
 
 Senior .NET Consultant 🔸 Avanade
