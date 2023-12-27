@@ -3,12 +3,12 @@ Yee Feng (Tim) Hsu
 http://yeehsu.freeshell.org
 zaken520@gmail.com
 +852 9273 7829
-3/F FLAT D, 18-26 PORTLAND STREET · YAU MA TEI, KOWLOON, HK 
+YAU MA TEI, KOWLOON, HK 
 
 
 Summary
 
-Worked in software development for 15+ years. Started in Silicon Valley, then moved to HK. 
+Worked in software development for 18+ years. Started in Silicon Valley, then moved to HK. 
 Majority time was a C++ developer but moved to C# .NET. 
 Consider myself a fullstack developer focusing on financial markets.
 
@@ -16,8 +16,8 @@ Consider myself a fullstack developer focusing on financial markets.
 
 Professional Working History
 
-Senior .NET Contrator 🔸 Randstad Hong Kong Ltd - FWD Hong Kong Ltd.
-May 2023 - Present
+Senior .NET Contractor 🔸 Randstad Hong Kong Ltd - Temus Ltd. FWD Hong Kong Ltd.
+May 2023 - January 2024
 Responsible for WebApi serverless backend development in C# .NET 6 for client FWD
 Implementation of all WebApi using AWS Cloud, RDS, S3, Api Gateway/Lambda, and Redis Cache
 Implementation of all related Engagement (Insurance) related activities on FWD OMNE App
