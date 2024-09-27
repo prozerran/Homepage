@@ -1,0 +1,65 @@
+Interview
+
+
+I have nearly 20 years experience as a software developer, mostly focusing on financial markets. I started as a C++ developer back in the US, then moved to HK around 2008
+I continue to be a C++ programmer then gradually moved to C# development, and have been do so for the past 10 years.
+I have worked for a few company all dealing with fintech, buidling trading applications, OMS, market making, and FIX connectivity, on multiple version, such as 4.2, 4.4, 5.0 both SP1 and SP2
+I am especially adept on FIX connectivity using QuickFix in C#, both in market data, order execution, debugging, troubleshooting as I understand the FIX protool pretty well, even to the point of leading a team and creating our own tags to deal with special situations.
+
+    
+In brief:
+
+- Thorough understanding of C++ and C# .NET 6/7/8
+- OOP, Design Patterns, MVC, WPF, SOLID principles
+- Fintech, OMS, FIX, Market Data, OTC, DMA, Exchanges
+- High Frequency/Low Latency, market making
+- ETF, equities and derivative pricing, Black-Scholes model
+- Blockchain, cryptocurrencies trading platform
+- Multi-threaded, asynchronous, event driven development
+- Agile development methodology 
+
+
+FIX connectivity to exchanges
+- CME, 
+- TT, SEHK, CBOE, NYSE, NASDAQ, ICE, CBOE
+- IB, Phillips
+- AAX, 10kM
+- Bitfinex
+- Challenge on FIX, its usually issues on the counterparty, which i had to email their L1 support to help with the FIX connection issues.
+They usually escalate my issues to L2/L3 or directly to the develpers as my requirements are very rare.
+
+Annoying while doing FIX connectivity and having L1 support from my counterpartie
+both on the buy and sell side institutions.
+I always send my FIX logs to them as is, with the SOH characters intact, however, their response is almost always in email with their own
+FIX log without the SOH character and replaced with the space character, which i find annoying, i had to replace them to 'fix' it in order for me to debug,
+process, and parse the data
+
+
+Ambition
+- I just want to resolve issues for your clients in a timely manner. Given my experience with FIX connectivity, and programming knowledge using QuickFIX,
+i dont see that much of a problem as i have been debugging on FIX platforms for about 10 years.
+- I would like to point out that besides a a developer in fintech, I am a part time trader myself, i have both open positions both in long/short positons,
+i use to run my own market making (think of it as my own prop trading firm) platform on Bitfinex to tried to make money on the spread, however,
+the spread their is way too thin, and unless i have huge captipal in the millions, my trading strategies wouldn't work due to fees and already high liquidity in
+lower risk assets, and i am relunctant to trade in higher spread, low liquidity assets due to fear of holding inventory as I cannot take that amount of risk.
+- I also have made substantial profits in swing trading, capitalize on the current crypto markets, especially with the recent Bitcoin ETFs approval by the US SEC
+for blackrock, fidelity, among others, so i'm just riding the market as of now and probably will retire by the time i reach age 50.
+
+GREATEST
+Greatest achievement is saving a company from complete bankrupty, but that has nothing to do with Fintech, but everything about revamping their tech stack,
+architecture, and completely upgrade their database, such as improved efficiency, configurating DB specs based on hardware capacity, how much it can handle, etc.
+Identified all the issues in DB performance, using index, explain keyword to see execution plan, using store procedures and views more often, and rewriting SQL
+queries to be way more efficient, about 1000x improvement which saved the company
+
+QUESTIONS
+what is the work life balance, and what is your WFH policy and what is your agile schedule is, assuming you are using SCRUM, (planning, standup, estimation, review, retrospective) 
+- between 1-10, what is the stress level of you and your team
+- KInd of far, in Kwong Tong and not near MTR (can work 3 times a day from home?)
+i know that this is a FIX connectivity L2/L3 support, so i would i have to deal with clients myself or work more closely with developers or even have a chance
+to work on the coding itself on the FIX issues.
+- Am i required to at client site on demand, for troubleshooting, help with FIX connectivity issues?
+- In your view, what sort of achievement or success means to you for new joiners that joins your company that you think can meet or exceed those expectations?
+
+•chaos engineering preferred. ????? panic modes, production issues, and require OT and traveling onsite to clients to resolve issues?
+
+
