@@ -8,13 +8,22 @@ YAU MA TEI, KOWLOON, HK
 
 Summary
 
-Worked in software development for 18+ years. Started in Silicon Valley, then moved to HK. 
-Majority time was a C++ developer but moved to C# .NET. 
-Consider myself a fullstack developer focusing on financial markets.
+FIRE - Financially Independent. Retired Early. ONLY looking for
+hybrid/remote/WFH/part-time/freelance/contract work. Willing to
+accept LOW salary for EASY work or work that could be automated.
 
 
 
 Professional Working History
+
+
+Self Employed 🔸 Freelance
+January 2024 - Present
+Working on self projects to determine market sentiment, angel/VC investment flows
+Use C# .NET 9 WPF, consolidate information to determine smart/retail/institutional money flow
+Use latest C# tech stack, including minimal API, async WPF app, AWS Cloud and services
+Developed own project to make smart decison trades, risk management, and market sentiment
+
 
 Senior .NET Contractor 🔸 Randstad Hong Kong Ltd - Temus Ltd. FWD Hong Kong Ltd.
 May 2023 - January 2024
@@ -50,9 +59,9 @@ Helped in DevOps, releases, Jenkins, JIRA, Confluence, Selenium, Microsoft Azure
 
 Lead Analyst Programmer 🔸 Concord Pacific Satellite Technologies Ltd.
 November 2015 - June 2017
-Lead cross-regional Agile team to develop GPS Fleet Management SAAS solution
-Lead front-end development team using Javascript, JQuery, AngularJS, JSON, Bootstrap
-Revamped SOA backend using C# .NET, MySQL, TCP/IP sockets, threads, SOAP & WCF APIs
+Rejoined company to help lead and revamp entire software infrastructure
+Saved the company from bankruptcy and retained clients due to failing software services
+Lead using C#, MySQL, sockets, threads, WCF, Javascript AngularJS, JQuery, Bootstrap
 Introduced to team: Agile, TDD, NUnit, MantisBT, SVN, GIT, Skype, Google Maps
 
 
@@ -80,16 +89,16 @@ Used Agile, TDD, Google unit testing, FFMpeg, Scaleform GFX, DirectX, OpenGL
 
 Sr. Software Engineer 🔸 Concord Pacific Satellite Technologies Ltd.
 November 2008 - October 2010
-Web Traffic & GPS related fleet management software control
+Innovated Web Traffic & GPS software for fleet management
 Embedded media player development using WinCE C++ MFC, WIN32, COM, HTTP, FTP
 Developed backend in C Linux, sockets, POSIX threads, MySQL tunning
 
 
 Sr. Software Engineer 🔸 OPSWAT, Inc.
 April 2005 - October 2008
-Part of team to develop Antivirus/Antispyware/Firewall SDK
-Implemented API library in OOP C++, C#, Java, PHP, HTTP/FTP/SMTP, XML, STL
-Integrated computer security, encryption, hashing MD5, SHA256, digital signatures
+Number 2 employee, helped innovated and grew the company to 500+ employees
+Created new and profitable software in Security/Antivirus/Antispyware/Firewall SDK
+Implemented API library in OOP C++, C#, Java to serve clients such as Cisco, DOD
 
 
 
